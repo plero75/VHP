@@ -3,99 +3,9 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Dashboard Mobilités Vincennes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-    html, body {
-      height: 100vh;
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f1117;
-      color: #ffffff;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    header, footer {
-      padding: 0.5rem 1rem;
-      text-align: center;
-    }
-    .logo-bar {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-    .logo-bar img {
-      height: 38px;
-    }
-    h1 {
-      font-size: 1.2rem;
-      margin: 0.2rem 0;
-    }
-    main {
-      flex: 1;
-      display: grid;
-      grid-template-rows: repeat(5, 1fr);
-      gap: 0.4rem;
-      padding: 0.4rem;
-    }
-    .card {
-      background-color: #1a1d25;
-      border-radius: 12px;
-      padding: 0.8rem 1.2rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .card h2 {
-      font-size: 1.1rem;
-      margin: 0;
-    }
-    .line-badge {
-      display: inline-block;
-      background-color: #2979ff;
-      color: #fff;
-      font-weight: bold;
-      width: 34px;
-      height: 34px;
-      text-align: center;
-      line-height: 34px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
-    .departures {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 0.5rem 0;
-    }
-    .badge-time {
-      background-color: #2c2f39;
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-weight: bold;
-      font-size: 1rem;
-    }
-    .status {
-      display: flex;
-      align-items: center;
-      font-size: 0.9rem;
-      margin-top: 0.2rem;
-    }
-    .status.fluid { color: #4caf50; }
-    .status.warning { color: #ffeb3b; }
-    .small {
-      font-size: 0.75rem;
-      color: #aaa;
-    }
-    .footer-note {
-      font-size: 1rem;
-    }
-  </style>
+  <title>Dashboard Mobilités Vincennes</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
@@ -104,12 +14,14 @@
       <h1>Dashboard Mobilités Vincennes</h1>
       <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/RATP_logo_2021.svg" alt="RATP" />
     </div>
+    <div id="meta-info" style="margin-top: 0.5rem; font-size: 0.95rem;">
+      📅 <span id="current-date">--/--</span> — 🕒 <span id="current-time">--:--</span> — 🌤 <span id="current-weather">Chargement météo…</span>
+    </div>
   </header>
 
   <main>
     <div class="card" id="rer-content">
       <h2><span class="line-badge">A</span>RER A – Joinville-le-Pont</h2>
-      <!-- dynamic content -->
     </div>
     <div class="card" id="bus77-content">
       <h2><span class="line-badge">77</span>Bus 77 – Hippodrome</h2>
@@ -123,14 +35,13 @@
       <div id="velib12128">Chargement Pyramide…</div>
     </div>
     <div class="card">
-      <h2>🌤 Météo</h2>
-      <div id="weather-content">Chargement météo…</div>
-      <div id="last-update" class="small">Mise à jour…</div>
+      <h2>🚦 Trafic Routier</h2>
+      <div id="traffic-content">Chargement trafic A86 / périphérique…</div>
     </div>
   </main>
 
   <footer>
-    <div class="footer-note">🐴 À bientôt à l’Hippodrome de Vincennes !</div>
+    <div class="footer-note">🐴 À bientôt à l’Hippodrome de Vincennes — Données temps réel IDFM / Vélib / météo</div>
   </footer>
 
   <script src="script.js"></script>

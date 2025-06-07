@@ -1,33 +1,39 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard VHP</title>
-  <link rel="stylesheet" href="style.css" />
-  <script>
-    const script = document.createElement('script');
-    script.src = 'script.js?cb=' + Date.now();
-    document.head.appendChild(script);
-  </script>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
 </head>
 <body>
   <header>
-    <h1>Dashboard VHP</h1>
+    <div class="logo-bar">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/3/3d/Idfm-logo.svg" alt="IDFM" />
+      <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/RATP_logo_2021.svg" alt="RATP" />
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Trotting_horse_icon.svg/1200px-Trotting_horse_icon.svg.png" alt="Vincennes" />
+    </div>
+    <h1>Tableau Temps Réel – Vincennes</h1>
   </header>
-  <main>
-    <section id="rer"><h2>🚆 RER A</h2><div id="rer-content">Chargement...</div></section>
-    <section id="bus77"><h2>🚌 Bus 77</h2><div id="bus77-content">Chargement...</div></section>
-    <section id="bus201"><h2>🚌 Bus 201</h2><div id="bus201-content">Chargement...</div></section>
-    <section id="velib"><h2>🚲 Vélib’</h2>
-      <div id="velib12163">Chargement Hippodrome...</div>
-      <div id="velib12128">Chargement Pyramide...</div>
+
+  <div id="app">
+    <section id="rer-content"></section>
+    <section id="bus77-content"></section>
+    <section id="bus201-content"></section>
+    <section>
+      <div id="velib12163"></div>
+      <div id="velib12128"></div>
     </section>
-    <section id="meteo"><h2>🌤 Météo</h2><div id="weather-content">Chargement...</div></section>
-    <footer>
-      <div id="last-update">Mise à jour : —</div>
-      <p>© Hippodrome de Vincennes – Données RATP / IDFM</p>
-    </footer>
-  </main>
+    <section>
+      <div id="weather-content"></div>
+      <div id="last-update" class="update"></div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="message">À bientôt à l’Hippodrome de Vincennes !</div>
+    <div>© Affichage temps réel RATP / Île-de-France Mobilités</div>
+  </footer>
 </body>
 </html>

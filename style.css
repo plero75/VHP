@@ -1,11 +1,10 @@
-
 * {
   box-sizing: border-box;
 }
 html, body {
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   background: #0f1117;
   color: white;
   height: 100%;
@@ -25,17 +24,13 @@ header, footer {
   gap: 1rem;
   flex-wrap: wrap;
 }
-
 .logo-bar img {
   height: 32px;
 }
-
 h1 {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   margin: 0.2rem 0;
-  text-align: center;
 }
-
 main {
   display: flex;
   flex-direction: column;
@@ -44,9 +39,8 @@ main {
   gap: 10px;
   padding: 0.5rem;
 }
-
 .card {
-  background-color: #1a1d25;
+  background: linear-gradient(to right, #1a1d25, #222530);
   border-radius: 12px;
   padding: 1rem;
   flex: 1 1 auto;
@@ -54,13 +48,12 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+  position: relative;
 }
-
 .card h2 {
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
 }
-
 .line-badge {
   background: #2979ff;
   color: white;
@@ -73,53 +66,67 @@ main {
   line-height: 38px;
   margin-right: 10px;
 }
-
 .departures {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  margin-top: 0.3rem;
 }
-
 .badge-time {
   background: #2c2f39;
   border-radius: 6px;
   padding: 6px 10px;
   font-weight: bold;
-  font-size: 1.05rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
 }
-
+.badge-time.urgent {
+  background-color: #ff5252;
+  animation: flash 1s infinite;
+}
+.badge-time.soon {
+  background-color: #ffc107;
+}
+.badge-time.later {
+  background-color: #4caf50;
+}
 .status {
   margin-top: 0.4rem;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
-
 .status.fluid {
   color: #4caf50;
 }
-
 .status.warning {
   color: #ffc107;
 }
-
 .small {
   font-size: 0.75rem;
   color: #ccc;
-  margin-top: 0.4rem;
+  margin-top: 0.3rem;
 }
-
+.loader {
+  font-size: 0.9rem;
+  color: #777;
+  animation: pulse 2s infinite;
+}
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
 .footer-note {
   margin-top: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
-
-/* Responsive layout */
 @media screen and (max-width: 768px) {
   .card h2 {
     font-size: 1rem;
   }
   .badge-time {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
   .line-badge {
     width: 30px;

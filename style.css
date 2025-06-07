@@ -1,1 +1,22 @@
-body { font-family: sans-serif; }
+body {
+  font-family: sans-serif;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 1rem;
+}
+section {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+h1, h2 {
+  color: #003366;
+}
+footer {
+  font-size: 0.8rem;
+  color: #777;
+  margin-top: 2rem;
+  text-align: center;
+}

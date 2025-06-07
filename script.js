@@ -1,67 +1,68 @@
 
-function refreshDashboard() {
-  // RER A – Joinville
-  fetch("https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https%3A//prim.iledefrance-mobilites.fr/marketplace/stop-monitoring%3FMonitoringRef%3DSTIF%3AStopArea%3ASP%3A43689%3A")
-    .then(res => res.json())
-    .then(data => {
-      const results = data.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit;
-      const rer = results.map(s => {
-        const aimed = new Date(s.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-        const dir = s.MonitoredVehicleJourney.DirectionName;
-        return `<li>${dir} — ${aimed}</li>`;
-      }).join("");
-      document.getElementById("rer-content").innerHTML = `<ul>${rer}</ul>`;
-    })
-    .catch(err => {
-      document.getElementById("rer-content").innerText = "Erreur chargement RER";
-    });
+async function fetchStopMonitoring(ref, containerId, label) {
+  try {
+    const url = `https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${ref}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit ?? [];
 
-  // Bus 77 et 201 – Hippodrome
-  fetch("https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https%3A//prim.iledefrance-mobilites.fr/marketplace/stop-monitoring%3FMonitoringRef%3DSTIF%3AStopArea%3ASP%3A412833%3A")
-    .then(res => res.json())
-    .then(data => {
-      const results = data.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit;
-      let bus77 = "", bus201 = "";
-      results.forEach(s => {
-        const aimed = new Date(s.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-        const line = s.MonitoredVehicleJourney.LineRef;
-        const dir = s.MonitoredVehicleJourney.DirectionName;
-        const li = `<li>${dir} — ${aimed}</li>`;
-        if (line.includes("77")) bus77 += li;
-        else if (line.includes("201")) bus201 += li;
-      });
-      document.getElementById("bus77-content").innerHTML = `<ul>${bus77}</ul>`;
-      document.getElementById("bus201-content").innerHTML = `<ul>${bus201}</ul>`;
-    })
-    .catch(err => {
-      document.getElementById("bus77-content").innerText = "Erreur chargement bus 77";
-      document.getElementById("bus201-content").innerText = "Erreur chargement bus 201";
-    });
+    const output = visits.slice(0, 5).map(v => {
+      const journey = v.MonitoredVehicleJourney;
+      const call = journey.MonitoredCall;
+      const dir = journey.DirectionName?.[0]?.value ?? "Direction inconnue";
+      const name = journey.VehicleJourneyName?.[0]?.value ?? "";
+      const aimed = new Date(call.AimedDepartureTime).toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"});
+      const expected = new Date(call.ExpectedDepartureTime).toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"});
+      const delay = (call.ExpectedDepartureTime !== call.AimedDepartureTime) ? `🕒 +${(new Date(call.ExpectedDepartureTime) - new Date(call.AimedDepartureTime))/60000} min` : "";
+      const quai = call.DeparturePlatformName?.value ? ` — Quai ${call.DeparturePlatformName.value}` : "";
+      return `<li><strong>${name}</strong> ${expected}${quai} → ${dir} ${delay}</li>`;
+    }).join("");
 
-  // VELIB
-  fetch("https://opendata.paris.fr/api/v2/catalog/datasets/velib-disponibilite-en-temps-reel/records?where=stationcode=12163")
-    .then(res => res.json())
-    .then(data => {
-      const st = data.records[0].record.fields;
-      document.getElementById("velib12163").innerText = `Hippodrome : ${st.numbikesavailable} vélos dont ${st.ebike} électriques — bornes : ${st.numdocksavailable}`;
-    });
-  fetch("https://opendata.paris.fr/api/v2/catalog/datasets/velib-disponibilite-en-temps-reel/records?where=stationcode=12128")
-    .then(res => res.json())
-    .then(data => {
-      const st = data.records[0].record.fields;
-      document.getElementById("velib12128").innerText = `Pyramide : ${st.numbikesavailable} vélos dont ${st.ebike} électriques — bornes : ${st.numdocksavailable}`;
-    });
-
-  // METEO
-  fetch("https://wttr.in/Paris?format=%C+%t")
-    .then(res => res.text())
-    .then(txt => {
-      document.getElementById("weather-content").innerText = `Paris : ${txt}`;
-    });
-
-  // Horodatage
-  document.getElementById("last-update").textContent = "Dernière mise à jour : " + new Date().toLocaleTimeString("fr-FR");
+    document.getElementById(containerId).innerHTML = `<h3>${label}</h3><ul>${output}</ul>`;
+  } catch (e) {
+    document.getElementById(containerId).innerHTML = `<p>Erreur chargement ${label}</p>`;
+  }
 }
 
-refreshDashboard();
-setInterval(refreshDashboard, 60000);
+async function fetchVelib(stationId, containerId, label) {
+  try {
+    const response = await fetch("https://velib-proxy.hippodrome-proxy42.workers.dev/station_status.json");
+    const data = await response.json();
+    const station = data.data.stations.find(s => s.station_id === stationId);
+    const dispo = station.num_bikes_available;
+    const elec = station.num_ebikes_available;
+    const docks = station.num_docks_available;
+    document.getElementById(containerId).innerText = `${label} : ${dispo} vélos dont ${elec} électriques — bornes : ${docks}`;
+  } catch (e) {
+    document.getElementById(containerId).innerText = `Erreur Vélib : ${label}`;
+  }
+}
+
+async function fetchWeather() {
+  try {
+    const response = await fetch("https://api.open-meteo.com/v1/forecast?latitude=48.85&longitude=2.35&current_weather=true");
+    const data = await response.json();
+    const weather = data.current_weather;
+    document.getElementById("weather-content").innerText = `Paris : ${weather.temperature}°C — Vent ${weather.windspeed} km/h`;
+  } catch (e) {
+    document.getElementById("weather-content").innerText = "Erreur météo";
+  }
+}
+
+function updateTime() {
+  const now = new Date().toLocaleTimeString("fr-FR");
+  document.getElementById("last-update").innerText = `Dernière mise à jour : ${now}`;
+}
+
+function refreshAll() {
+  fetchStopMonitoring("STIF:StopArea:SP:43135:", "rer-content", "RER A — Joinville-le-Pont");
+  fetchStopMonitoring("STIF:StopArea:SP:463641:", "bus77-content", "Bus 77 — Hippodrome de Vincennes");
+  fetchStopMonitoring("STIF:StopArea:SP:463644:", "bus201-content", "Bus 201 — École du Breuil / Pyramides");
+  fetchVelib("12163", "velib12163", "Hippodrome Paris-Vincennes");
+  fetchVelib("12128", "velib12128", "Pyramide – École du Breuil");
+  fetchWeather();
+  updateTime();
+}
+
+refreshAll();
+setInterval(refreshAll, 60000);

@@ -1,2 +1,2 @@
-# Dashboard Monitoring API
-Affiche les infos RER, bus, Vélib, météo...
+# Dashboard VHP
+Affiche les horaires en temps réel pour RER, Bus, Vélib, météo.

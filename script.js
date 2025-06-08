@@ -5,7 +5,8 @@ async function loadGtfsStopTimes() {
   const url = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/offre-horaires-tc-gtfs-idfm/exports/json";
   const res = await fetch(url);
   const data = await res.json();
-  gtfsStopTimesCache = data.stop_times;
+  // Correction : le flux est un tableau d'objets, pas une clé .stop_times
+  gtfsStopTimesCache = data;
   return gtfsStopTimesCache;
 }
 
@@ -17,7 +18,6 @@ async function loadGtfsStopTimes() {
  * @returns {Array<Date>} - horaires dans la journée
  */
 function getDeparturesForStopToday(stop_times, stop_id, dateStr) {
-  // Correspondance souple (GTFS peut avoir juste "43135" au lieu de "STIF:StopArea:SP:43135:")
   let normalizedId = stop_id.replace(/^STIF:StopArea:SP:/, '').replace(/:$/, '');
   const todayTrips = stop_times
     .filter(st => st.stop_id === stop_id || st.stop_id === normalizedId)
@@ -38,10 +38,9 @@ function getDeparturesForStopToday(stop_times, stop_id, dateStr) {
 }
 
 function updateDateTime() {
-  // Ces IDs n'existent pas dans ton HTML actuellement :
+  // Ajoute des divs dans ton HTML pour activer cette fonctionnalité
   // document.getElementById("current-date").textContent = now.toLocaleDateString("fr-FR");
   // document.getElementById("current-time").textContent = now.toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' });
-  // Soit tu ajoutes les divs correspondantes dans index.html, soit tu retires cette fonction
 }
 
 async function updateWeather() {
@@ -56,14 +55,13 @@ async function updateWeather() {
 }
 
 function clearAllBlocks() {
-  ["bus77-content", "bus201-content", "rer-content", "velib12128", "velib12163"].forEach(id => {
+  ["bus77-content", "bus201-content", "rer-content", "velib-breuil", "velib-vincennes"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = "";
   });
 }
 
- async function fetchStopMonitoringWithGtfs(ref, containerId, stop_id) {
-  // On charge GTFS si besoin
+async function fetchStopMonitoringWithGtfs(ref, containerId, stop_id) {
   const stop_times = await loadGtfsStopTimes();
   const todayStr = new Date().toISOString().slice(0, 10);
   const departures = getDeparturesForStopToday(stop_times, stop_id, todayStr);
@@ -92,22 +90,23 @@ function clearAllBlocks() {
     return;
   }
 
-  // Sinon, on affiche les prochains passages temps réel
-  await fetchStopMonitoring(ref, containerId);
+  // Sinon, on affiche les prochains passages temps réel (fonction à fournir selon tes besoins)
+  if (typeof fetchStopMonitoring === "function") {
+    await fetchStopMonitoring(ref, containerId);
+  }
 }
 
-// Liste des stations à afficher (nom exact ou code station)
+// --- VELIB ---
+
 const velibStations = [
   { name: "Pyramide - Ecole du Breuil", container: "velib-breuil" },
   { code: "12163", container: "velib-vincennes" }
 ];
 
-// Fonction utilitaire de normalisation des noms (ignore accents et casse)
 function normalizeString(s) {
   return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
-// Fonction d'affichage d'une station Vélib depuis open data Paris
 async function fetchAndDisplayAllVelibStations() {
   const url = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json";
   let stations;
@@ -124,10 +123,8 @@ async function fetchAndDisplayAllVelibStations() {
   for (const sta of velibStations) {
     let station;
     if (sta.code) {
-      // Recherche par code station
       station = stations.find(s => s.stationcode === sta.code);
     } else if (sta.name) {
-      // Recherche par nom, tolérante aux accents/casse
       station = stations.find(s => normalizeString(s.name) === normalizeString(sta.name));
     }
     if (!station) {
@@ -145,23 +142,15 @@ async function fetchAndDisplayAllVelibStations() {
   }
 }
 
-// Appel initial et rafraîchissement toutes les minutes
-fetchAndDisplayAllVelibStations();
-setInterval(fetchAndDisplayAllVelibStations, 60000);
-
-// === MODIFIE refreshAll POUR UTILISER LA NOUVELLE FONCTION ===
-
 function refreshAll() {
   clearAllBlocks();
-  updateDateTime && updateDateTime();
+  if (typeof updateDateTime === "function") updateDateTime();
   updateWeather();
   fetchStopMonitoringWithGtfs("STIF:StopArea:SP:43135:", "rer-content", "STIF:StopArea:SP:43135:");
   fetchStopMonitoringWithGtfs("STIF:StopArea:SP:463641:", "bus77-content", "STIF:StopArea:SP:463641:");
   fetchStopMonitoringWithGtfs("STIF:StopArea:SP:463644:", "bus201-content", "STIF:StopArea:SP:463644:");
-  updateVelib();
-
-
-
+  fetchAndDisplayAllVelibStations();
+}
 
 refreshAll();
 setInterval(refreshAll, 60000);

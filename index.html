@@ -6,74 +6,149 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <style>
+    :root {
+      --primary: #e2001a;
+      --bus: #009f4d;
+      --velib: #4e8cd6;
+      --bg: #f7fafd;
+      --panel: #fff;
+      --shadow: 0 6px 32px #0001;
+      --radius: 22px;
+      --gap: 18px;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #182033;
+      width: 100vw;
+      min-height: 100vh;
+      min-width: 100vw;
+      overflow: hidden;
+    }
     .dashboard {
       display: grid;
       grid-template-areas: 
         "header header header"
-        "left center right";
+        "left center right"
+        "footer footer footer";
       grid-template-columns: 1fr 2fr 1fr;
-      grid-template-rows: 120px 1fr;
+      grid-template-rows: 110px 1fr 60px;
       height: 100vh;
       width: 100vw;
-      gap: 16px;
-      padding: 16px;
+      gap: var(--gap);
+      padding: var(--gap);
       box-sizing: border-box;
     }
-    .header   { grid-area: header; }
-    .left     { grid-area: left; }
-    .center   { grid-area: center; }
-    .right    { grid-area: right; }
     .block {
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 4px 24px #0002;
-      padding: 18px 20px 15px 20px;
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px 18px 18px 22px;
       display: flex;
       flex-direction: column;
       min-width: 0;
       min-height: 0;
       overflow: hidden;
+      position: relative;
+      transition: box-shadow 0.2s;
+    }
+    .block:focus-within, .block:hover {
+      box-shadow: 0 8px 38px #0003;
+    }
+    .header   { grid-area: header; padding: 0 32px; background: var(--primary); color: #fff; display: flex; flex-direction: row; align-items: center; border-radius: var(--radius);}
+    .header-content {
+      display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%;
+    }
+    .header-title {
+      display: flex; align-items: center; font-weight: 800; font-size: 2.1em; gap: 18px;
+    }
+    .header-title .icon { width: 36px; height: 36px;}
+    .header-right {
+      display: flex; align-items: center; gap: 22px;
+      font-size: 1.18em;
+    }
+    .meteo {
+      font-size: 1.2em;
+      font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.13);
+      border-radius: 10px;
+      padding: 6px 14px;
+    }
+    .horloge {
+      font-size: 1.25em;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 6px 14px;
+    }
+    .left   { grid-area: left; }
+    .center { grid-area: center; }
+    .right  { grid-area: right; }
+    .footer { grid-area: footer; background: none; box-shadow: none; padding: 0; display: flex; align-items: center; justify-content: flex-end;}
+    .last-update {
+      font-size: 1.08em; color: #8c8c8c; font-weight: 500; letter-spacing: 0.1em;
+      background: #fff8;
+      border-radius: 12px;
+      padding: 10px 20px;
+      margin-right: 14px;
     }
     .bloc-title {
-      font-size: 1.4em;
-      font-weight: bold;
-      margin-bottom: 6px;
+      font-size: 1.35em;
+      font-weight: 700;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       gap: 12px;
+      letter-spacing: 0.02em;
     }
-    .meteo, .horloge { font-size: 1.1em; margin-right: 20px;}
-    .header-flex {
-      display: flex; align-items: center; justify-content: space-between; width: 100%; height: 100%;
+    .bloc-title.rer { color: var(--primary);}
+    .bloc-title.bus { color: var(--bus);}
+    .bloc-title.velib { color: var(--velib);}
+    .rer-content, .bus-content, .velib-content {
+      font-size: 1.22em;
+      line-height: 1.35;
+      margin-bottom: 2px;
     }
-    .velib-data { padding-top: 5px;}
+    .bus-content b, .rer-content b { color: var(--primary);}
+    .bus-content .bus-label { color: var(--bus);}
+    .velib-data b { color: var(--velib);}
+    .velib-data { padding-top: 3px; font-size: 1.15em;}
     @media (max-width: 900px), (max-height: 700px) {
       .dashboard {
         grid-template-areas:
           "header"
           "center"
           "left"
-          "right";
+          "right"
+          "footer";
         grid-template-columns: 1fr;
-        grid-template-rows: 90px 2fr 1fr 1fr;
-        gap: 8px;
+        grid-template-rows: 90px 2fr 1fr 1fr 50px;
+        gap: 10px;
         padding: 4px;
       }
-      .header-flex { flex-direction: column; align-items: flex-start;}
+      .header-content { flex-direction: column; align-items: flex-start;}
+      .header { padding: 0 12px; font-size: 1.2em;}
+      .bloc-title { margin-bottom: 6px; font-size: 1.07em;}
+      .last-update { font-size: 0.98em; padding: 7px 9px;}
+      .block { padding: 11px 9px 10px 11px;}
     }
   </style>
 </head>
 <body>
   <div class="dashboard">
     <!-- HEADER: Titre + météo + horloge -->
-    <div class="block header">
-      <div class="header-flex">
-        <div>
-          <span style="font-size:2.0em; font-weight:800; color:#e2001a;">
-            🏇 Panneau d’informations transports
-          </span>
+    <div class="block header" tabindex="0">
+      <div class="header-content">
+        <div class="header-title">
+          <img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/2/29/RER_A_icon.svg" alt="RER A">
+          Panneau d’informations transports
         </div>
-        <div>
+        <div class="header-right">
           <span class="meteo" id="weather-content">🌤 ...</span>
           <span class="horloge">
             <span id="current-date"></span>
@@ -83,27 +158,34 @@
       </div>
     </div>
     <!-- LEFT: RER -->
-    <div class="block left">
-      <div class="bloc-title">🚆 RER A (Vincennes)</div>
-      <div id="rer-content"></div>
+    <div class="block left" tabindex="0">
+      <div class="bloc-title rer">🚆 RER A (Vincennes)</div>
+      <div class="rer-content" id="rer-content"></div>
     </div>
     <!-- CENTER: Bus -->
-    <div class="block center">
-      <div class="bloc-title">🚌 Bus</div>
-      <div>
-        <b>77 (Hippodrome)</b>
-        <div id="bus77-content"></div>
-      </div>
-      <div style="margin-top:12px">
-        <b>201 (École du Breuil)</b>
-        <div id="bus201-content"></div>
+    <div class="block center" tabindex="0">
+      <div class="bloc-title bus">🚌 Bus</div>
+      <div class="bus-content">
+        <div><span class="bus-label"><b>77 (Hippodrome)</b></span>
+          <div id="bus77-content"></div>
+        </div>
+        <div style="margin-top:14px">
+          <span class="bus-label"><b>201 (École du Breuil)</b></span>
+          <div id="bus201-content"></div>
+        </div>
       </div>
     </div>
     <!-- RIGHT: Vélib -->
-    <div class="block right">
-      <div class="bloc-title">🚲 Vélib'</div>
-      <div class="velib-data" id="velib-vincennes"></div>
-      <div class="velib-data" id="velib-breuil"></div>
+    <div class="block right" tabindex="0">
+      <div class="bloc-title velib">🚲 Vélib'</div>
+      <div class="velib-content">
+        <div class="velib-data" id="velib-vincennes"></div>
+        <div class="velib-data" id="velib-breuil"></div>
+      </div>
+    </div>
+    <!-- FOOTER: Dernière MAJ -->
+    <div class="footer">
+      <span class="last-update" id="last-update">Dernière mise à jour...</span>
     </div>
   </div>
   <script src="script.js"></script>

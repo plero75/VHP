@@ -1,3 +1,42 @@
+let gtfsStopTimesCache = null;
+
+async function loadGtfsStopTimes() {
+  if (gtfsStopTimesCache) return gtfsStopTimesCache;
+  const url = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/offre-horaires-tc-gtfs-idfm/exports/json";
+  const res = await fetch(url);
+  const data = await res.json();
+  gtfsStopTimesCache = data.stop_times;
+  return gtfsStopTimesCache;
+}
+
+/**
+ * Retourne les horaires (Date JS) de départ pour un stop_id un jour donné
+ * @param {Array} stop_times - stop_times du GTFS (JSON)
+ * @param {String} stop_id - ex: "STIF:StopArea:SP:43135:"
+ * @param {String} dateStr - ex: "2025-06-08"
+ * @returns {Array<Date>} - horaires dans la journée
+ */
+function getDeparturesForStopToday(stop_times, stop_id, dateStr) {
+  // Correspondance souple (GTFS peut avoir juste "43135" au lieu de "STIF:StopArea:SP:43135:")
+  let normalizedId = stop_id.replace(/^STIF:StopArea:SP:/, '').replace(/:$/, '');
+  const todayTrips = stop_times
+    .filter(st => st.stop_id === stop_id || st.stop_id === normalizedId)
+    .map(st => st.departure_time)
+    .filter(Boolean);
+
+  return todayTrips.map(time => {
+    let [h, m, s] = time.split(":").map(Number);
+    let d = new Date(dateStr + "T00:00:00");
+    d.setHours(h, m, s || 0);
+    // Cas > 24h (bus de nuit)
+    if (h >= 24) {
+      d.setDate(d.getDate() + Math.floor(h / 24));
+      d.setHours(h % 24);
+    }
+    return d;
+  }).sort((a, b) => a - b);
+}
+
 function updateDateTime() {
   // Ces IDs n'existent pas dans ton HTML actuellement :
   // document.getElementById("current-date").textContent = now.toLocaleDateString("fr-FR");
@@ -23,97 +62,106 @@ function clearAllBlocks() {
   });
 }
 
-async function fetchStopMonitoring(ref, containerId) {
+ async function fetchStopMonitoringWithGtfs(ref, containerId, stop_id) {
+  // On charge GTFS si besoin
+  const stop_times = await loadGtfsStopTimes();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const departures = getDeparturesForStopToday(stop_times, stop_id, todayStr);
+  const now = new Date();
+
+  if (!departures.length) {
+    document.getElementById(containerId).innerHTML =
+      `<div class="status warning">🛑 Pas d'horaire théorique disponible pour cet arrêt aujourd'hui</div>`;
+    return;
+  }
+
+  const premier = departures[0];
+  const dernier = departures[departures.length - 1];
+
+  if (now < premier) {
+    document.getElementById(containerId).innerHTML = `
+      <div class="status warning">🕓 Service pas encore commencée</div>
+      <div class="small">Premier passage à ${premier.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</div>`;
+    return;
+  }
+
+  if (now > dernier) {
+    document.getElementById(containerId).innerHTML = `
+      <div class="status warning">🛑 Service de la journée terminée</div>
+      <div class="small">Dernier passage à ${dernier.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</div>`;
+    return;
+  }
+
+  // Sinon, on affiche les prochains passages temps réel
+  await fetchStopMonitoring(ref, containerId);
+}
+
+// Liste des stations à afficher (nom exact ou code station)
+const velibStations = [
+  { name: "Pyramide - Ecole du Breuil", container: "velib-breuil" },
+  { code: "12163", container: "velib-vincennes" }
+];
+
+// Fonction utilitaire de normalisation des noms (ignore accents et casse)
+function normalizeString(s) {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+// Fonction d'affichage d'une station Vélib depuis open data Paris
+async function fetchAndDisplayAllVelibStations() {
+  const url = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json";
+  let stations;
   try {
-    const url = `https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${ref}`;
     const res = await fetch(url);
-    const data = await res.json();
-
-    const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit ?? [];
-
-    const now = new Date();
-    const grouped = {};
-    let lastScheduled = null;
-    let firstScheduled = null;
-
-    visits.forEach(v => {
-      const journey = v.MonitoredVehicleJourney;
-      const call = journey.MonitoredCall;
-      const dir = journey.DirectionName?.[0]?.value ?? "Direction inconnue";
-      const expected = new Date(call.ExpectedDepartureTime);
-      if (!lastScheduled || expected > lastScheduled) lastScheduled = expected;
-      if (!firstScheduled || expected < firstScheduled) firstScheduled = expected;
-
-      const untilMin = Math.round((expected - now) / 60000);
-      const labelTime = untilMin <= 1 ? "IMMINENT" : `${expected.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })} · ${untilMin} min`;
-
-      if (!grouped[dir]) grouped[dir] = [];
-      grouped[dir].push(labelTime);
+    stations = await res.json();
+  } catch (e) {
+    velibStations.forEach(sta => {
+      document.getElementById(sta.container).innerHTML = "Erreur Vélib (Paris) : " + e.message;
     });
+    return;
+  }
 
-    const container = document.getElementById(containerId);
-    container.innerHTML = "";
-
-    if (firstScheduled && now < firstScheduled) {
-      const minsToStart = Math.round((firstScheduled - now) / 60000);
-      container.innerHTML = `
-        <div class="status warning">🕓 Service non commencé</div>
-        <div class="small">Premier passage dans ${minsToStart} min</div>`;
-      return;
+  for (const sta of velibStations) {
+    let station;
+    if (sta.code) {
+      // Recherche par code station
+      station = stations.find(s => s.stationcode === sta.code);
+    } else if (sta.name) {
+      // Recherche par nom, tolérante aux accents/casse
+      station = stations.find(s => normalizeString(s.name) === normalizeString(sta.name));
     }
-
-    if (lastScheduled && now > lastScheduled) {
-      const minsToNext = visits.length > 0 ? Math.round((new Date(visits[0].MonitoredVehicleJourney.MonitoredCall.ExpectedDepartureTime) - now) / 60000) : "--";
-      container.innerHTML = `
-        <div class="status warning">🛑 Service terminé</div>
-        <div class="small">Prochain passage estimé dans ${minsToNext} min</div>`;
-      return;
+    if (!station) {
+      document.getElementById(sta.container).innerHTML = "Station Vélib’ non trouvée.";
+      continue;
     }
-
-    for (const dir in grouped) {
-      container.innerHTML += `<div><strong>→ ${dir}</strong></div>`;
-      container.innerHTML += `<div class="departures">${grouped[dir].map(t =>
-        t === "IMMINENT"
-          ? '<div class="badge-time" style="background:#ff4081">IMMINENT</div>'
-          : `<div class="badge-time">${t}</div>`
-      ).join("")}</div>`;
-    }
-
-    container.innerHTML += `<div class="status fluid">🟢 À l'heure</div>`;
-    if (lastScheduled) {
-      container.innerHTML += `<div class="small">Dernier départ prévu à ${lastScheduled.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</div>`;
-    }
-
-  } catch {
-    document.getElementById(containerId).innerHTML = "<p>Erreur de chargement</p>";
+    document.getElementById(sta.container).innerHTML = `
+      <b>${station.name}</b><br>
+      Vélos mécaniques dispo : ${station.mechanical}<br>
+      Vélos électriques dispo : ${station.ebike}<br>
+      Bornes libres : ${station.numdocksavailable}<br>
+      Vélos totaux disponibles : ${station.numbikesavailable}<br>
+      État : ${station.status === "OPEN" ? "Ouverte" : "Fermée"}
+    `;
   }
 }
 
-async function updateVelib() {
-  try {
-    const res = await fetch("https://velib-metropole-opendata.smoove.pro/opendata/Velib_Metropole/station_status.json");
-    const data = await res.json();
-    const station1 = data.data.stations.find(s => s.station_id === "12163");
-    const station2 = data.data.stations.find(s => s.station_id === "12128");
-    document.getElementById("velib12163").textContent =
-      `Hippodrome : ${station1.num_bikes_available} vélos (${station1.num_ebikes_available} électriques) — bornes : ${station1.num_docks_available}`;
-    document.getElementById("velib12128").textContent =
-      `Pyramide : ${station2.num_bikes_available} vélos (${station2.num_ebikes_available} électriques) — bornes : ${station2.num_docks_available}`;
-  } catch {
-    document.getElementById("velib12163").textContent = "Erreur Vélib Hippodrome";
-    document.getElementById("velib12128").textContent = "Erreur Vélib Pyramide";
-  }
-}
+// Appel initial et rafraîchissement toutes les minutes
+fetchAndDisplayAllVelibStations();
+setInterval(fetchAndDisplayAllVelibStations, 60000);
+
+// === MODIFIE refreshAll POUR UTILISER LA NOUVELLE FONCTION ===
 
 function refreshAll() {
   clearAllBlocks();
-  // updateDateTime(); // désactivé à moins d'ajouter les divs correspondants dans le HTML
+  updateDateTime && updateDateTime();
   updateWeather();
-  fetchStopMonitoring("STIF:StopArea:SP:43135:", "rer-content");
-  fetchStopMonitoring("STIF:StopArea:SP:463641:", "bus77-content");
-  fetchStopMonitoring("STIF:StopArea:SP:463644:", "bus201-content");
+  fetchStopMonitoringWithGtfs("STIF:StopArea:SP:43135:", "rer-content", "STIF:StopArea:SP:43135:");
+  fetchStopMonitoringWithGtfs("STIF:StopArea:SP:463641:", "bus77-content", "STIF:StopArea:SP:463641:");
+  fetchStopMonitoringWithGtfs("STIF:StopArea:SP:463644:", "bus201-content", "STIF:StopArea:SP:463644:");
   updateVelib();
-}
+
+
+
 
 refreshAll();
 setInterval(refreshAll, 60000);

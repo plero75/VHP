@@ -1,11 +1,13 @@
 // --- CONFIG PROXY ---
 const PROXY_URL = 'https://ratp-proxy.hippodrome-proxy42.workers.dev/';
 
+// --- TEMPS RÉEL IDFM (RER, Bus, etc) ---
 async function fetchIDFMRealtime(ref, containerId) {
   const apiBase = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring";
   const apiUrl = `${apiBase}?MonitoringRef=${encodeURIComponent(ref)}`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
-  console.log("Proxy URL:", url); // <-- ajout debug
+  // Pour debug : affiche l'URL générée dans la console
+  // console.log("Proxy URL:", url);
 
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -31,7 +33,6 @@ async function fetchIDFMRealtime(ref, containerId) {
   } catch (e) {
     el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
   }
- 
 }
 
 // --- VELIB' ---

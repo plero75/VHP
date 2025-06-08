@@ -9,9 +9,9 @@ async function updateWeather() {
     const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=48.85&longitude=2.35&current_weather=true");
     const data = await res.json();
     const w = data.current_weather;
-    document.getElementById("current-weather").textContent = `🌤 ${w.temperature}°C · Vent ${w.windspeed} km/h`;
+    document.getElementById("weather-content").textContent =   `🌤 ${w.temperature}°C · Vent ${w.windspeed} km/h`;
   } catch {
-    document.getElementById("current-weather").textContent = "🌤 Météo indisponible";
+    document.getElementById("weather-conten").textContent = "🌤 Météo indisponible";
   }
 }
 

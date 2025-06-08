@@ -166,3 +166,13 @@ async function refreshAll() {
 refreshAll();
 setInterval(refreshAll, 60000);
 setInterval(updateDateTime, 1000);
+
+// Masquer le loader après les chargements (appelle hideLoader() après tes fetch si besoin)
+function hideLoader() {
+  const loader = document.getElementById('loading-overlay');
+  if(loader) {
+    loader.classList.add('hidden');
+    setTimeout(() => { loader.style.display = 'none'; }, 400);
+  }
+}
+// Par défaut, déjà appelé au load dans index.html

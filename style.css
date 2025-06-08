@@ -55,8 +55,8 @@ html, body {
 .header {
   grid-area: header;
   padding: 0 32px;
-  background: var(--headerbg);   /* Gris bleu doux */
-  color: var(--headertxt);
+  background: #eaf3fb;      /* Bandeau header doux */
+  color: #1a2543;           /* Texte foncé */
   display: flex;
   flex-direction: row;
   align-items: center;

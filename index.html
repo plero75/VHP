@@ -1,85 +1,22 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Panneau Info Transport LIVE</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div id="loading-overlay">
-    <div>
-      <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMnp3MXc1eDhqZXE4N3BqaDFkaXg3ZXVyaTUyd3MxNnRrZTZrZTVhcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26xBE9hktXvsvBaq4/giphy.gif"
-        alt="Cheval au trot" class="cheval-gif">
-      <div class="loading-text">Chargement en cours...</div>
+<main class="dashboard">
+  <header class="dashboard-header">
+    <div class="datetime-alert-zone">
+      <div id="datetime" class="datetime-big">
+        <span id="current-date">dimanche 8 juin</span>
+        <span id="current-time">10:32:44</span>
+      </div>
+      <div id="traffic-alert" class="traffic-alert hidden">
+        <!-- Alertes trafic injectées ici -->
+      </div>
     </div>
-  </div>
-  <main class="dashboard">
-    <header class="header" tabindex="0">
-      <span class="header-title">
-        <img class="picto" src="img/picto-rer-a.svg" alt="RER A">
-        Panneau d’informations transports
-      </span>
-      <span class="header-right">
-        <span class="meteo" id="weather-content">🌤 ...</span>
-        <span class="horloge">
-          <span id="current-date"></span>
-          <span id="current-time"></span>
-        </span>
-      </span>
-    </header>
-    <!-- RER -->
-    <section class="block rer-block" tabindex="0">
-      <div class="bloc-title">
-        <img class="picto" src="img/picto-rer-a.svg" alt="RER A">
-        <span class="title-label rer-label">RER A — Vincennes</span>
-        <span class="ratp-code">STIF:StopArea:SP:43135:</span>
-      </div>
-      <div class="rer-content" id="rer-content"></div>
-    </section>
-    <!-- BUS -->
-    <section class="block bus-block" tabindex="0">
-      <div class="bloc-title">
-        <img class="picto" src="img/picto-bus.svg" alt="Bus">
-        <span class="title-label bus-label">Bus 77 — Hippodrome</span>
-        <span class="ratp-code">STIF:StopArea:SP:463641:</span>
-      </div>
-      <div class="bus-content" id="bus77-content"></div>
-      <div class="bloc-title bloc-title-secondary">
-        <span class="title-label bus-label">Bus 201 — École du Breuil</span>
-        <span class="ratp-code">STIF:StopArea:SP:463644:</span>
-      </div>
-      <div class="bus-content" id="bus201-content"></div>
-    </section>
-    <!-- VELIB -->
-    <section class="block velib-block" tabindex="0">
-      <div class="bloc-title">
-        <img class="picto" src="img/picto-velib.svg" alt="Vélib">
-        <span class="title-label velib-label">Vélib’ — Vincennes République</span>
-        <span class="ratp-code">21005</span>
-      </div>
-      <div class="velib-content" id="velib-vincennes"></div>
-      <div class="bloc-title bloc-title-secondary">
-        <span class="title-label velib-label">Vélib’ — Château de Vincennes / Breuil</span>
-        <span class="ratp-code">12036</span>
-      </div>
-      <div class="velib-content" id="velib-breuil"></div>
-    </section>
-    <!-- FOOTER -->
-    <footer class="footer">
-      <span class="last-update" id="last-update">Dernière mise à jour...</span>
-    </footer>
-  </main>
-  <script src="script.js"></script>
-  <script>
-    function hideLoader() {
-      const loader = document.getElementById('loading-overlay');
-      if(loader) {
-        loader.classList.add('hidden');
-        setTimeout(() => { loader.style.display = 'none'; }, 400);
-      }
-    }
-    window.addEventListener('load', () => setTimeout(hideLoader, 700));
-  </script>
-</body>
-</html>
+  </header>
+  <section class="dashboard-grid">
+    <!-- blocs transports, météo, velib etc. -->
+    <div class="dashboard-card rer-card">...</div>
+    <div class="dashboard-card bus-card">...</div>
+    <!-- etc. -->
+  </section>
+  <footer class="dashboard-footer">
+    Mise à jour : <span id="last-update">10:32:44</span>
+  </footer>
+</main>

@@ -3,49 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Mobilités Vincennes</title>
+  <title>Dashboard Mobilités RATP</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
-    <div class="logo-bar">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/3/3d/Idfm-logo.svg" alt="IDFM" />
-      <h1>Dashboard Mobilités Vincennes</h1>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/RATP_logo_2021.svg" alt="RATP" />
-    </div>
-    <div id="meta-info">
-      📅 <span id="current-date">--/--</span> — 🕒 <span id="current-time">--:--</span> — 🌤 <span id="current-weather">Chargement météo…</span>
-    </div>
+  <header class="header">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3d/Idfm-logo.svg" class="logo-idf" alt="Île-de-France Mobilités" />
+    <h1>Dashboard Mobilités Vincennes</h1>
+    <img src="https://upload.wikimedia.org/wikipedia/fr/8/8d/Logo_RATP_2021.svg" class="logo-ratp" alt="RATP" />
   </header>
 
-  <main>
-    <div class="card" id="rer-content">
-      <h2><span class="line-badge">A</span>RER A – Joinville-le-Pont</h2>
-      <div class="loader">Chargement…</div>
-    </div>
-    <div class="card" id="bus77-content">
-      <h2><span class="line-badge">77</span>Bus 77 – Hippodrome</h2>
-      <div class="loader">Chargement…</div>
-    </div>
-    <div class="card" id="bus201-content">
-      <h2><span class="line-badge">201</span>Bus 201 – École du Breuil</h2>
-      <div class="loader">Chargement…</div>
-    </div>
-    <div class="card">
-      <h2>🚲 Vélib’</h2>
-      <div id="velib12163">Chargement Hippodrome…</div>
-      <div id="velib12128">Chargement Pyramide…</div>
-    </div>
-    <div class="card">
-      <h2>🚦 Trafic Routier</h2>
-      <div id="traffic-content">Chargement trafic A86 / périphérique…</div>
-    </div>
-  </main>
+  <main class="dashboard">
+    <section class="box rer-a">
+      <h2>🚆 RER A</h2>
+      <div class="double-column">
+        <div>
+          <h3>Vers Paris</h3>
+          <div id="rer-a-a"></div>
+        </div>
+        <div>
+          <h3>Vers Boissy</h3>
+          <div id="rer-a-r"></div>
+        </div>
+      </div>
+      <div class="traffic" id="traffic-rer">Chargement trafic RER A…</div>
+    </section>
 
-  <footer>
-    <div class="footer-note">🐴 À bientôt à l’Hippodrome de Vincennes — Données temps réel IDFM / Vélib / météo</div>
-  </footer>
+    <section class="box bus-77">
+      <h2>🚌 Bus 77</h2>
+      <div class="double-column">
+        <div>
+          <h3>Vers Gare de Lyon</h3>
+          <div id="bus77-a"></div>
+        </div>
+        <div>
+          <h3>Vers Joinville</h3>
+          <div id="bus77-r"></div>
+        </div>
+      </div>
+      <div class="traffic" id="traffic-bus77">Chargement trafic Bus 77…</div>
+    </section>
+
+    <section class="box bus-201">
+      <h2>🚌 Bus 201</h2>
+      <div class="double-column">
+        <div>
+          <h3>Vers Gare de Lyon</h3>
+          <div id="bus201-a"></div>
+        </div>
+        <div>
+          <h3>Vers Joinville</h3>
+          <div id="bus201-r"></div>
+        </div>
+      </div>
+      <div class="traffic" id="traffic-bus201">Chargement trafic Bus 201…</div>
+    </section>
+
+    <section class="box velib">
+      <h2>🚲 Vélib</h2>
+      <div id="velib-info">Chargement Vélib…</div>
+    </section>
+
+    <section class="box meteo">
+      <h2>⛅ Météo</h2>
+      <div id="meteo-info">Chargement météo…</div>
+    </section>
+
+    <section class="box air">
+      <h2>🌫 Qualité de l'air</h2>
+      <div id="air-info">Chargement AQI…</div>
+    </section>
+
+    <section class="box update">
+      <h2>🕒 Dernière mise à jour</h2>
+      <div id="update-time">--:--:--</div>
+    </section>
+  </main>
 
   <script src="script.js"></script>
 </body>

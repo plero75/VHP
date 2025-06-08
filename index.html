@@ -1,33 +1,16 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Panneau Info Transport LIVE</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <main class="dashboard">
-    <header class="dashboard-header">
-      <div class="datetime-alert-zone">
-        <div id="datetime" class="datetime-big">
-          <span id="current-date">dimanche 8 juin</span>
-          <span id="current-time">10:38:39</span>
-        </div>
-        <div id="traffic-alert" class="traffic-alert hidden"></div>
-      </div>
-    </header>
-    <section class="dashboard-grid">
-      <div class="dashboard-card rer-card" id="rer-card"></div>
-      <div class="dashboard-card bus-card" id="bus-card"></div>
-      <div class="dashboard-card velib-card" id="velib-card"></div>
-      <div class="dashboard-card meteo-card" id="meteo-card"></div>
-      <!-- Ajoute d'autres blocs ici -->
-    </section>
-    <footer class="dashboard-footer">
-      Mise à jour : <span id="last-update">10:38:39</span>
-    </footer>
-  </main>
-  <script src="script.js"></script>
-</body>
-</html>
+a<main class="dashboard">
+  <header class="dashboard-header">
+    <!-- Date / Heure adaptative + Alerte trafic -->
+  </header>
+  <section class="dashboard-grid">
+    <div class="dashboard-card rer-card">...RER...</div>
+    <div class="dashboard-card bus-card">...Bus...</div>
+    <div class="dashboard-card velib-card">...Vélib...</div>
+    <div class="dashboard-card meteo-card">...Météo...</div>
+    <div class="dashboard-card trafic-card">...Trafic général...</div>
+    <!-- Ajoute autant de blocs que tu veux -->
+  </section>
+  <footer class="dashboard-footer">
+    ...
+  </footer>
+</main>

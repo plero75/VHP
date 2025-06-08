@@ -301,7 +301,60 @@ function updateMeteoHoursCard(data) {
     </div>
   `;
 }
+// ====================
+// MOT DU JOUR
+// ====================
 
+const motsDuJour = [
+  {
+    "Mot":"À cheval",
+    "Définition":"C’est jouer à la fois Gagnant et Placé en Simple ou en Couplé. Exemple : Couplé Gagnant 4-6 et Couplé Placé 4-6."
+  },
+  {
+    "Mot":"Action",
+    "Définition":"Expression qualifiant les foulées du cheval. Elle peut être bonne, grande, mauvaise, raccourcie, petite, etc."
+  },
+  // ... (tout ton JSON ci-dessus, recopié ici)
+  {
+    "Mot":"Groupe 1",
+    "Définition":"Niveau le plus prestigieux des courses, réservé aux grandes épreuves comme le Prix d'Amérique."
+  }
+];
+
+// Choisir un mot du jour en fonction de la date (pour que ça change tous les jours)
+function pickMotDuJour() {
+  const d = new Date();
+  // Changement chaque jour, mais toujours le même pour la même date
+  const idx = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
+  const motIdx = idx % motsDuJour.length;
+  return motsDuJour[motIdx];
+}
+
+// Affichage du bloc "Mot du jour"
+function updateMotDuJourCard() {
+  const mot = pickMotDuJour();
+  document.getElementById('motjour-card').innerHTML = `
+    <h2>📖 Mot du jour</h2>
+    <div>
+      <span style="font-weight:bold; font-size:1.08em; color:#ffd900;">${mot.Mot}</span>
+      <br>
+      <span style="font-size:0.98em; color:#fff;">${mot.Définition}</span>
+    </div>
+  `;
+}
+
+// Appel dans updateAll()
+async function updateAll() {
+  fetchVelibCard();
+  fetchRERCard();
+  fetchBusCard("77", "STIF:StopArea:SP:463641:", "bus77-card");
+  fetchBusCard("201", "STIF:StopArea:SP:463644:", "bus201-card");
+  fetchMeteoCard();
+  fetchMeteoHoursCard();
+  updateMotDuJourCard(); // AJOUTÉ ICI
+}
+updateAll();
+setInterval(updateAll, 60000);
 // Pour test alerte :
 // showTrafficAlert("Trafic perturbé sur la ligne A");
 // hideTrafficAlert();

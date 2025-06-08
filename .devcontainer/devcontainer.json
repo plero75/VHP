@@ -1,0 +1,11 @@
+{
+  "name": "Dashboard VHP",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ritwickdey.LiveServer"]
+    }
+  },
+  "forwardPorts": [5500],
+  "postCreateCommand": "npm install -g live-server"
+}

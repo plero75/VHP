@@ -1,6 +1,5 @@
 // ====================
 // Date/Heure dynamique
-// ====================
 function updateDateTime() {
   const now = new Date();
   const options = { weekday: 'long', day: 'numeric', month: 'long' };
@@ -13,7 +12,6 @@ updateDateTime();
 
 // ====================
 // Alerte trafic dynamique
-// ====================
 function showTrafficAlert(msg) {
   const alert = document.getElementById('traffic-alert');
   if(alert) {
@@ -42,36 +40,31 @@ function normalize(str) {
 // ====================
 // Vélib (OpenData Paris) : 2 stations dans la même card
 async function fetchVelibCard() {
-  // Hippodrome = 12163, Pyramide - École du Breuil = 12128
   const stationCodes = ["12163", "12128"];
   try {
     const res = await fetch("https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?where=stationcode in ('12163','12128')");
     const data = await res.json();
     if (!data.results || data.results.length === 0) throw new Error('Aucune donnée station');
-    // On trie pour toujours avoir Hippodrome puis Pyramide dans l'affichage
     const staHippo = data.results.find(s => s.stationcode === "12163");
     const staBreuil = data.results.find(s => s.stationcode === "12128");
     updateVelibCard({
-      hippo: staHippo
-        ? {
-            station: staHippo.name,
-            code: staHippo.stationcode,
-            mechanical: staHippo.mechanical,
-            ebike: staHippo.ebike,
-            docks: staHippo.numdocksavailable,
-            alert: staHippo.status !== "OPEN" ? "Station fermée" : ""
-          }
-        : null,
-      breuil: staBreuil
-        ? {
-            station: staBreuil.name,
-            code: staBreuil.stationcode,
-            mechanical: staBreuil.mechanical,
-            ebike: staBreuil.ebike,
-            docks: staBreuil.numdocksavailable,
-            alert: staBreuil.status !== "OPEN" ? "Station fermée" : ""
-          }
-        : null
+      hippo: staHippo ? {
+        station: staHippo.name,
+        code: staHippo.stationcode,
+        mechanical: staHippo.mechanical,
+        ebike: staHippo.ebike,
+        docks: staHippo.numdocksavailable,
+        alert: staHippo.status !== "OPEN" ? "Station fermée" : ""
+      } : null,
+      breuil: staBreuil ? {
+        station: staBreuil.name,
+        code: staBreuil.stationcode,
+        mechanical: staBreuil.mechanical,
+        ebike: staBreuil.ebike,
+        docks: staBreuil.numdocksavailable,
+        alert: staBreuil.status !== "OPEN" ? "Station fermée" : ""
+      } : null,
+      error: null
     });
   } catch (e) {
     updateVelibCard({
@@ -109,6 +102,7 @@ function updateVelibCard(data) {
     </div>
   `;
 }
+
 // ====================
 // RER & BUS (IDFM/prim API via proxy)
 const PROXY_URL = "https://ratp-proxy.hippodrome-proxy42.workers.dev/";
@@ -129,23 +123,19 @@ async function fetchIDFMStop(ref) {
 }
 
 // ====================
-// RER A : directions réelles, label Paris en parenthèses, affichage sur 2 lignes
+// RER A : directions Joinville, trafic, etc.
 async function fetchRERCard() {
   // Joinville-le-Pont (STIF:StopArea:SP:43839:)
-  const ref = "STIF:StopArea:SP:43839:"; // Joinville-le-Pont
+  const ref = "STIF:StopArea:SP:43839:";
   const visits = await fetchIDFMStop(ref);
   if (!visits) {
-    updateRERCard({ nextSaintGermain: [], nextBoissy: [], alert: "Données indisponibles", trafic: "Trafic inconnu" });
+    updateRERCard({ nextSaintGermain: [], nextBoissy: [], trafic: "Données indisponibles" });
     return;
   }
-
-  // Directions réelles depuis Joinville-le-Pont
   const destSaintGermain = ["saint-germain", "la defense", "nanterre", "cergy", "poissy"];
   const destBoissy = ["boissy", "marne-la-vallee", "torcy"];
-
   let nextSaintGermain = [], nextBoissy = [];
   let traficStatus = "Trafic normal";
-
   for (const v of visits) {
     const dest = (
       v.MonitoredVehicleJourney?.DestinationName?.[0]?.value ||
@@ -162,8 +152,6 @@ async function fetchRERCard() {
     };
     if (destSaintGermain.some(dp => normalize(dest).includes(dp))) nextSaintGermain.push(info);
     else if (destBoissy.some(db => normalize(dest).includes(db))) nextBoissy.push(info);
-
-    // Récupération état trafic (ArrivalStatus)
     if (
       v.MonitoredVehicleJourney?.MonitoredCall?.ArrivalStatus === "delayed"
       && traficStatus === "Trafic normal"
@@ -171,17 +159,14 @@ async function fetchRERCard() {
       traficStatus = "Perturbation sur la ligne";
     }
   }
-
   updateRERCard({
     nextSaintGermain,
     nextBoissy,
-    alert: "",
     trafic: traficStatus
   });
 }
 
-// Affichage RER A avec Paris en parenthèses
-function updateRERCard({nextSaintGermain, nextBoissy, alert, trafic}) {
+function updateRERCard({nextSaintGermain, nextBoissy, trafic}) {
   document.getElementById('rer-card').innerHTML = `
     <h2>
       <img src="img/picto-rer-a.svg" alt="RER A" style="height:1.2em;vertical-align:middle;">
@@ -203,15 +188,12 @@ function updateRERCard({nextSaintGermain, nextBoissy, alert, trafic}) {
       <div style="margin-top:1em;font-size:1.1em;">
         <b>État du trafic RER A :</b> <span>${trafic}</span>
       </div>
-      <div style="margin-top:0.6em;">
-        ${alert ? `<span class="status warning">${alert}</span>` : ""}
-      </div>
     </div>
   `;
 }
 
 // ====================
-// BUS : plus de code d’arrêt, bug fix, dernier passage si possible
+// BUS
 async function fetchBusCard(line, ref, cardId) {
   const visits = await fetchIDFMStop(ref);
   if (!visits) {
@@ -231,7 +213,6 @@ async function fetchBusCard(line, ref, cardId) {
       wait: mins !== null ? (mins > 0 ? `${mins} min` : "à l'instant") : "?"
     };
   });
-  // Dernier passage du jour (si data dispo dans visites)
   let last = "";
   if (visits.length > 0) {
     const aimed = visits[visits.length-1].MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
@@ -243,8 +224,6 @@ async function fetchBusCard(line, ref, cardId) {
   const alert = visits.find(v => v.MonitoredVehicleJourney?.MonitoredCall?.ArrivalStatus === "delayed") ? "Perturbation" : "";
   updateBusCard({line, direction, next, alert, last}, cardId);
 }
-
-// Affichage BUS
 function updateBusCard(data, id) {
   document.getElementById(id).innerHTML = `
     <h2>
@@ -254,7 +233,7 @@ function updateBusCard(data, id) {
     <div>
       <div><span class="bus-line-idfm">${data.line}</span> ${data.direction}</div>
       <ul style="margin:0;padding:0 0 0 1em;">
-        ${data.next.map(t => `<li>${t.time} <span class="temps">${t.wait}</span></li>`).join('') || "<li>—</li>"}
+        ${data.next.map(t => `<li><span>${t.time}</span><br><span class="temps">${t.wait}</span></li>`).join('') || "<li>—</li>"}
       </ul>
       <div style="margin-top:0.6em;">
         ${data.alert ? `<span class="status warning">${data.alert}</span>` : ""}
@@ -325,50 +304,6 @@ async function fetchMeteoHoursCard() {
   }
 }
 
-// ====================
-// Bloc "Mot du jour"
-const motsDuJour = [ 
-  // ... (ton JSON complet ici, tronqué pour lisibilité)
-  {"Mot":"À cheval","Définition":"C’est jouer à la fois Gagnant et Placé en Simple ou en Couplé. Exemple : Couplé Gagnant 4-6 et Couplé Placé 4-6."},
-  {"Mot":"Action","Définition":"Expression qualifiant les foulées du cheval. Elle peut être bonne, grande, mauvaise, raccourcie, petite, etc."},
-  // ... etc ...
-  {"Mot":"Groupe 1","Définition":"Niveau le plus prestigieux des courses, réservé aux grandes épreuves comme le Prix d'Amérique."}
-];
-function pickMotDuJour() {
-  const d = new Date();
-  const idx = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
-  const motIdx = idx % motsDuJour.length;
-  return motsDuJour[motIdx];
-}
-function updateMotDuJourCard() {
-  const mot = pickMotDuJour();
-  document.getElementById('motjour-card').innerHTML = `
-    <h2>📖 Mot du jour</h2>
-    <div>
-      <span style="font-weight:bold; font-size:1.08em; color:#ffd900;">${mot.Mot}</span>
-      <br>
-      <span style="font-size:0.98em; color:#fff;">${mot.Définition}</span>
-    </div>
-  `;
-}
-
-// ====================
-// Affichage des blocs météo et Vélib (inchangé)
-function updateVelibCard(data) {
-  document.getElementById('velib-card').innerHTML = `
-    <h2>
-      <span class="velib-picto">🚲</span>Vélib'
-    </h2>
-    <div>
-      <b>${data.station}</b> <span class="ratp-badge">${data.code}</span><br>
-      mécaniques : <b>${data.mechanical}</b> &nbsp;&nbsp; électriques : <b>${data.ebike}</b><br>
-      bornes libres : <b>${data.docks}</b>
-      <div style="margin-top:0.6em;">
-        ${data.alert ? `<span class="status warning">${data.alert}</span>` : ""}
-      </div>
-    </div>
-  `;
-}
 function updateMeteoCard(data) {
   document.getElementById('meteo-card').innerHTML = `
     <h2>
@@ -398,6 +333,31 @@ function updateMeteoHoursCard(data) {
 }
 
 // ====================
+// Bloc "Mot du jour"
+const motsDuJour = [
+  {"Mot":"À cheval","Définition":"C’est jouer à la fois Gagnant et Placé en Simple ou en Couplé. Exemple : Couplé Gagnant 4-6 et Couplé Placé 4-6."},
+  // ... (les autres mots)
+  {"Mot":"Groupe 1","Définition":"Niveau le plus prestigieux des courses, réservé aux grandes épreuves comme le Prix d'Amérique."}
+];
+function pickMotDuJour() {
+  const d = new Date();
+  const idx = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
+  const motIdx = idx % motsDuJour.length;
+  return motsDuJour[motIdx];
+}
+function updateMotDuJourCard() {
+  const mot = pickMotDuJour();
+  document.getElementById('motjour-card').innerHTML = `
+    <h2>📖 Mot du jour</h2>
+    <div>
+      <span style="font-weight:bold; font-size:1.08em; color:#ffd900;">${mot.Mot}</span>
+      <br>
+      <span style="font-size:0.98em; color:#fff;">${mot.Définition}</span>
+    </div>
+  `;
+}
+
+// ====================
 // UPDATE ALL
 async function updateAll() {
   fetchVelibCard();
@@ -410,8 +370,3 @@ async function updateAll() {
 }
 updateAll();
 setInterval(updateAll, 60000);
-
-// ====================
-// Pour test alerte :
-// showTrafficAlert("Trafic perturbé sur la ligne A");
-// hideTrafficAlert();

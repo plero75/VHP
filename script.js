@@ -27,6 +27,8 @@ async function fetchStopMonitoring(ref, containerId) {
     const url = `https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${ref}`;
     const res = await fetch(url);
     const data = await res.json();
+    console.log(JSON.stringify(data, null, 2)); // <-- Ajoute cette ligne
+
     const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit ?? [];
 
     const now = new Date();

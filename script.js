@@ -23,8 +23,8 @@ async function fetchIDFMRealtime(ref, containerId) {
     el.innerHTML = visits.slice(0, 5).map(v => {
       const aimed = v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
       const dt = aimed ? new Date(aimed) : null;
-      const dest = v.MonitoredVehicleJourney?.DestinationName?.[0] || '';
-      const line = v.MonitoredVehicleJourney?.LineRef || '';
+   const dest = getValue(v.MonitoredVehicleJourney?.DestinationName);
+const line = getValue(v.MonitoredVehicleJourney?.LineRef);
       const now = new Date();
       const mins = dt ? Math.round((dt - now) / 60000) : null;
       return `<span class="badge-time">${dt ? dt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "?"}</span>
@@ -33,6 +33,16 @@ async function fetchIDFMRealtime(ref, containerId) {
   } catch (e) {
     el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
   }
+}
+
+// --- VELIB' ---
+const velibStations = [
+  { name: "Pyramide - Ecole du Breuil", container: "velib-breuil" },
+  { code: "12163", container: "velib-vincennes" }
+];
+
+function normalizeString(s) {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 // --- OUTIL POUR LIRE LES VALEURS SIRI ---
 function getValue(obj) {
@@ -75,16 +85,6 @@ async function fetchIDFMRealtime(ref, containerId) {
     el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
   }
 }
-// --- VELIB' ---
-const velibStations = [
-  { name: "Pyramide - Ecole du Breuil", container: "velib-breuil" },
-  { code: "12163", container: "velib-vincennes" }
-];
-
-function normalizeString(s) {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
-
 async function fetchAndDisplayAllVelibStations() {
   const url = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json";
   let stations;

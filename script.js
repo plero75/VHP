@@ -34,14 +34,14 @@ function hideTrafficAlert() {
 }
 
 // ====================
-// DATA DYNAMIQUE (AVEC FETCH/API)
-// ====================
+// Helper pour normaliser les libellés (RER directions)
+function normalize(str) {
+  return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 
-// -----------
+// ====================
 // Vélib (OpenData Paris)
-// -----------
 async function fetchVelibCard() {
-  // Ex: station 21005 "Pyramide - École du Breuil"
   const stationCode = "21005";
   try {
     const res = await fetch("https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?where=stationcode='" + stationCode + "'");
@@ -68,9 +68,8 @@ async function fetchVelibCard() {
   }
 }
 
-// -----------
+// ====================
 // RER & BUS (IDFM/prim API via proxy)
-// -----------
 const PROXY_URL = "https://ratp-proxy.hippodrome-proxy42.workers.dev/";
 
 async function fetchIDFMStop(ref) {
@@ -88,64 +87,120 @@ async function fetchIDFMStop(ref) {
   }
 }
 
+// ====================
+// RER A : deux directions, plus de code d’arrêt, bug fix
 async function fetchRERCard() {
-  // Vincennes (STIF:StopArea:SP:43135:)
   const ref = "STIF:StopArea:SP:43135:";
   const visits = await fetchIDFMStop(ref);
   if (!visits) {
-    updateRERCard({
-      code: ref, direction: "?", next: [], alert: "Données indisponibles"
-    });
+    updateRERCard({ nextParis: [], nextBoissy: [], alert: "Données indisponibles" });
     return;
   }
-  const direction = visits[0]?.MonitoredVehicleJourney?.DirectionName || "Inconnu";
-  const next = visits.slice(0, 4).map(v => {
-    const time = v.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime || v.MonitoredVehicleJourney.MonitoredCall.AimedArrivalTime;
-    const dt = time ? new Date(time) : null;
+  const destParis = ["paris", "la defense", "saint-germain"];
+  const destBoissy = ["boissy", "marne-la-vallee", "torcy"];
+  let nextParis = [], nextBoissy = [];
+  for (const v of visits) {
+    const dest = v.MonitoredVehicleJourney?.DestinationName?.[0]?.value || v.MonitoredVehicleJourney?.DestinationName || "";
+    const aimed = v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
+    const dt = aimed ? new Date(aimed) : null;
     const now = new Date();
-    const mins = dt ? Math.round((dt - now) / 60000) : "?";
-    return {
+    const mins = dt ? Math.round((dt - now) / 60000) : null;
+    const info = {
       time: dt ? dt.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'}) : "--:--",
-      wait: mins !== "?" ? (mins > 0 ? `${mins} min` : "à l'instant") : "?"
+      wait: mins !== null ? (mins > 0 ? `${mins} min` : "à l'instant") : "?"
     };
-  });
-  // Simple check for alert on RER
-  const alert = visits.find(v =>
-    v.MonitoredVehicleJourney?.MonitoredCall?.ArrivalStatus === "delayed") ? "Perturbation" : "";
-  updateRERCard({code: ref, direction, next, alert});
+    if (destParis.some(dp => normalize(dest).includes(dp))) nextParis.push(info);
+    else if (destBoissy.some(db => normalize(dest).includes(db))) nextBoissy.push(info);
+  }
+  const alert = visits.find(v => v.MonitoredVehicleJourney?.MonitoredCall?.ArrivalStatus === "delayed") ? "Perturbation" : "";
+  updateRERCard({ nextParis, nextBoissy, alert });
 }
 
+// Affichage RER A
+function updateRERCard({nextParis, nextBoissy, alert}) {
+  document.getElementById('rer-card').innerHTML = `
+    <h2>
+      <img src="img/picto-rer-a.svg" alt="RER A" style="height:1.2em;vertical-align:middle;">
+      RER A
+    </h2>
+    <div>
+      <div style="font-weight:bold;margin-bottom:0.4em;">
+        <span style="color:#e2001a;">Vers Paris</span>
+        <span style="margin-left:2em;color:#e2001a;">Vers Boissy</span>
+      </div>
+      <div style="display:flex;gap:2em;">
+        <ul style="margin:0;padding:0 1em 0 1em;list-style:none;">
+          ${nextParis.slice(0, 4).map(t => `<li>${t.time} <span class="temps">${t.wait}</span></li>`).join('') || "<li>—</li>"}
+        </ul>
+        <ul style="margin:0;padding:0 1em 0 1em;list-style:none;">
+          ${nextBoissy.slice(0, 4).map(t => `<li>${t.time} <span class="temps">${t.wait}</span></li>`).join('') || "<li>—</li>"}
+        </ul>
+      </div>
+      <div style="margin-top:0.6em;">
+        ${alert ? `<span class="status warning">${alert}</span>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+// ====================
+// BUS : plus de code d’arrêt, bug fix, dernier passage si possible
 async function fetchBusCard(line, ref, cardId) {
   const visits = await fetchIDFMStop(ref);
   if (!visits) {
     updateBusCard({
-      line, code: ref, direction: "?", next: [], alert: "Données indisponibles"
+      line, direction: "?", next: [], alert: "Données indisponibles", last: ""
     }, cardId);
     return;
   }
   const direction = visits[0]?.MonitoredVehicleJourney?.DirectionName || "Inconnu";
   const next = visits.slice(0, 4).map(v => {
-    const time = v.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime || v.MonitoredVehicleJourney.MonitoredCall.AimedArrivalTime;
-    const dt = time ? new Date(time) : null;
+    const aimed = v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
+    const dt = aimed ? new Date(aimed) : null;
     const now = new Date();
-    const mins = dt ? Math.round((dt - now) / 60000) : "?";
+    const mins = dt ? Math.round((dt - now) / 60000) : null;
     return {
       time: dt ? dt.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'}) : "--:--",
-      wait: mins !== "?" ? (mins > 0 ? `${mins} min` : "à l'instant") : "?"
+      wait: mins !== null ? (mins > 0 ? `${mins} min` : "à l'instant") : "?"
     };
   });
-  // Simple check for alert on bus
-  const alert = visits.find(v =>
-    v.MonitoredVehicleJourney?.MonitoredCall?.ArrivalStatus === "delayed") ? "Perturbation" : "";
-  updateBusCard({line, code: ref, direction, next, alert}, cardId);
+  // Dernier passage du jour (si data dispo dans visites)
+  let last = "";
+  if (visits.length > 0) {
+    const aimed = visits[visits.length-1].MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
+    if (aimed) {
+      const dt = new Date(aimed);
+      last = dt.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+    }
+  }
+  const alert = visits.find(v => v.MonitoredVehicleJourney?.MonitoredCall?.ArrivalStatus === "delayed") ? "Perturbation" : "";
+  updateBusCard({line, direction, next, alert, last}, cardId);
 }
 
-// -----------
+// Affichage BUS
+function updateBusCard(data, id) {
+  document.getElementById(id).innerHTML = `
+    <h2>
+      <img src="img/picto-bus.svg" alt="Bus" style="height:1.2em;vertical-align:middle;">
+      Bus ${data.line}
+    </h2>
+    <div>
+      <div><span class="bus-line-idfm">${data.line}</span> ${data.direction}</div>
+      <ul style="margin:0;padding:0 0 0 1em;">
+        ${data.next.map(t => `<li>${t.time} <span class="temps">${t.wait}</span></li>`).join('') || "<li>—</li>"}
+      </ul>
+      <div style="margin-top:0.6em;">
+        ${data.alert ? `<span class="status warning">${data.alert}</span>` : ""}
+        ${data.last ? `<div style="margin-top:0.5em;font-size:0.95em;color:#ffd900;">Dernier passage du jour prévu : ${data.last}</div>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+// ====================
 // Météo (Open-Meteo)
-// -----------
 async function fetchMeteoCard() {
   try {
-    // Paris - Vincennes
     const lat = 48.841; const lon = 2.441;
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
     const res = await fetch(url);
@@ -175,7 +230,6 @@ async function fetchMeteoCard() {
 
 async function fetchMeteoHoursCard() {
   try {
-    // Paris - Vincennes
     const lat = 48.841; const lon = 2.441;
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,weathercode&forecast_days=1&timezone=Europe%2FParis`;
     const res = await fetch(url);
@@ -185,7 +239,6 @@ async function fetchMeteoHoursCard() {
     for(let i=0; i<6; ++i) {
       const idx = i + now.getHours();
       if (!data.hourly || !data.hourly.time[idx]) continue;
-      // ex: 2025-06-08T15:00
       const hourStr = data.hourly.time[idx].split("T")[1].slice(0, 2) + "h";
       const temp = Math.round(data.hourly.temperature_2m[idx]);
       const code = data.hourly.weathercode[idx];
@@ -206,23 +259,34 @@ async function fetchMeteoHoursCard() {
 }
 
 // ====================
-// UPDATE ALL
-// ====================
-async function updateAll() {
-  fetchVelibCard();
-  fetchRERCard();
-  fetchBusCard("77", "STIF:StopArea:SP:463641:", "bus77-card");
-  fetchBusCard("201", "STIF:StopArea:SP:463644:", "bus201-card");
-  fetchMeteoCard();
-  fetchMeteoHoursCard();
+// Bloc "Mot du jour"
+const motsDuJour = [ 
+  // ... (ton JSON complet ici, tronqué pour lisibilité)
+  {"Mot":"À cheval","Définition":"C’est jouer à la fois Gagnant et Placé en Simple ou en Couplé. Exemple : Couplé Gagnant 4-6 et Couplé Placé 4-6."},
+  {"Mot":"Action","Définition":"Expression qualifiant les foulées du cheval. Elle peut être bonne, grande, mauvaise, raccourcie, petite, etc."},
+  // ... etc ...
+  {"Mot":"Groupe 1","Définition":"Niveau le plus prestigieux des courses, réservé aux grandes épreuves comme le Prix d'Amérique."}
+];
+function pickMotDuJour() {
+  const d = new Date();
+  const idx = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
+  const motIdx = idx % motsDuJour.length;
+  return motsDuJour[motIdx];
 }
-updateAll();
-setInterval(updateAll, 60000);
+function updateMotDuJourCard() {
+  const mot = pickMotDuJour();
+  document.getElementById('motjour-card').innerHTML = `
+    <h2>📖 Mot du jour</h2>
+    <div>
+      <span style="font-weight:bold; font-size:1.08em; color:#ffd900;">${mot.Mot}</span>
+      <br>
+      <span style="font-size:0.98em; color:#fff;">${mot.Définition}</span>
+    </div>
+  `;
+}
 
 // ====================
-// HTML RENDERING (inchangé)
-// ====================
-
+// Affichage des blocs météo et Vélib (inchangé)
 function updateVelibCard(data) {
   document.getElementById('velib-card').innerHTML = `
     <h2>
@@ -232,42 +296,6 @@ function updateVelibCard(data) {
       <b>${data.station}</b> <span class="ratp-badge">${data.code}</span><br>
       mécaniques : <b>${data.mechanical}</b> &nbsp;&nbsp; électriques : <b>${data.ebike}</b><br>
       bornes libres : <b>${data.docks}</b>
-      <div style="margin-top:0.6em;">
-        ${data.alert ? `<span class="status warning">${data.alert}</span>` : ""}
-      </div>
-    </div>
-  `;
-}
-function updateRERCard(data) {
-  document.getElementById('rer-card').innerHTML = `
-    <h2>
-      <img src="img/picto-rer-a.svg" alt="RER A" style="height:1.2em;vertical-align:middle;">
-      RER A
-      <span class="ratp-badge">${data.code}</span>
-    </h2>
-    <div>
-      <div><span class="rer-line-idfm">A</span> ${data.direction}</div>
-      <ul style="margin:0;padding:0 0 0 1em;">
-        ${data.next.map(t => `<li>${t.time} <span class="temps">${t.wait}</span></li>`).join('')}
-      </ul>
-      <div style="margin-top:0.6em;">
-        ${data.alert ? `<span class="status warning">${data.alert}</span>` : ""}
-      </div>
-    </div>
-  `;
-}
-function updateBusCard(data, id) {
-  document.getElementById(id).innerHTML = `
-    <h2>
-      <img src="img/picto-bus.svg" alt="Bus" style="height:1.2em;vertical-align:middle;">
-      Bus ${data.line}
-      <span class="ratp-badge">${data.code}</span>
-    </h2>
-    <div>
-      <div><span class="bus-line-idfm">${data.line}</span> ${data.direction}</div>
-      <ul style="margin:0;padding:0 0 0 1em;">
-        ${data.next.map(t => `<li>${t.time} <span class="temps">${t.wait}</span></li>`).join('')}
-      </ul>
       <div style="margin-top:0.6em;">
         ${data.alert ? `<span class="status warning">${data.alert}</span>` : ""}
       </div>
@@ -301,49 +329,9 @@ function updateMeteoHoursCard(data) {
     </div>
   `;
 }
+
 // ====================
-// MOT DU JOUR
-// ====================
-
-const motsDuJour = [
-  {
-    "Mot":"À cheval",
-    "Définition":"C’est jouer à la fois Gagnant et Placé en Simple ou en Couplé. Exemple : Couplé Gagnant 4-6 et Couplé Placé 4-6."
-  },
-  {
-    "Mot":"Action",
-    "Définition":"Expression qualifiant les foulées du cheval. Elle peut être bonne, grande, mauvaise, raccourcie, petite, etc."
-  },
-  // ... (tout ton JSON ci-dessus, recopié ici)
-  {
-    "Mot":"Groupe 1",
-    "Définition":"Niveau le plus prestigieux des courses, réservé aux grandes épreuves comme le Prix d'Amérique."
-  }
-];
-
-// Choisir un mot du jour en fonction de la date (pour que ça change tous les jours)
-function pickMotDuJour() {
-  const d = new Date();
-  // Changement chaque jour, mais toujours le même pour la même date
-  const idx = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
-  const motIdx = idx % motsDuJour.length;
-  return motsDuJour[motIdx];
-}
-
-// Affichage du bloc "Mot du jour"
-function updateMotDuJourCard() {
-  const mot = pickMotDuJour();
-  document.getElementById('motjour-card').innerHTML = `
-    <h2>📖 Mot du jour</h2>
-    <div>
-      <span style="font-weight:bold; font-size:1.08em; color:#ffd900;">${mot.Mot}</span>
-      <br>
-      <span style="font-size:0.98em; color:#fff;">${mot.Définition}</span>
-    </div>
-  `;
-}
-
-// Appel dans updateAll()
+// UPDATE ALL
 async function updateAll() {
   fetchVelibCard();
   fetchRERCard();
@@ -351,10 +339,12 @@ async function updateAll() {
   fetchBusCard("201", "STIF:StopArea:SP:463644:", "bus201-card");
   fetchMeteoCard();
   fetchMeteoHoursCard();
-  updateMotDuJourCard(); // AJOUTÉ ICI
+  updateMotDuJourCard();
 }
 updateAll();
 setInterval(updateAll, 60000);
+
+// ====================
 // Pour test alerte :
 // showTrafficAlert("Trafic perturbé sur la ligne A");
 // hideTrafficAlert();

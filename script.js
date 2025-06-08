@@ -1,7 +1,8 @@
 function updateDateTime() {
-  const now = new Date();
-  document.getElementById("current-date").textContent = now.toLocaleDateString("fr-FR");
-  document.getElementById("current-time").textContent = now.toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' });
+  // Ces IDs n'existent pas dans ton HTML actuellement :
+  // document.getElementById("current-date").textContent = now.toLocaleDateString("fr-FR");
+  // document.getElementById("current-time").textContent = now.toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' });
+  // Soit tu ajoutes les divs correspondantes dans index.html, soit tu retires cette fonction
 }
 
 async function updateWeather() {
@@ -11,7 +12,7 @@ async function updateWeather() {
     const w = data.current_weather;
     document.getElementById("weather-content").textContent =   `🌤 ${w.temperature}°C · Vent ${w.windspeed} km/h`;
   } catch {
-    document.getElementById("weather-conten").textContent = "🌤 Météo indisponible";
+    document.getElementById("weather-content").textContent = "🌤 Météo indisponible";
   }
 }
 
@@ -27,7 +28,6 @@ async function fetchStopMonitoring(ref, containerId) {
     const url = `https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${ref}`;
     const res = await fetch(url);
     const data = await res.json();
-    console.log(JSON.stringify(data, null, 2)); // <-- Ajoute cette ligne
 
     const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit ?? [];
 
@@ -107,7 +107,7 @@ async function updateVelib() {
 
 function refreshAll() {
   clearAllBlocks();
-  updateDateTime();
+  // updateDateTime(); // désactivé à moins d'ajouter les divs correspondants dans le HTML
   updateWeather();
   fetchStopMonitoring("STIF:StopArea:SP:43135:", "rer-content");
   fetchStopMonitoring("STIF:StopArea:SP:463641:", "bus77-content");

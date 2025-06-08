@@ -1,146 +1,178 @@
+:root {
+  --primary: #e2001a;
+  --bus: #009f4d;
+  --velib: #4e8cd6;
+  --headerbg: #eaf3fb;   /* Bandeau header doux, pas rouge */
+  --headertxt: #1a2543;
+  --bg: #f7fafd;
+  --panel: #fff;
+  --shadow: 0 6px 32px #0001;
+  --radius: 22px;
+  --gap: 18px;
+}
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #f4f4f4;
-  font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
-  color: #222;
-}
-
-body {
+  background: var(--bg);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #182033;
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
+  min-width: 100vw;
   overflow: hidden;
 }
-
 .dashboard {
+  display: grid;
+  grid-template-areas: 
+    "header header header"
+    "left center right"
+    "footer footer footer";
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-rows: 110px 1fr 60px;
+  height: 100vh;
+  width: 100vw;
+  gap: var(--gap);
+  padding: var(--gap);
+  box-sizing: border-box;
+}
+.block {
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 18px 18px 22px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  height: 100vh;
-  width: 1080px;
-  max-width: 100vw;
-  margin: auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.2s;
 }
-
-header {
-  width: 100%;
+.block:focus-within, .block:hover {
+  box-shadow: 0 8px 38px #0003;
+}
+.header {
+  grid-area: header;
+  padding: 0 32px;
+  background: var(--headerbg);   /* Gris bleu doux */
+  color: var(--headertxt);
   display: flex;
   flex-direction: row;
   align-items: center;
+  border-radius: var(--radius);
+  box-shadow: 0 6px 32px #bcd4ea50;
+}
+.header-content {
+  display: flex;
   justify-content: space-between;
-  padding: 24px 40px 8px 40px;
-  background: #fff;
-  border-bottom: 4px solid #009f4d;
-}
-
-.logo-idfm {
-  height: 56px;
-}
-
-.horloge {
-  font-size: 2.2rem;
-  font-weight: bold;
-  text-align: right;
-}
-
-main {
-  flex: 1;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 28px;
-  padding: 24px 60px;
-  box-sizing: border-box;
-}
-
-.bloc {
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  padding: 18px 28px;
-  display: flex;
-  flex-direction: column;
-  min-height: 60px;
-  max-width: 100%;
-}
-
-.bloc-header {
-  display: flex;
   align-items: center;
-  gap: 18px;
-  margin-bottom: 8px;
+  width: 100%; height: 100%;
 }
-
+.header-title {
+  display: flex; align-items: center; font-weight: 800; font-size: 2.1em; gap: 18px;
+}
 .picto {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.header-right {
+  display: flex; align-items: center; gap: 22px;
+  font-size: 1.18em;
+}
+.meteo {
+  font-size: 1.2em;
+  font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+  background: #f2f8fc;
+  border-radius: 10px;
+  padding: 6px 14px;
+}
+.horloge {
+  font-size: 1.25em;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: #f2f8fc;
+  border-radius: 10px;
+  padding: 6px 14px;
+}
+.left   { grid-area: left; }
+.center { grid-area: center; }
+.right  { grid-area: right; }
+.footer { grid-area: footer; background: none; box-shadow: none; padding: 0; display: flex; align-items: center; justify-content: flex-end;}
+.last-update {
+  font-size: 1.08em; color: #8c8c8c; font-weight: 500; letter-spacing: 0.1em;
+  background: #fff8;
+  border-radius: 12px;
+  padding: 10px 20px;
+  margin-right: 14px;
+}
+.bloc-title {
+  font-size: 1.35em;
+  font-weight: 700;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
+  gap: 12px;
+  letter-spacing: 0.02em;
+}
+.bloc-title.rer { color: var(--primary);}
+.bloc-title.bus { color: var(--bus);}
+.bloc-title.velib { color: var(--velib);}
+.rer-content, .bus-content, .velib-content {
+  font-size: 1.22em;
+  line-height: 1.35;
+  margin-bottom: 2px;
+}
+.bus-content b, .rer-content b { color: var(--primary);}
+.bus-content .bus-label { color: var(--bus);}
+.velib-data b { color: var(--velib);}
+.velib-data { padding-top: 3px; font-size: 1.15em;}
+/* Loader cheval au trot */
+#loading-overlay {
+  display: flex;
   justify-content: center;
+  align-items: center;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(255,255,255,0.93);
+  transition: opacity 0.4s;
 }
-
-.bloc-title {
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: #009f4d;
+#loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
-
-.bloc-content {
-  font-size: 1.1rem;
-  padding-left: 56px;
-  min-height: 24px;
+.cheval-gif {
+  width: 110px;
+  display: block;
+  margin: auto;
 }
-
-.rer .bloc-title { color: #e30613; }
-.bus .bloc-title { color: #009f4d; }
-.velib .bloc-title { color: #7ac143; }
-.meteo .bloc-title { color: #f9d616; }
-
-.status, .warning {
-  color: #fff;
-  background: #e30613;
-  border-radius: 8px;
-  padding: 5px 10px;
-  display: inline-block;
-  font-size: 1.1rem;
+.loading-text {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 1.23em;
+  color: #e2001a;
+  font-weight: bold;
 }
-.warning {
-  background: #ea8600;
-}
-.small {
-  font-size: 0.95em;
-  color: #888;
-}
-
-.badge-time {
-  display: inline-block;
-  min-width: 58px;
-  font-weight: 600;
-  color: #009f4d;
-  padding-right: 8px;
-}
-
-footer {
-  width: 100%;
-  text-align: right;
-  padding: 12px 40px 24px 0;
-  font-size: 1.1rem;
-  color: #666;
-}
-
-@media (max-width: 1100px) {
-  .dashboard { width: 100vw; }
-  main { padding: 16px 6vw; }
-}
-
-@media (max-width: 700px), (max-height: 1000px) {
-  .dashboard { width: 100vw; }
-  main { padding: 6vw 1vw;}
-  .bloc { padding: 10px 10px; }
-  .bloc-header { gap: 6px; }
-  .bloc-title { font-size: 1.0rem; }
-  .bloc-content { font-size: 0.95rem; padding-left: 44px;}
+@media (max-width: 900px), (max-height: 700px) {
+  .dashboard {
+    grid-template-areas:
+      "header"
+      "center"
+      "left"
+      "right"
+      "footer";
+    grid-template-columns: 1fr;
+    grid-template-rows: 90px 2fr 1fr 1fr 50px;
+    gap: 10px;
+    padding: 4px;
+  }
+  .header-content { flex-direction: column; align-items: flex-start;}
+  .header { padding: 0 12px; font-size: 1.2em;}
+  .bloc-title { margin-bottom: 6px; font-size: 1.07em;}
+  .last-update { font-size: 0.98em; padding: 7px 9px;}
+  .block { padding: 11px 9px 10px 11px;}
 }

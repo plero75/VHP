@@ -6,15 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Ajout pour grille dashboard */
     .dashboard {
       display: grid;
       grid-template-areas: 
         "header header header"
-        "left center right"
-        "footer footer footer";
+        "left center right";
       grid-template-columns: 1fr 2fr 1fr;
-      grid-template-rows: 120px 1fr 90px;
+      grid-template-rows: 120px 1fr;
       height: 100vh;
       width: 100vw;
       gap: 16px;
@@ -22,7 +20,6 @@
       box-sizing: border-box;
     }
     .header   { grid-area: header; }
-    .footer   { grid-area: footer; }
     .left     { grid-area: left; }
     .center   { grid-area: center; }
     .right    { grid-area: right; }
@@ -49,18 +46,6 @@
     .header-flex {
       display: flex; align-items: center; justify-content: space-between; width: 100%; height: 100%;
     }
-    .footer-alert {
-      color: #b66400;
-      background: #ffeccc;
-      font-size: 1.15em;
-      font-weight: bold;
-      border-radius: 12px;
-      padding: 16px 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-    }
     .velib-data { padding-top: 5px;}
     @media (max-width: 900px), (max-height: 700px) {
       .dashboard {
@@ -68,15 +53,13 @@
           "header"
           "center"
           "left"
-          "right"
-          "footer";
+          "right";
         grid-template-columns: 1fr;
-        grid-template-rows: 90px 2fr 1fr 1fr 70px;
+        grid-template-rows: 90px 2fr 1fr 1fr;
         gap: 8px;
         padding: 4px;
       }
       .header-flex { flex-direction: column; align-items: flex-start;}
-      .footer-alert { font-size: 1em; border-radius: 10px; padding: 12px 0;}
     }
   </style>
 </head>
@@ -121,10 +104,6 @@
       <div class="bloc-title">🚲 Vélib'</div>
       <div class="velib-data" id="velib-vincennes"></div>
       <div class="velib-data" id="velib-breuil"></div>
-    </div>
-    <!-- FOOTER: Info trafic -->
-    <div class="block footer">
-      <div class="footer-alert" id="last-update">Chargement...</div>
     </div>
   </div>
   <script src="script.js"></script>

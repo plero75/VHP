@@ -26,40 +26,44 @@ async function fetchStopMonitoring(ref, containerId) {
     const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit ?? [];
 
     const now = new Date();
-    let lastTime = null;
     const grouped = {};
+    let lastScheduled = null;
 
     visits.forEach(v => {
       const journey = v.MonitoredVehicleJourney;
       const call = journey.MonitoredCall;
       const dir = journey.DirectionName?.[0]?.value ?? "Direction inconnue";
       const expected = new Date(call.ExpectedDepartureTime);
+      if (!lastScheduled || expected > lastScheduled) lastScheduled = expected;
+
       const untilMin = Math.round((expected - now) / 60000);
       const labelTime = untilMin <= 1 ? "IMMINENT" : `${expected.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })} · ${untilMin} min`;
 
       if (!grouped[dir]) grouped[dir] = [];
       grouped[dir].push(labelTime);
-
-      if (!lastTime || expected > lastTime) {
-        lastTime = expected;
-      }
     });
 
-    let html = "";
-    if (lastTime && now > lastTime) {
-      html = `<div class="status warning">🛑 Service terminé</div><div class="small">Prochains passages disponibles demain.</div>`;
-    } else {
-      for (const dir in grouped) {
-        html += `<div><strong>→ ${dir}</strong></div>`;
-        html += `<div class="departures">${grouped[dir].map(t => t === "IMMINENT" ? '<div class="badge-time" style="background:#ff4081">IMMINENT</div>' : `<div class="badge-time">${t}</div>`).join("")}</div>`;
-      }
-      html += `<div class="status fluid">🟢 À l'heure</div>`;
-      if (lastTime) {
-        html += `<div class="small">Dernier départ affiché : ${lastTime.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</div>`;
-      }
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+
+    if (lastScheduled && now > lastScheduled) {
+      const hoursUntilFirst = visits.length > 0 ? Math.round((new Date(visits[0].MonitoredVehicleJourney.MonitoredCall.ExpectedDepartureTime) - now) / 60000) : "--";
+      container.innerHTML = `
+        <div class="status warning">🛑 Service terminé</div>
+        <div class="small">Prochain passage estimé dans ${hoursUntilFirst} min</div>`;
+      return;
     }
 
-    document.getElementById(containerId).innerHTML = html;
+    for (const dir in grouped) {
+      container.innerHTML += `<div><strong>→ ${dir}</strong></div>`;
+      container.innerHTML += `<div class="departures">${grouped[dir].map(t => t === "IMMINENT" ? '<div class="badge-time" style="background:#ff4081">IMMINENT</div>' : `<div class="badge-time">${t}</div>`).join("")}</div>`;
+    }
+
+    container.innerHTML += `<div class="status fluid">🟢 À l'heure</div>`;
+    if (lastScheduled) {
+      container.innerHTML += `<div class="small">Dernier départ prévu à ${lastScheduled.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</div>`;
+    }
+
   } catch {
     document.getElementById(containerId).innerHTML = "<p>Erreur chargement</p>";
   }

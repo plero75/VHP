@@ -2,14 +2,12 @@
 const PROXY_URL = 'https://ratp-proxy.hippodrome-proxy42.workers.dev/';
 
 async function fetchIDFMRealtime(ref, containerId) {
-  // ref doit être du type "STIF:StopArea:SP:43135:"
   const apiBase = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring";
-  // Ici, encodeURIComponent sur le paramètre, PAS DEUX FOIS!
   const apiUrl = `${apiBase}?MonitoringRef=${encodeURIComponent(ref)}`;
-  // Ensuite, encodeURIComponent sur toute l'URL cible pour le proxy
-  const url = `https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=${encodeURIComponent(apiUrl)}`;
-   
-   const el = document.getElementById(containerId);
+  const url = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
+  console.log("Proxy URL:", url); // <-- ajout debug
+
+  const el = document.getElementById(containerId);
   if (!el) return;
   try {
     const res = await fetch(url, {cache: "no-store"});
@@ -33,6 +31,7 @@ async function fetchIDFMRealtime(ref, containerId) {
   } catch (e) {
     el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
   }
+ 
 }
 
 // --- VELIB' ---

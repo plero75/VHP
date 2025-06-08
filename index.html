@@ -2,65 +2,67 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Panneau Info Transport (Live)</title>
+  <title>Panneau Info Transport LIVE</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: #f7fafd;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      color: #1a2543;
-      width: 100vw;
-      min-height: 100vh;
-      min-width: 100vw;
-      overflow: hidden;
-    }
+    /* Ajout pour grille dashboard */
     .dashboard {
       display: grid;
-      grid-template-areas:
+      grid-template-areas: 
         "header header header"
         "left center right"
         "footer footer footer";
       grid-template-columns: 1fr 2fr 1fr;
-      grid-template-rows: 110px 1fr 110px;
+      grid-template-rows: 120px 1fr 90px;
       height: 100vh;
       width: 100vw;
       gap: 16px;
       padding: 16px;
       box-sizing: border-box;
     }
-    .block { background: #fff; border-radius: 18px; box-shadow: 0 4px 24px #0002; padding: 22px 18px 18px 22px; display: flex; flex-direction: column; justify-content: center; min-width: 0; min-height: 0; overflow: hidden;}
-    .block h2, .block h3 { margin: 0 0 8px 0; font-weight: 700; font-size: 1.25em;}
-    .block .dir { font-weight: 500; font-size: 1.07em; margin: 8px 0 2px 0; color: #1546a0;}
-    .block .next { font-size: 1.12em; margin-bottom: 2px;}
-    .block .sub { font-size: 0.98em; color: #666; margin-bottom: 4px;}
-    .block .alert { color: #d83a34; font-weight: 500; font-size: 0.97em;}
-    .header {
-      grid-area: header;
-      background: #e2001a;
-      color: #fff;
+    .header   { grid-area: header; }
+    .footer   { grid-area: footer; }
+    .left     { grid-area: left; }
+    .center   { grid-area: center; }
+    .right    { grid-area: right; }
+    .block {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px #0002;
+      padding: 18px 20px 15px 20px;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .bloc-title {
+      font-size: 1.4em;
+      font-weight: bold;
+      margin-bottom: 6px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      font-size: 2em;
-      padding: 0 24px;
-      border-radius: 18px;
-      box-shadow: 0 3px 16px #0001;
-      font-weight: bold;
+      gap: 12px;
     }
-    .header .left-title { display: flex; align-items: center; gap: 16px; font-size: 1.2em; font-weight: bold;}
-    .header .icon { vertical-align: middle; width: 43px; height: 43px; margin-right: 10px;}
-    .header .weather { display: flex; align-items: center; gap: 10px; font-size: 1.05em; font-weight: 500; background: rgba(255,255,255,0.12); padding: 7px 18px; border-radius: 12px;}
-    .footer { grid-area: footer; background: #ffeccc; color: #b66400; display: flex; align-items: center; justify-content: center; font-size: 1.18em; font-weight: 600; border-radius: 18px;}
-    .left   { grid-area: left; background: #f5f7fa; }
-    .right  { grid-area: right; background: #f5f7fa; }
-    .center { grid-area: center; }
-    .update-time { font-size: 1em; color: #ccc; margin-bottom: 12px; }
-    .velib-data { display: flex; flex-direction: column; gap: 6px; }
-    .velib-data b { color: #4e8cd6; }
-    .icon-section { vertical-align: middle; width: 32px; height: 32px; margin-right: 8px; }
-    @media (max-width: 800px), (max-height: 600px) {
+    .meteo, .horloge { font-size: 1.1em; margin-right: 20px;}
+    .header-flex {
+      display: flex; align-items: center; justify-content: space-between; width: 100%; height: 100%;
+    }
+    .footer-alert {
+      color: #b66400;
+      background: #ffeccc;
+      font-size: 1.15em;
+      font-weight: bold;
+      border-radius: 12px;
+      padding: 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+    .velib-data { padding-top: 5px;}
+    @media (max-width: 900px), (max-height: 700px) {
       .dashboard {
         grid-template-areas:
           "header"
@@ -69,126 +71,62 @@
           "right"
           "footer";
         grid-template-columns: 1fr;
-        grid-template-rows: 85px 1.5fr 1fr 1fr 85px;
+        grid-template-rows: 90px 2fr 1fr 1fr 70px;
         gap: 8px;
-        padding: 5px;
+        padding: 4px;
       }
-      .header { font-size: 1.1em; padding: 0 12px;}
-      .block { padding: 11px 9px 10px 11px;}
+      .header-flex { flex-direction: column; align-items: flex-start;}
+      .footer-alert { font-size: 1em; border-radius: 10px; padding: 12px 0;}
     }
   </style>
 </head>
 <body>
   <div class="dashboard">
-    <!-- Bandeau titre + météo -->
-    <div class="header">
-      <span class="left-title">
-        <img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/2/29/RER_A_icon.svg" alt="RER A">
-        Panneau d'informations transports
-      </span>
-      <span class="weather" id="weather-block">
-        <span>⏳</span> Chargement météo...
-      </span>
+    <!-- HEADER: Titre + météo + horloge -->
+    <div class="block header">
+      <div class="header-flex">
+        <div>
+          <span style="font-size:2.0em; font-weight:800; color:#e2001a;">
+            🏇 Panneau d’informations transports
+          </span>
+        </div>
+        <div>
+          <span class="meteo" id="weather-content">🌤 ...</span>
+          <span class="horloge">
+            <span id="current-date"></span>
+            <span id="current-time"></span>
+          </span>
+        </div>
+      </div>
     </div>
-    <!-- Bloc gauche : RER -->
-    <div class="block left" id="rer-block">
-      <!-- Données RER injectées ici -->
-      <h2>🚆 RER A</h2>
-      <div class="dir">Chargement...</div>
+    <!-- LEFT: RER -->
+    <div class="block left">
+      <div class="bloc-title">🚆 RER A (Vincennes)</div>
+      <div id="rer-content"></div>
     </div>
-    <!-- Bloc central : Bus -->
-    <div class="block center" id="bus-block">
-      <!-- Données Bus injectées ici -->
-      <div class="update-time" id="update-time">🗓️ Chargement...</div>
-      <h2>🚌 Bus</h2>
-      <div>Chargement...</div>
+    <!-- CENTER: Bus -->
+    <div class="block center">
+      <div class="bloc-title">🚌 Bus</div>
+      <div>
+        <b>77 (Hippodrome)</b>
+        <div id="bus77-content"></div>
+      </div>
+      <div style="margin-top:12px">
+        <b>201 (École du Breuil)</b>
+        <div id="bus201-content"></div>
+      </div>
     </div>
-    <!-- Bloc droite : Vélib -->
-    <div class="block right" id="velib-block">
-      <!-- Données Vélib injectées ici -->
-      <h2>🚲 Vélib'</h2>
-      <div>Chargement...</div>
+    <!-- RIGHT: Vélib -->
+    <div class="block right">
+      <div class="bloc-title">🚲 Vélib'</div>
+      <div class="velib-data" id="velib-vincennes"></div>
+      <div class="velib-data" id="velib-breuil"></div>
     </div>
-    <!-- Footer : Info trafic -->
-    <div class="footer" id="info-trafic-block">
-      <!-- Données trafic injectées ici -->
-      <span>Chargement...</span>
+    <!-- FOOTER: Info trafic -->
+    <div class="block footer">
+      <div class="footer-alert" id="last-update">Chargement...</div>
     </div>
   </div>
-  <script>
-    // Exemple d'APIs (à remplacer par tes vraies sources)
-    // OpenWeatherMap demo (remplace la clé et la ville par les tiennes)
-    fetch("https://api.open-meteo.com/v1/forecast?latitude=48.85&longitude=2.35&current_weather=true&timezone=Europe%2FParis")
-      .then(r=>r.json())
-      .then(data=>{
-        const w = data.current_weather;
-        let icon = w.weathercode < 3 ? "☀️" : w.weathercode < 45 ? "⛅" : "🌧️";
-        document.getElementById("weather-block").innerHTML = `${icon} ${Math.round(w.temperature)}°C, ${w.weathercode<3?"Ensoleillé":w.weathercode<45?"Nuageux":"Pluvieux"}`;
-      });
-
-    // RATP API ou endpoint custom pour horaires RER (ici mock)
-    fetch("https://api-ratp-mock.plero75.fr/rer/A/saint-georges") // <-- remplace par vrai endpoint
-      .then(r=>r.json())
-      .then(data=>{
-        document.getElementById("rer-block").innerHTML = `
-          <h2>🚆 RER A (Saint-Georges)</h2>
-          <div class="dir">Vers Paris (La Défense, Charles de Gaulle – Étoile, Auber, Châtelet-Les Halles, Gare de Lyon)</div>
-          <div class="next">Prochain : <b>${data.paris.next}</b></div>
-          <div class="sub">Suivants : ${data.paris.following.join(", ")}</div>
-          <div class="dir">Vers Boissy-Saint-Léger</div>
-          <div class="next">Prochain : <b>${data.boissy.next}</b></div>
-          <div class="sub">Suivants : ${data.boissy.following.join(", ")}</div>
-          <div class="alert">${data.trafic_alert}</div>
-          <div class="sub">🚦 Dernier train prévu chaque sens</div>
-        `;
-      })
-      .catch(()=>{document.getElementById("rer-block").innerHTML = "<h2>🚆 RER A</h2><div>Erreur de chargement API RATP</div>";});
-
-    // Bus (mock)
-    fetch("https://api-ratp-mock.plero75.fr/bus") // <-- remplace par vrai endpoint
-      .then(r=>r.json())
-      .then(data=>{
-        document.getElementById("bus-block").innerHTML = `
-          <span class="update-time">🗓️ ${data.update_time}</span>
-          <h2>🚌 Bus</h2>
-          <h3>77 (Hippodrome)</h3>
-          <div class="dir">Vers Gare de Lyon</div>
-          <div class="next">Prochain : <b>${data.bus77.lyon}</b></div>
-          <div class="dir">Vers Joinville-le-Pont</div>
-          <div class="next">Prochain : <b>${data.bus77.joinville}</b></div>
-          <div class="sub">Suivants : ${data.bus77.next.join(", ")}</div>
-          <h3>201 (École du Breuil)</h3>
-          <div class="dir">Vers Nogent-sur-Marne</div>
-          <div class="next">Prochain : <b>${data.bus201.nogent}</b></div>
-          <div class="sub">Suivants : ${data.bus201.nogent_next.join(", ")}</div>
-          <div class="dir">Vers Maisons-Alfort – Les Juilliottes</div>
-          <div class="next">Prochain : <b>${data.bus201.maisons}</b></div>
-          <div class="sub">Suivants : ${data.bus201.maisons_next.join(", ")}</div>
-        `;
-      })
-      .catch(()=>{document.getElementById("bus-block").innerHTML = "<h2>🚌 Bus</h2><div>Erreur de chargement API Bus</div>";});
-
-    // Vélib (mock)
-    fetch("https://api-ratp-mock.plero75.fr/velib") // <-- remplace par vrai endpoint ou l'API Vélib
-      .then(r=>r.json())
-      .then(data=>{
-        document.getElementById("velib-block").innerHTML = `
-          <h2>🚲 Vélib'</h2>
-          <div class="velib-data">
-            <div><b>Hippodrome</b> (porte C & entrée P1): <b>${data.hippodrome.bikes}</b> vélos, <b>${data.hippodrome.stands}</b> bornes libres</div>
-            <div><b>École du Breuil / Pyramide</b> (parking Vans): <b>${data.breuil.bikes}</b> vélos, <b>${data.breuil.stands}</b> bornes libres</div>
-          </div>
-        `;
-      })
-      .catch(()=>{document.getElementById("velib-block").innerHTML = "<h2>🚲 Vélib'</h2><div>Erreur de chargement API Vélib</div>";});
-
-    // Info trafic (mock)
-    fetch("https://api-ratp-mock.plero75.fr/info-trafic") // <-- remplace par vrai endpoint
-      .then(r=>r.json())
-      .then(data=>{
-        document.getElementById("info-trafic-block").innerHTML = `⚠️ ${data.alert}`;
-      })
-      .catch(()=>{document.getElementById("info-trafic-block").innerHTML = "⚠️ Erreur info trafic";});
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -13,6 +13,23 @@ function normalizeString(str) {
   return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+// --- Extraction de valeur (corrigée pour afficher une vraie chaîne) ---
+function getValue(val) {
+  if (Array.isArray(val)) {
+    return getValue(val[0]);
+  }
+  if (typeof val === "object" && val !== null) {
+    if ("value" in val) return val.value;
+    if ("Name" in val) return val.Name;
+    if ("label" in val) return val.label;
+    // Si l'objet a une seule clé, retourne sa valeur
+    const keys = Object.keys(val);
+    if (keys.length === 1) return getValue(val[keys[0]]);
+    return JSON.stringify(val);
+  }
+  return val ?? "";
+}
+
 // --- IDFM : Temps réel ---
 async function fetchIDFMRealtime(ref, containerId) {
   const apiBase = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring";
@@ -45,12 +62,6 @@ async function fetchIDFMRealtime(ref, containerId) {
   } catch (e) {
     el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
   }
-}
-
-// --- Extraction de valeur (prend le premier élément si c'est un tableau) ---
-function getValue(val) {
-  if (Array.isArray(val)) return val[0] ?? "";
-  return val ?? "";
 }
 
 // --- VELIB' ---

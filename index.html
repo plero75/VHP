@@ -2,164 +2,153 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Panneau Transport – Simple & Lisible</title>
+  <title>Panneau Transport – Zones</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
       background: #f7fafd;
       font-family: 'Segoe UI', Arial, sans-serif;
-      color: #182033;
-      margin: 0; padding: 0;
+      color: #1a2543;
+      box-sizing: border-box;
+      width: 100vw;
+      overflow: hidden;
     }
-    .container {
-      max-width: 500px;
-      margin: 32px auto;
+    body {
+      height: 100vh;
+      width: 100vw;
+      min-height: 100vh;
+      min-width: 100vw;
+      display: grid;
+      place-items: stretch stretch;
+    }
+    .dashboard {
+      display: grid;
+      grid-template-areas:
+        "header header header"
+        "left center right"
+        "footer footer footer";
+      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-rows: 110px 1fr 110px;
+      height: 100vh;
+      width: 100vw;
+      gap: 16px;
       padding: 16px;
+      box-sizing: border-box;
     }
     .block {
       background: #fff;
-      border-radius: 14px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 10px #0001;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px #0002;
+      padding: 22px 18px 18px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      min-height: 0;
       overflow: hidden;
     }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 600;
-      font-size: 1.13em;
-      padding: 12px 20px 8px 20px;
-      border-bottom: 1px solid #ececec;
+    .block h2, .block h3 {
+      margin: 0 0 8px 0;
+      font-weight: 700;
+      font-size: 1.25em;
     }
-    .header .icon {
-      width: 26px; height: 26px;
-    }
-    .section {
-      padding: 12px 22px 8px 46px;
-      position: relative;
-    }
-    .section .dir {
+    .block .dir {
       font-weight: 500;
-      font-size: 1em;
-      margin-bottom: 1px;
+      font-size: 1.07em;
+      margin: 8px 0 2px 0;
       color: #1546a0;
     }
-    .section .next {
-      font-size: 1.08em;
-      margin-bottom: 1px;
+    .block .next {
+      font-size: 1.12em;
+      margin-bottom: 2px;
     }
-    .section .sub {
-      font-size: 0.97em;
+    .block .sub {
+      font-size: 0.98em;
       color: #666;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
-    .section .alert {
+    .block .alert {
       color: #d83a34;
       font-weight: 500;
-      font-size: 0.95em;
+      font-size: 0.97em;
     }
-    .update {
-      text-align: right;
-      color: #7b8a9c;
-      font-size: 0.95em;
-      margin: 10px 7px 4px 0;
-    }
-    .info {
-      background: #ffeccc;
-      color: #b66400;
-      text-align: center;
-      padding: 12px 10px;
-      font-size: 1.06em;
-      border-radius: 0 0 14px 14px;
-      font-weight: 500;
-      letter-spacing: 0.3px;
-    }
-    @media (max-width: 520px) {
-      .container { max-width: 99vw; padding: 2vw; }
-      .block { margin-bottom: 14px; }
-      .header { font-size: 1em; padding: 10px 8px; }
-      .section { padding: 9px 10px 6px 30px; }
+    .header { grid-area: header; background: #e2001a; color: #fff; display: flex; align-items: center; gap: 15px; font-size: 2em; justify-content: center; }
+    .footer { grid-area: footer; background: #ffeccc; color: #b66400; display: flex; align-items: center; justify-content: center; font-size: 1.18em; font-weight: 600; border-radius: 18px; }
+    .left   { grid-area: left; background: #f5f7fa; }
+    .right  { grid-area: right; background: #f5f7fa; }
+    .center { grid-area: center; }
+    .update-time { font-size: 1em; color: #ccc; margin-bottom: 12px; }
+    .velib-data { display: flex; flex-direction: column; gap: 6px; }
+    .velib-data b { color: #4e8cd6; }
+    .icon { vertical-align: middle; width: 32px; height: 32px; margin-right: 8px; }
+    @media (max-width: 800px), (max-height: 600px) {
+      .dashboard {
+        grid-template-areas:
+          "header"
+          "center"
+          "left"
+          "right"
+          "footer";
+        grid-template-columns: 1fr;
+        grid-template-rows: 80px 1.5fr 1fr 1fr 80px;
+        gap: 8px;
+        padding: 5px;
+      }
+      .header, .footer, .left, .right, .center { min-width: 0; min-height: 0; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="update">🗓️ mardi 23 avril, 10:29</div>
-    <!-- RER A -->
-    <div class="block">
-      <div class="header" style="color:#e2001a;">
-        <img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/2/29/RER_A_icon.svg" alt="RER A">
-        RER A (Saint Georges)
-      </div>
-      <div class="section">
-        <div class="dir">🚄 Vers Paris</div>
-        <div class="next">Prochain train : <b>3 min</b></div>
-        <div class="sub">Suivants : 6 min, 12 min, 12 min</div>
-        <div class="alert">⚠️ Trafic : perturbé</div>
-        <div class="sub">🚦 Dernier train prévu chaque sens</div>
-      </div>
-      <div class="section">
-        <div class="dir">🚄 Vers Boissy</div>
-        <div class="next">Prochain train : <b>Arrivée imminente</b> (ou dans 4 min)</div>
-        <div class="sub">Suivants : 14 min, 18 min, 24 min</div>
-        <div class="alert">⚠️ Trafic : perturbé</div>
-        <div class="sub">🚦 Dernier train prévu chaque sens</div>
+  <div class="dashboard">
+    <!-- Bandeau titre en haut -->
+    <div class="block header">
+      <img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/2/29/RER_A_icon.svg" alt="RER A">
+      <span>Panneau Info Transport</span>
+    </div>
+    <!-- Bloc gauche : RER -->
+    <div class="block left">
+      <h2>🚆 RER A (Saint-Georges)</h2>
+      <div class="dir">Vers Paris (La Défense, Charles de Gaulle – Étoile, Auber, Châtelet-Les Halles, Gare de Lyon)</div>
+      <div class="next">Prochain : <b>3 min</b></div>
+      <div class="sub">Suivants : 6 min, 12 min, 12 min</div>
+      <div class="dir">Vers Boissy-Saint-Léger</div>
+      <div class="next">Prochain : <b>Arrivée imminente</b> (ou dans 4 min)</div>
+      <div class="sub">Suivants : 14 min, 18 min, 24 min</div>
+      <div class="alert">⚠️ Trafic : perturbé</div>
+      <div class="sub">🚦 Dernier train prévu chaque sens</div>
+    </div>
+    <!-- Bloc central : Bus -->
+    <div class="block center">
+      <span class="update-time">🗓️ dimanche 8 juin, 10:29</span>
+      <h2>🚌 Bus</h2>
+      <h3>77 (Hippodrome)</h3>
+      <div class="dir">Vers Gare de Lyon</div>
+      <div class="next">Prochain : <b>88 min</b></div>
+      <div class="dir">Vers Joinville-le-Pont</div>
+      <div class="next">Prochain : <b>14 min</b></div>
+      <div class="sub">Suivants : 22 min</div>
+      <h3>201 (École du Breuil)</h3>
+      <div class="dir">Vers Nogent-sur-Marne</div>
+      <div class="next">Prochain : <b>5 min</b></div>
+      <div class="sub">Suivants : 24 min</div>
+      <div class="dir">Vers Maisons-Alfort – Les Juilliottes</div>
+      <div class="next">Prochain : <b>12 min</b></div>
+      <div class="sub">Suivants : 24 min</div>
+    </div>
+    <!-- Bloc droite : Vélib -->
+    <div class="block right">
+      <h2>🚲 Vélib'</h2>
+      <div class="velib-data">
+        <div><b>Hippodrome</b> (porte C & entrée P1) : <b>8</b> vélos, <b>4</b> bornes libres</div>
+        <div><b>École du Breuil / Pyramide</b> (parking Vans) : <b>9</b> vélos, <b>3</b> bornes libres</div>
       </div>
     </div>
-    <!-- BUS 77 -->
-    <div class="block">
-      <div class="header" style="color:#00854d;">
-        <img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Bus_font_awesome.svg" alt="Bus">
-        BUS 77 (Arrêt Hippodrome)
-      </div>
-      <div class="section">
-        <div class="dir">🚌 Vers Gare de Lyon</div>
-        <div class="next">Prochain bus : <b>88 min</b></div>
-      </div>
-      <div class="section">
-        <div class="dir">🚌 Vers Gare de Joinville-le-Pont</div>
-        <div class="next">Prochain bus : <b>14 min</b></div>
-        <div class="sub">Suivants : 22 min</div>
-      </div>
-    </div>
-    <!-- BUS 201 -->
-    <div class="block">
-      <div class="header" style="color:#00854d;">
-        <img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Bus_font_awesome.svg" alt="Bus">
-        BUS 201 (École du Breuil)
-      </div>
-      <div class="section">
-        <div class="dir">🚌 Vers XXX</div>
-        <div class="next">Prochain bus : <b>5 min</b></div>
-        <div class="sub">Suivants : 24 min</div>
-      </div>
-      <div class="section">
-        <div class="dir">🚌 Vers XX</div>
-        <div class="next">Prochain bus : <b>12 min</b></div>
-        <div class="sub">Suivants : 24 min</div>
-      </div>
-    </div>
-    <!-- Vélib -->
-    <div class="block">
-      <div class="header" style="color:#4e8cd6;">
-        <img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/8/8d/Bicycle_font_awesome.svg" alt="Vélib">
-        VÉLIB'
-      </div>
-      <div class="section">
-        <div class="dir">Station Hippodrome (porte C & entrée P1)</div>
-        <div class="next"><b>8</b> vélos dispo, <b>4</b> bornes libres</div>
-      </div>
-      <div class="section">
-        <div class="dir">École du Breuil/Pyramide (parking Vans)</div>
-        <div class="next"><b>9</b> vélos dispo, <b>3</b> bornes libres</div>
-      </div>
-    </div>
-    <!-- Info trafic -->
-    <div class="block">
-      <div class="info">
-        ⚠️ Global : perturbations importantes (IDFM)
-      </div>
+    <!-- Footer : Info trafic -->
+    <div class="footer">
+      ⚠️ Global : perturbations importantes (IDFM)
     </div>
   </div>
 </body>

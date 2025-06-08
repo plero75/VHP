@@ -1,84 +1,137 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <title>Dashboard Mobilités Vincennes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Mobilités RATP</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #ffffff;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    header, footer {
+      padding: 0.5rem 1rem;
+      text-align: center;
+    }
+    .logo-bar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .logo-bar img {
+      height: 38px;
+    }
+    h1 {
+      font-size: 1.2rem;
+      margin: 0.2rem 0;
+    }
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-rows: repeat(5, 1fr);
+      gap: 0.4rem;
+      padding: 0.4rem;
+    }
+    .card {
+      background-color: #1a1d25;
+      border-radius: 12px;
+      padding: 0.8rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card h2 {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+    .line-badge {
+      display: inline-block;
+      background-color: #2979ff;
+      color: #fff;
+      font-weight: bold;
+      width: 34px;
+      height: 34px;
+      text-align: center;
+      line-height: 34px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .departures {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0.5rem 0;
+    }
+    .badge-time {
+      background-color: #2c2f39;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+      margin-top: 0.2rem;
+    }
+    .status.fluid { color: #4caf50; }
+    .status.warning { color: #ffeb3b; }
+    .small {
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+    .footer-note {
+      font-size: 1rem;
+    }
+  </style>
 </head>
 <body>
-  <header class="header">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3d/Idfm-logo.svg" class="logo-idf" alt="Île-de-France Mobilités" />
-    <h1>Dashboard Mobilités Vincennes</h1>
-    <img src="https://upload.wikimedia.org/wikipedia/fr/8/8d/Logo_RATP_2021.svg" class="logo-ratp" alt="RATP" />
+  <header>
+    <div class="logo-bar">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/3/3d/Idfm-logo.svg" alt="IDFM" />
+      <h1>Dashboard Mobilités Vincennes</h1>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/RATP_logo_2021.svg" alt="RATP" />
+    </div>
   </header>
 
-  <main class="dashboard">
-    <section class="box rer-a">
-      <h2>🚆 RER A</h2>
-      <div class="double-column">
-        <div>
-          <h3>Vers Paris</h3>
-          <div id="rer-a-a"></div>
-        </div>
-        <div>
-          <h3>Vers Boissy</h3>
-          <div id="rer-a-r"></div>
-        </div>
-      </div>
-      <div class="traffic" id="traffic-rer">Chargement trafic RER A…</div>
-    </section>
-
-    <section class="box bus-77">
-      <h2>🚌 Bus 77</h2>
-      <div class="double-column">
-        <div>
-          <h3>Vers Gare de Lyon</h3>
-          <div id="bus77-a"></div>
-        </div>
-        <div>
-          <h3>Vers Joinville</h3>
-          <div id="bus77-r"></div>
-        </div>
-      </div>
-      <div class="traffic" id="traffic-bus77">Chargement trafic Bus 77…</div>
-    </section>
-
-    <section class="box bus-201">
-      <h2>🚌 Bus 201</h2>
-      <div class="double-column">
-        <div>
-          <h3>Vers Gare de Lyon</h3>
-          <div id="bus201-a"></div>
-        </div>
-        <div>
-          <h3>Vers Joinville</h3>
-          <div id="bus201-r"></div>
-        </div>
-      </div>
-      <div class="traffic" id="traffic-bus201">Chargement trafic Bus 201…</div>
-    </section>
-
-    <section class="box velib">
-      <h2>🚲 Vélib</h2>
-      <div id="velib-info">Chargement Vélib…</div>
-    </section>
-
-    <section class="box meteo">
-      <h2>⛅ Météo</h2>
-      <div id="meteo-info">Chargement météo…</div>
-    </section>
-
-    <section class="box air">
-      <h2>🌫 Qualité de l'air</h2>
-      <div id="air-info">Chargement AQI…</div>
-    </section>
-
-    <section class="box update">
-      <h2>🕒 Dernière mise à jour</h2>
-      <div id="update-time">--:--:--</div>
-    </section>
+  <main>
+    <div class="card" id="rer-content">
+      <h2><span class="line-badge">A</span>RER A – Joinville-le-Pont</h2>
+      <!-- dynamic content -->
+    </div>
+    <div class="card" id="bus77-content">
+      <h2><span class="line-badge">77</span>Bus 77 – Hippodrome</h2>
+    </div>
+    <div class="card" id="bus201-content">
+      <h2><span class="line-badge">201</span>Bus 201 – École du Breuil</h2>
+    </div>
+    <div class="card">
+      <h2>🚲 Vélib’</h2>
+      <div id="velib12163">Chargement Hippodrome…</div>
+      <div id="velib12128">Chargement Pyramide…</div>
+    </div>
+    <div class="card">
+      <h2>🌤 Météo</h2>
+      <div id="weather-content">Chargement météo…</div>
+      <div id="last-update" class="small">Mise à jour…</div>
+    </div>
   </main>
+
+  <footer>
+    <div class="footer-note">🐴 À bientôt à l’Hippodrome de Vincennes !</div>
+  </footer>
 
   <script src="script.js"></script>
 </body>

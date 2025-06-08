@@ -6,7 +6,10 @@ async function fetchStopMonitoring(ref, containerId, label) {
     const data = await response.json();
     const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit ?? [];
 
+    
+    let lastTime = "";
     const output = visits.slice(0, 5).map(v => {
+
       const journey = v.MonitoredVehicleJourney;
       const call = journey.MonitoredCall;
       const dir = journey.DirectionName?.[0]?.value ?? "Direction inconnue";
@@ -15,10 +18,13 @@ async function fetchStopMonitoring(ref, containerId, label) {
       const expected = new Date(call.ExpectedDepartureTime).toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"});
       const delay = (call.ExpectedDepartureTime !== call.AimedDepartureTime) ? `🕒 +${(new Date(call.ExpectedDepartureTime) - new Date(call.AimedDepartureTime))/60000} min` : "";
       const quai = call.DeparturePlatformName?.value ? ` — Quai ${call.DeparturePlatformName.value}` : "";
+      
+      lastTime = expected;
       return `<li><strong>${name}</strong> ${expected}${quai} → ${dir} ${delay}</li>`;
+
     }).join("");
 
-    document.getElementById(containerId).innerHTML = `<h3>${label}</h3><ul>${output}</ul>`;
+    document.getElementById(containerId).innerHTML = `<h3>${label}</h3><ul>${output}</ul><div class="update">Dernier départ affiché : ${lastTime}</div>`;
   } catch (e) {
     document.getElementById(containerId).innerHTML = `<p>Erreur chargement ${label}</p>`;
   }

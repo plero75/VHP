@@ -187,3 +187,4 @@ html, body {
   .traffic-alert { font-size: 3.9vw; }
   .meteo-hour-block { min-width: 54px; font-size: 0.96em;}
 }
+.motjour-card { border-top: 6px solid #ffd900; }

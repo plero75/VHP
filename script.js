@@ -1,12 +1,15 @@
 // --- CONFIG PROXY ---
 const PROXY_URL = 'https://ratp-proxy.hippodrome-proxy42.workers.dev/';
 
-// --- TEMPS RÉEL IDFM (RER, Bus, etc) ---
 async function fetchIDFMRealtime(ref, containerId) {
-  // Utilise l'endpoint marketplace/stop-monitoring via ton proxy
-  const apiUrl = `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${encodeURIComponent(ref)}`;
-  const url = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
-  const el = document.getElementById(containerId);
+  // ref doit être du type "STIF:StopArea:SP:43135:"
+  const apiBase = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring";
+  // Ici, encodeURIComponent sur le paramètre, PAS DEUX FOIS!
+  const apiUrl = `${apiBase}?MonitoringRef=${encodeURIComponent(ref)}`;
+  // Ensuite, encodeURIComponent sur toute l'URL cible pour le proxy
+  const url = `https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=${encodeURIComponent(apiUrl)}`;
+   
+   const el = document.getElementById(containerId);
   if (!el) return;
   try {
     const res = await fetch(url, {cache: "no-store"});

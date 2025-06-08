@@ -88,19 +88,29 @@ async function fetchIDFMStop(ref) {
 }
 
 // ====================
-// RER A : deux directions, plus de code d’arrêt, bug fix
+// RER A : directions réelles, label Paris en parenthèses, affichage sur 2 lignes
 async function fetchRERCard() {
-  const ref = "STIF:StopArea:SP:43135:";
+  // Joinville-le-Pont (STIF:StopArea:SP:43839:)
+  const ref = "STIF:StopArea:SP:43839:"; // Joinville-le-Pont
   const visits = await fetchIDFMStop(ref);
   if (!visits) {
-    updateRERCard({ nextParis: [], nextBoissy: [], alert: "Données indisponibles" });
+    updateRERCard({ nextSaintGermain: [], nextBoissy: [], alert: "Données indisponibles", trafic: "Trafic inconnu" });
     return;
   }
-  const destParis = ["paris", "la defense", "saint-germain"];
+
+  // Directions réelles depuis Joinville-le-Pont
+  const destSaintGermain = ["saint-germain", "la defense", "nanterre", "cergy", "poissy"];
   const destBoissy = ["boissy", "marne-la-vallee", "torcy"];
-  let nextParis = [], nextBoissy = [];
+
+  let nextSaintGermain = [], nextBoissy = [];
+  let traficStatus = "Trafic normal";
+
   for (const v of visits) {
-    const dest = v.MonitoredVehicleJourney?.DestinationName?.[0]?.value || v.MonitoredVehicleJourney?.DestinationName || "";
+    const dest = (
+      v.MonitoredVehicleJourney?.DestinationName?.[0]?.value ||
+      v.MonitoredVehicleJourney?.DestinationName ||
+      ""
+    );
     const aimed = v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
     const dt = aimed ? new Date(aimed) : null;
     const now = new Date();
@@ -109,32 +119,48 @@ async function fetchRERCard() {
       time: dt ? dt.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'}) : "--:--",
       wait: mins !== null ? (mins > 0 ? `${mins} min` : "à l'instant") : "?"
     };
-    if (destParis.some(dp => normalize(dest).includes(dp))) nextParis.push(info);
+    if (destSaintGermain.some(dp => normalize(dest).includes(dp))) nextSaintGermain.push(info);
     else if (destBoissy.some(db => normalize(dest).includes(db))) nextBoissy.push(info);
+
+    // Récupération état trafic (ArrivalStatus)
+    if (
+      v.MonitoredVehicleJourney?.MonitoredCall?.ArrivalStatus === "delayed"
+      && traficStatus === "Trafic normal"
+    ) {
+      traficStatus = "Perturbation sur la ligne";
+    }
   }
-  const alert = visits.find(v => v.MonitoredVehicleJourney?.MonitoredCall?.ArrivalStatus === "delayed") ? "Perturbation" : "";
-  updateRERCard({ nextParis, nextBoissy, alert });
+
+  updateRERCard({
+    nextSaintGermain,
+    nextBoissy,
+    alert: "",
+    trafic: traficStatus
+  });
 }
 
-// Affichage RER A
-function updateRERCard({nextParis, nextBoissy, alert}) {
+// Affichage RER A avec Paris en parenthèses
+function updateRERCard({nextSaintGermain, nextBoissy, alert, trafic}) {
   document.getElementById('rer-card').innerHTML = `
     <h2>
       <img src="img/picto-rer-a.svg" alt="RER A" style="height:1.2em;vertical-align:middle;">
-      RER A
+      Prochains RER à la gare de Joinville-le-Pont :
     </h2>
     <div>
-      <div style="font-weight:bold;margin-bottom:0.4em;">
-        <span style="color:#e2001a;">Vers Paris</span>
-        <span style="margin-left:2em;color:#e2001a;">Vers Boissy</span>
+      <div style="font-weight:bold;margin-bottom:0.4em;display:flex;gap:2em;">
+        <span style="color:#e2001a;">Vers Saint-Germain-en-Laye <span style="font-weight:normal;">(Paris)</span></span>
+        <span style="margin-left:2em;color:#e2001a;">Vers Boissy-St-Léger</span>
       </div>
       <div style="display:flex;gap:2em;">
         <ul style="margin:0;padding:0 1em 0 1em;list-style:none;">
-          ${nextParis.slice(0, 4).map(t => `<li>${t.time} <span class="temps">${t.wait}</span></li>`).join('') || "<li>—</li>"}
+          ${nextSaintGermain.slice(0, 4).map(t => `<li><span>${t.time}</span><br><span class="temps">${t.wait}</span></li>`).join('') || "<li>—</li>"}
         </ul>
         <ul style="margin:0;padding:0 1em 0 1em;list-style:none;">
-          ${nextBoissy.slice(0, 4).map(t => `<li>${t.time} <span class="temps">${t.wait}</span></li>`).join('') || "<li>—</li>"}
+          ${nextBoissy.slice(0, 4).map(t => `<li><span>${t.time}</span><br><span class="temps">${t.wait}</span></li>`).join('') || "<li>—</li>"}
         </ul>
+      </div>
+      <div style="margin-top:1em;font-size:1.1em;">
+        <b>État du trafic RER A :</b> <span>${trafic}</span>
       </div>
       <div style="margin-top:0.6em;">
         ${alert ? `<span class="status warning">${alert}</span>` : ""}

@@ -1,19 +1,15 @@
-// --- GTFS & TEMPS RÉEL (remplacé par proxy IBoo/IDFM si dispo) ---
+// --- CONFIG PROXY ---
+const PROXY_URL = 'https://ratp-proxy.hippodrome-proxy42.workers.dev/';
 
-// Exemple d'appel pour le RER, Bus 77 et 201 via ton proxy Cloudflare Worker (ou Node/Express)
-// On suppose que ton proxy s'utilise ainsi :
-//   /proxy?url=https://api.iledefrance-mobilites.fr/stop-places/v1/monitoring?monitoringRef=REF
-// Remplace '/proxy' par le chemin réel si besoin.
-
-const PROXY_URL = '/proxy'; // adapter si besoin
-
+// --- TEMPS RÉEL IDFM (RER, Bus, etc) ---
 async function fetchIDFMRealtime(ref, containerId) {
-  const apiUrl = `https://api.iledefrance-mobilites.fr/stop-places/v1/monitoring?monitoringRef=${encodeURIComponent(ref)}`;
+  // Utilise l'endpoint marketplace/stop-monitoring via ton proxy
+  const apiUrl = `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${encodeURIComponent(ref)}`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
   const el = document.getElementById(containerId);
   if (!el) return;
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, {cache: "no-store"});
     if (!res.ok) throw new Error("Erreur " + res.status);
     const data = await res.json();
     const visits = (data.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit) || [];
@@ -22,11 +18,14 @@ async function fetchIDFMRealtime(ref, containerId) {
       return;
     }
     el.innerHTML = visits.slice(0, 5).map(v => {
-      const aimed = v.MonitoredVehicleJourney.MonitoredCall.AimedArrivalTime;
-      const dt = new Date(aimed);
-      const dest = v.MonitoredVehicleJourney.DestinationName?.[0] || '';
-      const line = v.MonitoredVehicleJourney.LineRef || '';
-      return `<span class="badge-time">${dt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span> <b>${line}</b> → ${dest}`;
+      const aimed = v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
+      const dt = aimed ? new Date(aimed) : null;
+      const dest = v.MonitoredVehicleJourney?.DestinationName?.[0] || '';
+      const line = v.MonitoredVehicleJourney?.LineRef || '';
+      const now = new Date();
+      const mins = dt ? Math.round((dt - now) / 60000) : null;
+      return `<span class="badge-time">${dt ? dt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "?"}</span>
+        <b>${line}</b> → ${dest} <span class="small">${mins !== null ? (mins > 0 ? `dans ${mins} min` : "à l'instant") : ""}</span>`;
     }).join("<br>");
   } catch (e) {
     el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
@@ -134,9 +133,9 @@ async function refreshAll() {
   updateDateTime();
   updateWeather();
   fetchAndDisplayAllVelibStations();
-  fetchIDFMRealtime("STIF:StopArea:SP:43135:", "rer-content"); // RER A Vincennes
+  fetchIDFMRealtime("STIF:StopArea:SP:43135:", "rer-content");     // RER A Vincennes
   fetchIDFMRealtime("STIF:StopArea:SP:463641:", "bus77-content"); // Bus 77
-  fetchIDFMRealtime("STIF:StopArea:SP:463644:", "bus201-content"); // Bus 201
+  fetchIDFMRealtime("STIF:StopArea:SP:463644:", "bus201-content");// Bus 201
   updateLastUpdate();
 }
 

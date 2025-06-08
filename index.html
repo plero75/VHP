@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Panneau Info Transport LIVE</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,68 +17,66 @@
       </div>
     </div>
   </div>
-  <div class="dashboard">
+  <main class="dashboard">
     <!-- HEADER: Titre + météo + horloge -->
-    <div class="block header" tabindex="0">
-      <div class="header-content">
-        <div class="header-title">
-          <!-- Picto officiel RATP/IDFM RER A = /img/picto-rer-a.svg -->
-          <img class="picto" src="img/picto-rer-a.svg" alt="RER A">
-          Panneau d’informations transports
-        </div>
-        <div class="header-right">
-          <span class="meteo" id="weather-content">🌤 ...</span>
-          <span class="horloge">
-            <span id="current-date"></span>
-            <span id="current-time"></span>
-          </span>
-        </div>
-      </div>
-    </div>
-    <!-- LEFT: RER -->
-    <div class="block left" tabindex="0">
-      <div class="bloc-title rer">
+    <header class="header" tabindex="0">
+      <span class="header-title">
         <img class="picto" src="img/picto-rer-a.svg" alt="RER A">
-        RER A (Vincennes)
+        Panneau d’informations transports
+      </span>
+      <span class="header-right">
+        <span class="meteo" id="weather-content">🌤 ...</span>
+        <span class="horloge">
+          <span id="current-date"></span>
+          <span id="current-time"></span>
+        </span>
+      </span>
+    </header>
+    <!-- RER -->
+    <section class="block rer-block" tabindex="0">
+      <div class="bloc-title">
+        <img class="picto" src="img/picto-rer-a.svg" alt="RER A">
+        <span class="title-label rer-label">RER A (Vincennes)</span>
       </div>
       <div class="rer-content" id="rer-content"></div>
-    </div>
-    <!-- CENTER: Bus -->
-    <div class="block center" tabindex="0">
-      <div class="bloc-title bus">
+    </section>
+    <!-- BUS -->
+    <section class="block bus-block" tabindex="0">
+      <div class="bloc-title">
         <img class="picto" src="img/picto-bus.svg" alt="Bus">
-        Bus
+        <span class="title-label bus-label">Bus</span>
       </div>
       <div class="bus-content">
         <div>
-          <span class="bus-label"><b>77 (Hippodrome)</b></span>
+          <span class="bus-line-badge">77</span>
+          <span class="bus-label">Hippodrome</span>
           <div id="bus77-content"></div>
         </div>
-        <div style="margin-top:14px">
-          <span class="bus-label"><b>201 (École du Breuil)</b></span>
+        <div style="margin-top:12px">
+          <span class="bus-line-badge">201</span>
+          <span class="bus-label">École du Breuil</span>
           <div id="bus201-content"></div>
         </div>
       </div>
-    </div>
-    <!-- RIGHT: Vélib -->
-    <div class="block right" tabindex="0">
-      <div class="bloc-title velib">
+    </section>
+    <!-- VELIB -->
+    <section class="block velib-block" tabindex="0">
+      <div class="bloc-title">
         <img class="picto" src="img/picto-velib.svg" alt="Vélib">
-        Vélib'
+        <span class="title-label velib-label">Vélib'</span>
       </div>
       <div class="velib-content">
         <div class="velib-data" id="velib-vincennes"></div>
         <div class="velib-data" id="velib-breuil"></div>
       </div>
-    </div>
-    <!-- FOOTER: Dernière MAJ -->
-    <div class="footer">
+    </section>
+    <!-- FOOTER -->
+    <footer class="footer">
       <span class="last-update" id="last-update">Dernière mise à jour...</span>
-    </div>
-  </div>
+    </footer>
+  </main>
   <script src="script.js"></script>
   <script>
-    // Loader gestion
     function hideLoader() {
       const loader = document.getElementById('loading-overlay');
       if(loader) {

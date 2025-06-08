@@ -199,3 +199,11 @@ html, body {
   .block { padding: 10px 6px 7px 8px;}
   .footer { font-size: 0.95em;}
 }
+.bus-photo {
+  width: 100%;
+  max-width: 320px;
+  border-radius: 14px;
+  margin: 8px 0 16px 0;
+  box-shadow: 0 2px 12px #0001;
+  object-fit: cover;
+}

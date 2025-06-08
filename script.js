@@ -91,6 +91,7 @@ async function fetchAndDisplayAllVelibStations() {
   try {
     const res = await fetch(url, { cache: "no-store" });
     stations = await res.json();
+    console.log("Données Vélib reçues :", stations); // <-- AJOUTEZ CETTE LIGNE
     if (!Array.isArray(stations)) throw new Error("Réponse Vélib' inattendue");
   } catch (e) {
     velibStations.forEach(sta => {
@@ -98,7 +99,6 @@ async function fetchAndDisplayAllVelibStations() {
       if (el) el.innerHTML = `<div class="status warning">Erreur Vélib (Paris) : ${e.message}</div>`;
     });
     return;
-  }
   for (const sta of velibStations) {
     const el = document.getElementById(sta.container);
     if (!el) {

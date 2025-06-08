@@ -1,12 +1,24 @@
 // --- CONFIG PROXY ---
 const PROXY_URL = 'https://ratp-proxy.hippodrome-proxy42.workers.dev/';
 
+// --- Liste des stations Vélib à surveiller ---
+const velibStations = [
+  { code: "21005", container: "velib-vincennes", name: "Vincennes - République" },
+  { code: "12036", container: "velib-breuil", name: "Château de Vincennes - Breuil" }
+  // Ajoutez d'autres stations au besoin
+];
+
+// Fonction utilitaire pour comparer les noms
+function normalizeString(str) {
+  return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+// --- IDFM : Temps réel ---
 async function fetchIDFMRealtime(ref, containerId) {
   const apiBase = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring";
   const apiUrl = `${apiBase}?MonitoringRef=${encodeURIComponent(ref)}`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
-  // Pour debug : affiche l'URL générée dans la console
-  console.log("Proxy URL:", url);
+  // console.log("Proxy URL:", url);
 
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -21,7 +33,7 @@ async function fetchIDFMRealtime(ref, containerId) {
     }
     el.innerHTML = visits.slice(0, 5).map(v => {
       const aimed = v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
-      console.log('AimedArrivalTime:', aimed, v); // <-- Debug
+      // console.log('AimedArrivalTime:', aimed, v);
       const dt = aimed ? new Date(aimed) : null;
       const dest = getValue(v.MonitoredVehicleJourney?.DestinationName);
       const line = getValue(v.MonitoredVehicleJourney?.LineRef);
@@ -35,6 +47,11 @@ async function fetchIDFMRealtime(ref, containerId) {
   }
 }
 
+// --- Extraction de valeur (prend le premier élément si c'est un tableau) ---
+function getValue(val) {
+  if (Array.isArray(val)) return val[0] ?? "";
+  return val ?? "";
+}
 
 // --- VELIB' ---
 async function fetchAndDisplayAllVelibStations() {
@@ -43,7 +60,6 @@ async function fetchAndDisplayAllVelibStations() {
   try {
     const res = await fetch(url, { cache: "no-store" });
     stations = await res.json();
-    console.log("Données Vélib reçues :", stations); // <-- Debug
     if (!Array.isArray(stations)) throw new Error("Réponse Vélib' inattendue");
   } catch (e) {
     velibStations.forEach(sta => {
@@ -55,7 +71,7 @@ async function fetchAndDisplayAllVelibStations() {
   for (const sta of velibStations) {
     const el = document.getElementById(sta.container);
     if (!el) {
-      console.warn("Bloc HTML manquant pour", sta.container);
+      // console.warn("Bloc HTML manquant pour", sta.container);
       continue;
     }
     let station;
@@ -70,14 +86,15 @@ async function fetchAndDisplayAllVelibStations() {
     }
     el.innerHTML = `
       <b>${station.name}</b><br>
-      Vélos mécaniques dispo : ${station.mechanical}<br>
-      Vélos électriques dispo : ${station.ebike}<br>
-      Bornes libres : ${station.numdocksavailable}<br>
-      Vélos totaux disponibles : ${station.numbikesavailable}<br>
+      Vélos mécaniques dispo : ${station.mechanical ?? "?"}<br>
+      Vélos électriques dispo : ${station.ebike ?? "?"}<br>
+      Bornes libres : ${station.numdocksavailable ?? "?"}<br>
+      Vélos totaux disponibles : ${station.numbikesavailable ?? "?"}<br>
       État : ${station.status === "OPEN" ? "Ouverte" : "Fermée"}
     `;
   }
 }
+
 // --- MÉTÉO ---
 async function updateWeather() {
   const el = document.getElementById("weather-content");
@@ -134,6 +151,7 @@ async function refreshAll() {
   updateLastUpdate();
 }
 
+// --- Lancements périodiques ---
 refreshAll();
 setInterval(refreshAll, 60000);
 setInterval(updateDateTime, 1000);

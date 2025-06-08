@@ -1,3 +1,17 @@
+async function fetchStopMonitoringWithGtfs(ref, containerId, stop_id) {
+  let stop_times;
+  try {
+    stop_times = await loadGtfsStopTimes();
+  } catch (e) {
+    const el = document.getElementById(containerId);
+    if (el) el.innerHTML = "Erreur de chargement des horaires (GTFS)";
+    return;
+  }
+  if (!Array.isArray(stop_times)) {
+    const el = document.getElementById(containerId);
+    if (el) el.innerHTML = "Aucune donnée horaire disponible (GTFS)";
+    return;
+  }
  let gtfsStopTimesCache = null;
 
 async function loadGtfsStopTimes() {

@@ -40,34 +40,75 @@ function normalize(str) {
 }
 
 // ====================
-// Vélib (OpenData Paris)
+// Vélib (OpenData Paris) : 2 stations dans la même card
 async function fetchVelibCard() {
-  const stationCode = "21005";
+  // Hippodrome = 12163, Pyramide - École du Breuil = 12128
+  const stationCodes = ["12163", "12128"];
   try {
-    const res = await fetch("https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?where=stationcode='" + stationCode + "'");
+    const res = await fetch("https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?where=stationcode in ('12163','12128')");
     const data = await res.json();
-    const sta = data.results && data.results[0];
-    if (!sta) throw new Error('Aucune donnée station');
+    if (!data.results || data.results.length === 0) throw new Error('Aucune donnée station');
+    // On trie pour toujours avoir Hippodrome puis Pyramide dans l'affichage
+    const staHippo = data.results.find(s => s.stationcode === "12163");
+    const staBreuil = data.results.find(s => s.stationcode === "12128");
     updateVelibCard({
-      station: sta.name,
-      code: sta.stationcode,
-      mechanical: sta.mechanical,
-      ebike: sta.ebike,
-      docks: sta.numdocksavailable,
-      alert: sta.status !== "OPEN" ? "Station fermée" : ""
+      hippo: staHippo
+        ? {
+            station: staHippo.name,
+            code: staHippo.stationcode,
+            mechanical: staHippo.mechanical,
+            ebike: staHippo.ebike,
+            docks: staHippo.numdocksavailable,
+            alert: staHippo.status !== "OPEN" ? "Station fermée" : ""
+          }
+        : null,
+      breuil: staBreuil
+        ? {
+            station: staBreuil.name,
+            code: staBreuil.stationcode,
+            mechanical: staBreuil.mechanical,
+            ebike: staBreuil.ebike,
+            docks: staBreuil.numdocksavailable,
+            alert: staBreuil.status !== "OPEN" ? "Station fermée" : ""
+          }
+        : null
     });
   } catch (e) {
     updateVelibCard({
-      station: "Erreur Vélib",
-      code: stationCode,
-      mechanical: "?",
-      ebike: "?",
-      docks: "?",
-      alert: "Erreur données Vélib"
+      hippo: null,
+      breuil: null,
+      error: "Erreur données Vélib"
     });
   }
 }
 
+function updateVelibCard(data) {
+  document.getElementById('velib-card').innerHTML = `
+    <h2>
+      <span class="velib-picto">🚲</span>Vélib'
+    </h2>
+    <div>
+      ${data.hippo ? `
+        <b>${data.hippo.station} <span style="font-size:0.8em;color:#ffd900;">(Hippodrome)</span></b> <span class="ratp-badge">${data.hippo.code}</span><br>
+        mécaniques : <b>${data.hippo.mechanical}</b> &nbsp;&nbsp; électriques : <b>${data.hippo.ebike}</b><br>
+        bornes libres : <b>${data.hippo.docks}</b>
+        <div style="margin-top:0.4em;">
+          ${data.hippo.alert ? `<span class="status warning">${data.hippo.alert}</span>` : ""}
+        </div>
+        <hr style="border:0;border-top:1px solid #222;margin:0.7em 0;">
+      ` : `<b>Station Hippodrome indisponible</b><hr style="border:0;border-top:1px solid #222;margin:0.7em 0;">`}
+      ${data.breuil ? `
+        <b>${data.breuil.station} <span style="font-size:0.8em;color:#ffd900;">(Pyramide - École du Breuil)</span></b> <span class="ratp-badge">${data.breuil.code}</span><br>
+        mécaniques : <b>${data.breuil.mechanical}</b> &nbsp;&nbsp; électriques : <b>${data.breuil.ebike}</b><br>
+        bornes libres : <b>${data.breuil.docks}</b>
+        <div style="margin-top:0.4em;">
+          ${data.breuil.alert ? `<span class="status warning">${data.breuil.alert}</span>` : ""}
+        </div>
+      ` : `<b>Station Pyramide - École du Breuil indisponible</b>`}
+      ${data.error ? `<div style="color:#b91c1c;font-weight:bold;">${data.error}</div>` : ""}
+    </div>
+  `;
+}
 // ====================
 // RER & BUS (IDFM/prim API via proxy)
 const PROXY_URL = "https://ratp-proxy.hippodrome-proxy42.workers.dev/";

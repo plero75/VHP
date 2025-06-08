@@ -34,7 +34,47 @@ async function fetchIDFMRealtime(ref, containerId) {
     el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
   }
 }
+// --- OUTIL POUR LIRE LES VALEURS SIRI ---
+function getValue(obj) {
+  if (!obj) return "";
+  if (typeof obj === "string") return obj;
+  if (Array.isArray(obj)) return getValue(obj[0]);
+  if (typeof obj === "object" && "value" in obj) return obj.value;
+  return "";
+}
 
+// --- MODIFIE fetchIDFMRealtime ---
+async function fetchIDFMRealtime(ref, containerId) {
+  const apiBase = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring";
+  const apiUrl = `${apiBase}?MonitoringRef=${encodeURIComponent(ref)}`;
+  const url = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
+  // console.log("Proxy URL:", url);
+
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  try {
+    const res = await fetch(url, {cache: "no-store"});
+    if (!res.ok) throw new Error("Erreur " + res.status);
+    const data = await res.json();
+    const visits = (data.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit) || [];
+    if (!visits.length) {
+      el.innerHTML = `<div class="status warning">Aucun passage à venir pour cet arrêt.</div>`;
+      return;
+    }
+    el.innerHTML = visits.slice(0, 5).map(v => {
+      const aimed = v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
+      const dt = aimed ? new Date(aimed) : null;
+      const dest = getValue(v.MonitoredVehicleJourney?.DestinationName);
+      const line = getValue(v.MonitoredVehicleJourney?.LineRef);
+      const now = new Date();
+      const mins = dt ? Math.round((dt - now) / 60000) : null;
+      return `<span class="badge-time">${dt ? dt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "?"}</span>
+        <b>${line}</b> → ${dest} <span class="small">${mins !== null ? (mins > 0 ? `dans ${mins} min` : "à l'instant") : ""}</span>`;
+    }).join("<br>");
+  } catch (e) {
+    el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
+  }
+}
 // --- VELIB' ---
 const velibStations = [
   { name: "Pyramide - Ecole du Breuil", container: "velib-breuil" },

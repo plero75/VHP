@@ -1,3 +1,4 @@
+
 html, body {
   height: 100%;
   margin: 0;
@@ -8,6 +9,16 @@ html, body {
   box-sizing: border-box;
   width: 100vw;
   min-height: 100vh;
+}
+.panel-line {
+  display: inline-block;
+  border-radius: 8px;
+  padding: 2px 12px;
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-right: 10px;
+  background: var(--panel-color, #222);
+  color: #fff;
 }
 .dashboard {
   min-height: 100vh;

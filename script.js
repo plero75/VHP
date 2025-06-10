@@ -30,41 +30,7 @@ function getValue(val) {
   return val ?? "";
 }
 
-// --- IDFM : Temps réel ---
-async function fetchIDFMRealtime(ref, containerId) {
-  const apiBase = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring";
-  const apiUrl = `${apiBase}?MonitoringRef=${encodeURIComponent(ref)}`;
-  const url = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
-  // console.log("Proxy URL:", url);
-
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  try {
-    const res = await fetch(url, {cache: "no-store"});
-    if (!res.ok) throw new Error("Erreur " + res.status);
-    const data = await res.json();
-    const visits = (data.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit) || [];
-    if (!visits.length) {
-      el.innerHTML = `<div class="status warning">Aucun passage à venir pour cet arrêt.</div>`;
-      return;
-    }
-    el.innerHTML = visits.slice(0, 5).map(v => {
-      const aimed = v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
-      // console.log('AimedArrivalTime:', aimed, v);
-      const dt = aimed ? new Date(aimed) : null;
-      const dest = getValue(v.MonitoredVehicleJourney?.DestinationName);
-      const line = getValue(v.MonitoredVehicleJourney?.LineRef);
-      const now = new Date();
-      const mins = dt ? Math.round((dt - now) / 60000) : null;
-      return `<span class="badge-time">${dt ? dt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "?"}</span>
-        <b>${line}</b> → ${dest} <span class="small">${mins !== null ? (mins > 0 ? `dans ${mins} min` : "à l'instant") : ""}</span>`;
-    }).join("<br>");
-  } catch (e) {
-    el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
-  }
-}
-
-// --- VELIB' ---
+// --- VELIB' --- (NOUVEL AFFICHAGE AVEC PICTOS)
 async function fetchAndDisplayAllVelibStations() {
   const url = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json";
   let stations;
@@ -81,10 +47,7 @@ async function fetchAndDisplayAllVelibStations() {
   }
   for (const sta of velibStations) {
     const el = document.getElementById(sta.container);
-    if (!el) {
-      // console.warn("Bloc HTML manquant pour", sta.container);
-      continue;
-    }
+    if (!el) continue;
     let station;
     if (sta.code) {
       station = stations.find(s => s.stationcode === sta.code);
@@ -95,15 +58,133 @@ async function fetchAndDisplayAllVelibStations() {
       el.innerHTML = `<div class="status warning">Station Vélib’ non trouvée.</div>`;
       continue;
     }
-    el.innerHTML = `
-      <b>${station.name}</b><br>
-      Vélos mécaniques dispo : ${station.mechanical ?? "?"}<br>
-      Vélos électriques dispo : ${station.ebike ?? "?"}<br>
-      Bornes libres : ${station.numdocksavailable ?? "?"}<br>
-      Vélos totaux disponibles : ${station.numbikesavailable ?? "?"}<br>
-      État : ${station.status === "OPEN" ? "Ouverte" : "Fermée"}
-    `;
+    updateVelibCard(sta.container, {
+      name: station.name,
+      mechanical: station.mechanical ?? "?",
+      ebike: station.ebike ?? "?",
+      free_docks: station.numdocksavailable ?? "?"
+    });
   }
+}
+
+// --- VELIB CARD AVEC PICTOS ---
+function updateVelibCard(stationId, data) {
+  const card = document.getElementById(stationId);
+  card.innerHTML = `
+    <span class="velib-station-name">${data.name}</span>
+    <div class="velib-info">
+      <span class="velib-picto">
+        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="7" cy="17" r="3" fill="#555"/><circle cx="17" cy="17" r="3" fill="#555"/><rect x="10" y="16" width="4" height="2" fill="#555"/><rect x="9" y="10" width="6" height="2" fill="#0a0"/></svg>
+      </span>
+      ${data.mechanical}
+      <span class="velib-picto">
+        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="7" cy="17" r="3" fill="#555"/><circle cx="17" cy="17" r="3" fill="#555"/><polyline points="11,13 13,13 12,16" fill="none" stroke="#fc0" stroke-width="2"/><rect x="9" y="10" width="6" height="2" fill="#0af"/></svg>
+      </span>
+      ${data.ebike}
+      <span class="velib-picto">
+        <svg viewBox="0 0 24 24" width="22" height="22"><rect x="10" y="8" width="4" height="8" rx="1" fill="#aaa"/><rect x="11" y="10" width="2" height="4" fill="#fff"/></svg>
+      </span>
+      ${data.free_docks}
+    </div>
+  `;
+}
+
+// --- IDFM : TEMPS RÉEL --- (NE FAIT QUE LES PASSAGES, PAS PICTO/DIRECTIONS)
+async function fetchIDFMRealtime(ref, containerId) {
+  const apiBase = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring";
+  const apiUrl = `${apiBase}?MonitoringRef=${encodeURIComponent(ref)}`;
+  const url = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  try {
+    const res = await fetch(url, {cache: "no-store"});
+    if (!res.ok) throw new Error("Erreur " + res.status);
+    const data = await res.json();
+    const visits = (data.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit) || [];
+    if (!visits.length) {
+      el.innerHTML = `<div class="status warning">Aucun passage à venir pour cet arrêt.</div>`;
+      return;
+    }
+    // Regrouper par direction
+    const directionsMap = {};
+    visits.forEach(v => {
+      const dir = getValue(v.MonitoredVehicleJourney?.DirectionName) || getValue(v.MonitoredVehicleJourney?.DestinationName) || "Inconnu";
+      if (!directionsMap[dir]) directionsMap[dir] = [];
+      directionsMap[dir].push(v);
+    });
+    // Prendre les deux directions principales
+    const directions = Object.keys(directionsMap).slice(0, 2).map(dirName => {
+      const nextVisit = directionsMap[dirName][0];
+      const aimed = nextVisit.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
+      const dt = aimed ? new Date(aimed) : null;
+      return {
+        name: dirName,
+        next: dt ? dt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "?"
+      };
+    });
+    // Rendu selon le type de card
+    if (containerId === 'rer-content') {
+      updateRERCard({
+        stationName: "Vincennes",
+        direction1: directions[0] || {name:"-", next:"-"},
+        direction2: directions[1] || {name:"-", next:"-"}
+      });
+    } else if (containerId === 'bus77-content') {
+      updateBusCard(77, {
+        stationName: "Hippodrome",
+        direction1: directions[0] || {name:"-", next:"-"},
+        direction2: directions[1] || {name:"-", next:"-"}
+      });
+    } else if (containerId === 'bus201-content') {
+      updateBusCard(201, {
+        stationName: "Hippodrome",
+        direction1: directions[0] || {name:"-", next:"-"},
+        direction2: directions[1] || {name:"-", next:"-"}
+      });
+    }
+  } catch (e) {
+    el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
+  }
+}
+
+// --- RER CARD AVEC PICTO ---
+function updateRERCard(data) {
+  const card = document.getElementById('rer-content');
+  card.innerHTML = `
+    <span class="rer-station-name">${data.stationName}</span>
+    <div class="rer-direction">
+      <span class="rer-picto">
+        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#e2001a" stroke-width="3"/><text x="12" y="16" font-size="10" text-anchor="middle" fill="#e2001a" font-family="Arial" font-weight="bold">A</text></svg>
+      </span>
+      <span>${data.direction1.name} :</span> <b>${data.direction1.next}</b>
+    </div>
+    <div class="rer-direction">
+      <span class="rer-picto">
+        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#e2001a" stroke-width="3"/><text x="12" y="16" font-size="10" text-anchor="middle" fill="#e2001a" font-family="Arial" font-weight="bold">A</text></svg>
+      </span>
+      <span>${data.direction2.name} :</span> <b>${data.direction2.next}</b>
+    </div>
+  `;
+}
+
+// --- BUS CARD AVEC PICTO ---
+function updateBusCard(busId, data) {
+  const card = document.getElementById(`bus${busId}-content`);
+  card.innerHTML = `
+    <span class="bus-station-name">${data.stationName}</span>
+    <div class="bus-direction">
+      <span class="bus-picto">
+        <svg viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="7" width="18" height="8" rx="2" fill="#009f4d"/><circle cx="7" cy="17" r="2" fill="#222"/><circle cx="17" cy="17" r="2" fill="#222"/><text x="12" y="13" font-size="7" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="bold">${busId}</text></svg>
+      </span>
+      <span>${data.direction1.name} :</span> <b>${data.direction1.next}</b>
+    </div>
+    <div class="bus-direction">
+      <span class="bus-picto">
+        <svg viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="7" width="18" height="8" rx="2" fill="#009f4d"/><circle cx="7" cy="17" r="2" fill="#222"/><circle cx="17" cy="17" r="2" fill="#222"/><text x="12" y="13" font-size="7" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="bold">${busId}</text></svg>
+      </span>
+      <span>${data.direction2.name} :</span> <b>${data.direction2.next}</b>
+    </div>
+  `;
 }
 
 // --- MÉTÉO ---
@@ -156,6 +237,7 @@ async function refreshAll() {
   updateDateTime();
   updateWeather();
   fetchAndDisplayAllVelibStations();
+  // Les fetchIDFMRealtime vont eux-mêmes appeler l'affichage avec pictos/direction
   fetchIDFMRealtime("STIF:StopArea:SP:43135:", "rer-content");     // RER A Vincennes
   fetchIDFMRealtime("STIF:StopArea:SP:463641:", "bus77-content"); // Bus 77
   fetchIDFMRealtime("STIF:StopArea:SP:463644:", "bus201-content");// Bus 201

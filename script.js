@@ -7,14 +7,14 @@ const velibStations = [
   { code: "12128", container: "velib-breuil", name: "Château de Vincennes - Breuil" }
 ];
 
-// --- Map des stop_area_id Navitia pour affichage horaires théoriques ---
+// --- Map des stop_area_id Navitia pour horaires théoriques ---
 const stopAreaIdMap = {
   'rer-content': 'stop_area:IDFM:43135',     // RER A Vincennes
   'bus77-content': 'stop_area:IDFM:463641',  // Bus 77
   'bus201-content': 'stop_area:IDFM:463644', // Bus 201
 };
 
-// --- Map des line_id Navitia ---
+// --- Map des line_id Navitia pour disruptions ---
 const lineIdMap = {
   'rer-content': 'line:IDFM:C01742',    // RER A
   'bus77-content': 'line:IDFM:C01777',  // Bus 77
@@ -159,13 +159,13 @@ async function fetchTheoreticalServiceHours(stopAreaId) {
       };
     }
     return null;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
 
-// --- TEMPS RÉEL RER/BUS AVEC PICTOS, PASSAGES SUR UNE LIGNE ET INFOS TRAFIC ---
-async function fetchIDFMRealtime(ref, containerId, options = {}) {
+// --- TEMPS RÉEL RER/BUS (SIRI/SM) ---
+async function fetchIDFMRealtime(ref, containerId) {
   const apiBase = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring";
   const apiUrl = `${apiBase}?MonitoringRef=${encodeURIComponent(ref)}`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
@@ -180,7 +180,7 @@ async function fetchIDFMRealtime(ref, containerId, options = {}) {
       el.innerHTML = `<div class="status warning">Aucun passage à venir pour cet arrêt.</div>`;
       return;
     }
-    // Grouper par sens (DestinationName)
+    // Grouper par sens (DirectionName/DestinationName)
     const byDirection = {};
     visits.forEach(v => {
       const dir = getValue(v.MonitoredVehicleJourney?.DirectionName) || getValue(v.MonitoredVehicleJourney?.DestinationName) || "Inconnu";
@@ -190,12 +190,8 @@ async function fetchIDFMRealtime(ref, containerId, options = {}) {
     const directions = Object.entries(byDirection).slice(0, 2);
 
     // Pictos
-    const rerPicto = `
-      <svg class="rer-picto" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#e2001a" stroke-width="3"/><text x="12" y="16" font-size="10" text-anchor="middle" fill="#e2001a" font-family="Arial" font-weight="bold">A</text></svg>
-    `;
-    const makeBusPicto = (lineNum) => `
-      <svg class="bus-picto" viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="7" width="18" height="8" rx="2" fill="#009f4d"/><circle cx="7" cy="17" r="2" fill="#222"/><circle cx="17" cy="17" r="2" fill="#222"/><text x="12" y="13" font-size="7" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="bold">${lineNum}</text></svg>
-    `;
+    const rerPicto = `<svg class="rer-picto" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#e2001a" stroke-width="3"/><text x="12" y="16" font-size="10" text-anchor="middle" fill="#e2001a" font-family="Arial" font-weight="bold">A</text></svg>`;
+    const makeBusPicto = (lineNum) => `<svg class="bus-picto" viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="7" width="18" height="8" rx="2" fill="#009f4d"/><circle cx="7" cy="17" r="2" fill="#222"/><circle cx="17" cy="17" r="2" fill="#222"/><text x="12" y="13" font-size="7" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="bold">${lineNum}</text></svg>`;
 
     let html = "";
     directions.forEach(([dir, passList]) => {
@@ -222,7 +218,7 @@ async function fetchIDFMRealtime(ref, containerId, options = {}) {
       html += `</div></div>`;
     });
 
-    // Horaires théoriques début/fin de service (Navitia)
+    // Horaires théoriques début/fin service (Navitia)
     const stopAreaId = stopAreaIdMap[containerId];
     if (stopAreaId) {
       const serviceHours = await fetchTheoreticalServiceHours(stopAreaId);

@@ -1,4 +1,22 @@
-.values {
+.velib-info, .rer-direction, .bus-direction {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5em;
+  gap: 0.5em;
+}
+
+.velib-picto, .rer-picto, .bus-picto {
+  width: 1.5em;
+  height: 1.5em;
+  display: inline-block;
+  vertical-align: middle;
+}
+.velib-station-name, .rer-station-name, .bus-station-name {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 0.3em;
+  display: block;
+}.values {
   margin-top: 8px;
   margin-bottom: 8px;
   display: flex;

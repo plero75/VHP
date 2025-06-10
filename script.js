@@ -53,12 +53,13 @@ async function fetchAndDisplayAllVelibStations() {
       el.innerHTML = `<div class="status warning">Station Vélib’ non trouvée.</div>`;
       continue;
     }
-    updateVelibCard(sta.container, {
-      name: station.name,
-      mechanical: station.mechanical ?? "?",
-      ebike: station.ebike ?? "?",
-      free_docks: station.numdocksavailable ?? "?"
-    });
+   updateVelibCard(sta.container, {
+  name: station.name,
+  mechanical: station.mechanical ?? "?",
+  ebike: station.ebike ?? "?",
+  free_docks: station.numdocksavailable ?? "?",
+  status: station.status
+});
   }
 }
 

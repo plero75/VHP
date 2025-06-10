@@ -117,7 +117,7 @@ function updateVelibCard(stationId, data) {
 
 // --- INFOS TRAFIC NAVITIA (RER/BUS) ---
 async function fetchNavitiaDisruptions(lineId) {
-  const navitiaDisruptionsUrl = `https://prim.iledefrance-mobilites.fr/marketplace/navitia/coverage/fr-idf/lines/${lineId}/disruptions`;
+  const navitiaDisruptionsUrl = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/coverage/fr-idf/lines/${lineId}/disruptions`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(navitiaDisruptionsUrl)}`;
   try {
     const res = await fetch(url, {cache:"no-store"});
@@ -137,7 +137,7 @@ async function fetchNavitiaDisruptions(lineId) {
 // --- HORAIRES THÉORIQUES NAVITIA ---
 async function fetchTheoreticalServiceHours(stopAreaId) {
   const today = new Date().toISOString().split("T")[0].replace(/-/g,"");
-  const navitiaUrl = `https://prim.iledefrance-mobilites.fr/marketplace/navitia/coverage/fr-idf/stop_areas/${stopAreaId}/route_schedules?from_datetime=${today}T000000`;
+  const navitiaUrl = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/coverage/fr-idf/stop_areas/${stopAreaId}/route_schedules?from_datetime=${today}T000000`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(navitiaUrl)}`;
   try {
     const res = await fetch(url, {cache: "no-store"});

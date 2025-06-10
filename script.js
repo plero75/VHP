@@ -66,19 +66,23 @@ function updateVelibCard(stationId, data) {
   const card = document.getElementById(stationId);
   card.innerHTML = `
     <span class="velib-station-name">${data.name}</span>
-    <div class="velib-info">
-      <span class="velib-picto">
-        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="7" cy="17" r="3" fill="#555"/><circle cx="17" cy="17" r="3" fill="#555"/><rect x="10" y="16" width="4" height="2" fill="#555"/><rect x="9" y="10" width="6" height="2" fill="#0a0"/></svg>
+    <div style="display: flex; flex-direction: row; gap: 22px; align-items: center; margin-top: 6px;">
+      <span title="Vélos mécaniques" style="display:flex;align-items:center;gap:6px;">
+        <svg viewBox="0 0 24 24" width="24" height="24" class="velib-picto"><circle cx="7" cy="17" r="3" fill="#555"/><circle cx="17" cy="17" r="3" fill="#555"/><rect x="10" y="16" width="4" height="2" fill="#555"/><rect x="9" y="10" width="6" height="2" fill="#0a0"/></svg>
+        <span>${data.mechanical}</span>
       </span>
-      ${data.mechanical}
-      <span class="velib-picto">
-        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="7" cy="17" r="3" fill="#555"/><circle cx="17" cy="17" r="3" fill="#555"/><polyline points="11,13 13,13 12,16" fill="none" stroke="#fc0" stroke-width="2"/><rect x="9" y="10" width="6" height="2" fill="#0af"/></svg>
+      <span title="Vélos électriques" style="display:flex;align-items:center;gap:6px;">
+        <svg viewBox="0 0 24 24" width="24" height="24" class="velib-picto"><circle cx="7" cy="17" r="3" fill="#555"/><circle cx="17" cy="17" r="3" fill="#555"/><polyline points="11,13 13,13 12,16" fill="none" stroke="#fc0" stroke-width="2"/><rect x="9" y="10" width="6" height="2" fill="#0af"/></svg>
+        <span>${data.ebike}</span>
       </span>
-      ${data.ebike}
-      <span class="velib-picto">
-        <svg viewBox="0 0 24 24" width="22" height="22"><rect x="10" y="8" width="4" height="8" rx="1" fill="#aaa"/><rect x="11" y="10" width="2" height="4" fill="#fff"/></svg>
+      <span title="Bornes libres" style="display:flex;align-items:center;gap:6px;">
+        <svg viewBox="0 0 24 24" width="24" height="24" class="velib-picto"><rect x="10" y="8" width="4" height="8" rx="1" fill="#aaa"/><rect x="11" y="10" width="2" height="4" fill="#fff"/></svg>
+        <span>${data.free_docks}</span>
       </span>
-      ${data.free_docks}
+    </div>
+    <div style="margin-top:6px; font-size:0.98em;">
+      <span style="color:#ffd900;">Total dispo : ${data.mechanical + data.ebike}</span> · 
+      <span style="color:${data.status === "OPEN" ? "#0c0" : "#f00"};">${data.status === "OPEN" ? "Ouverte" : "Fermée"}</span>
     </div>
   `;
 }

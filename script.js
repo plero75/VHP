@@ -219,9 +219,9 @@ async function refreshAll() {
   updateWeather();
   fetchAndDisplayAllVelibStations();
   // Les fetchIDFMRealtime vont eux-mêmes appeler l'affichage avec pictos/direction
-  fetchIDFMRealtime("STIF:StopArea:SP:43135:", "rer-content");     // RER A Vincennes
-  fetchIDFMRealtime("STIF:StopArea:SP:463641:", "bus77-content"); // Bus 77
-  fetchIDFMRealtime("STIF:StopArea:SP:463644:", "bus201-content");// Bus 201
+fetchIDFMRealtime("STIF:StopArea:SP:43135:", "rer-content", { lineId: "STIF:Line::C01742:" });     // RER A Vincennes
+fetchIDFMRealtime("STIF:StopArea:SP:463641:", "bus77-content", { lineId: "STIF:Line::C01777:" }); // Bus 77
+fetchIDFMRealtime("STIF:StopArea:SP:463644:", "bus201-content", { lineId: "STIF:Line::C01201:" });// Bus 201
   updateLastUpdate();
 }
 

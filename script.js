@@ -89,8 +89,8 @@ function updateVelibCard(stationId, data) {
   `;
 }
 
-// --- IDFM : TEMPS RÉEL --- (NE FAIT QUE LES PASSAGES, PAS PICTO/DIRECTIONS)
-async function fetchIDFMRealtime(ref, containerId) {
+// --- IDFM : TEMPS RÉEL, GROUPÉ PAR SENS, 4 PASSAGES, AVEC TEMPS EN MINUTES ---
+async function fetchIDFMRealtime(ref, containerId, options = {}) {
   const apiBase = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring";
   const apiUrl = `${apiBase}?MonitoringRef=${encodeURIComponent(ref)}`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
@@ -105,86 +105,67 @@ async function fetchIDFMRealtime(ref, containerId) {
       el.innerHTML = `<div class="status warning">Aucun passage à venir pour cet arrêt.</div>`;
       return;
     }
-    // Regrouper par direction
-    const directionsMap = {};
+    // Grouper par sens (DestinationName)
+    const byDirection = {};
     visits.forEach(v => {
       const dir = getValue(v.MonitoredVehicleJourney?.DirectionName) || getValue(v.MonitoredVehicleJourney?.DestinationName) || "Inconnu";
-      if (!directionsMap[dir]) directionsMap[dir] = [];
-      directionsMap[dir].push(v);
+      if (!byDirection[dir]) byDirection[dir] = [];
+      byDirection[dir].push(v);
     });
-    // Prendre les deux directions principales
-    const directions = Object.keys(directionsMap).slice(0, 2).map(dirName => {
-      const nextVisit = directionsMap[dirName][0];
-      const aimed = nextVisit.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
-      const dt = aimed ? new Date(aimed) : null;
-      return {
-        name: dirName,
-        next: dt ? dt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "?"
-      };
+    const directions = Object.entries(byDirection).slice(0, 2);
+    // Pour chaque direction, afficher les 4 prochains horaires et temps en min
+    let html = "";
+    directions.forEach(([dir, passList], idx) => {
+      html += `<div class="${containerId.startsWith('rer') ? "rer-direction" : "bus-direction"}"><b>Direction ${dir}</b> :<ul>`;
+      passList.slice(0, 4).forEach(v => {
+        const aimed = v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime;
+        const dt = aimed ? new Date(aimed) : null;
+        const now = new Date();
+        const mins = dt ? Math.round((dt - now) / 60000) : null;
+        html += `<li>
+          <span class="badge-time">${dt ? dt.toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"}) : "?"}</span>
+          <span class="temps">${mins !== null ? (mins > 0 ? `dans ${mins} min` : "à l'instant") : ""}</span>
+        </li>`;
+      });
+      html += `</ul></div>`;
     });
-    // Rendu selon le type de card
-    if (containerId === 'rer-content') {
-      updateRERCard({
-        stationName: "Vincennes",
-        direction1: directions[0] || {name:"-", next:"-"},
-        direction2: directions[1] || {name:"-", next:"-"}
-      });
-    } else if (containerId === 'bus77-content') {
-      updateBusCard(77, {
-        stationName: "Hippodrome",
-        direction1: directions[0] || {name:"-", next:"-"},
-        direction2: directions[1] || {name:"-", next:"-"}
-      });
-    } else if (containerId === 'bus201-content') {
-      updateBusCard(201, {
-        stationName: "Hippodrome",
-        direction1: directions[0] || {name:"-", next:"-"},
-        direction2: directions[1] || {name:"-", next:"-"}
-      });
+
+    // Heures de début/fin de service (sur la journée)
+    const todayStr = new Date().toISOString().split("T")[0];
+    const allToday = visits
+      .map(v => v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime)
+      .filter(t => t && t.startsWith(todayStr))
+      .map(t => new Date(t))
+      .sort((a, b) => a - b);
+    if (allToday.length) {
+      html += `<div class="service-hours">⏰ Début service : ${allToday[0].toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})} · Fin service : ${allToday[allToday.length-1].toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</div>`;
     }
+    // Trafic (retard, travaux)
+    if (options.lineId) {
+      html += await fetchIDFMDisruptions(options.lineId);
+    }
+    el.innerHTML = html;
   } catch (e) {
     el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
   }
 }
 
-// --- RER CARD AVEC PICTO ---
-function updateRERCard(data) {
-  const card = document.getElementById('rer-content');
-  card.innerHTML = `
-    <span class="rer-station-name">${data.stationName}</span>
-    <div class="rer-direction">
-      <span class="rer-picto">
-        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#e2001a" stroke-width="3"/><text x="12" y="16" font-size="10" text-anchor="middle" fill="#e2001a" font-family="Arial" font-weight="bold">A</text></svg>
-      </span>
-      <span>${data.direction1.name} :</span> <b>${data.direction1.next}</b>
-    </div>
-    <div class="rer-direction">
-      <span class="rer-picto">
-        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#e2001a" stroke-width="3"/><text x="12" y="16" font-size="10" text-anchor="middle" fill="#e2001a" font-family="Arial" font-weight="bold">A</text></svg>
-      </span>
-      <span>${data.direction2.name} :</span> <b>${data.direction2.next}</b>
-    </div>
-  `;
-}
-
-// --- BUS CARD AVEC PICTO ---
-function updateBusCard(busId, data) {
-  const card = document.getElementById(`bus${busId}-content`);
-  card.innerHTML = `
-    <span class="bus-station-name">${data.stationName}</span>
-    <div class="bus-direction">
-      <span class="bus-picto">
-        <svg viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="7" width="18" height="8" rx="2" fill="#009f4d"/><circle cx="7" cy="17" r="2" fill="#222"/><circle cx="17" cy="17" r="2" fill="#222"/><text x="12" y="13" font-size="7" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="bold">${busId}</text></svg>
-      </span>
-      <span>${data.direction1.name} :</span> <b>${data.direction1.next}</b>
-    </div>
-    <div class="bus-direction">
-      <span class="bus-picto">
-        <svg viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="7" width="18" height="8" rx="2" fill="#009f4d"/><circle cx="7" cy="17" r="2" fill="#222"/><circle cx="17" cy="17" r="2" fill="#222"/><text x="12" y="13" font-size="7" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="bold">${busId}</text></svg>
-      </span>
-      <span>${data.direction2.name} :</span> <b>${data.direction2.next}</b>
-    </div>
-  `;
+// --- INFOS TRAFIC ---
+async function fetchIDFMDisruptions(lineId) {
+  const url = `${PROXY_URL}?url=https://prim.iledefrance-mobilites.fr/marketplace/lines/${encodeURIComponent(lineId)}/disruptions`;
+  try {
+    const res = await fetch(url, {cache:"no-store"});
+    if (!res.ok) throw new Error("Erreur " + res.status);
+    const data = await res.json();
+    const disruptions = data.disruptions || [];
+    if (disruptions.length) {
+      // Prends la dernière ou la plus importante, ou affiche tout :
+      return `<div class="status warning">🚧 ${disruptions[0].cause || disruptions[0].title || "Info trafic"}</div>`;
+    }
+    return `<div class="status">Trafic normal</div>`;
+  } catch {
+    return `<div class="status warning">Info trafic indisponible</div>`;
+  }
 }
 
 // --- MÉTÉO ---

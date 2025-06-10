@@ -3,11 +3,25 @@ const PROXY_URL = 'https://ratp-proxy.hippodrome-proxy42.workers.dev/';
 
 // --- Liste des stations Vélib à surveiller ---
 const velibStations = [
-  { code: "21005", container: "velib-vincennes", name: "Vincennes - République" },
-  { code: "12036", container: "velib-breuil", name: "Château de Vincennes - Breuil" }
+  { code: "12163", container: "velib-vincennes", name: "Vincennes - République" },
+  { code: "12128", container: "velib-breuil", name: "Château de Vincennes - Breuil" }
 ];
 
-// Fonction utilitaire pour comparer les noms
+// --- Map des stop_area_id Navitia pour affichage horaires théoriques ---
+const stopAreaIdMap = {
+  'rer-content': 'stop_area:IDFM:43135',     // RER A Vincennes
+  'bus77-content': 'stop_area:IDFM:463641',  // Bus 77
+  'bus201-content': 'stop_area:IDFM:463644', // Bus 201
+};
+
+// --- Map des line_id Navitia ---
+const lineIdMap = {
+  'rer-content': 'line:IDFM:C01742',    // RER A
+  'bus77-content': 'line:IDFM:C01777',  // Bus 77
+  'bus201-content': 'line:IDFM:C01201', // Bus 201
+};
+
+// --- Utilitaires ---
 function normalizeString(str) {
   return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
@@ -25,7 +39,7 @@ function getValue(val) {
   return val ?? "";
 }
 
-// --- VELIB' avec pictos ---
+// --- VELIB' ---
 async function fetchAndDisplayAllVelibStations() {
   const url = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json";
   let stations;
@@ -53,55 +67,100 @@ async function fetchAndDisplayAllVelibStations() {
       el.innerHTML = `<div class="status warning">Station Vélib’ non trouvée.</div>`;
       continue;
     }
-   updateVelibCard(sta.container, {
-  name: station.name,
-  mechanical: station.mechanical ?? "?",
-  ebike: station.ebike ?? "?",
-  free_docks: station.numdocksavailable ?? "?",
-  status: station.status
-});
+    updateVelibCard(sta.container, {
+      name: station.name,
+      mechanical: station.mechanical ?? "?",
+      ebike: station.ebike ?? "?",
+      free_docks: station.numdocksavailable ?? "?",
+      status: station.status
+    });
   }
 }
 
+// --- PICTOS LISIBLES VELIB ---
 function updateVelibCard(stationId, data) {
   const card = document.getElementById(stationId);
   card.innerHTML = `
     <span class="velib-station-name">${data.name}</span>
     <div style="display: flex; flex-direction: row; gap: 22px; align-items: center; margin-top: 6px;">
       <span title="Vélos mécaniques" style="display:flex;align-items:center;gap:6px;">
-        <svg viewBox="0 0 24 24" width="24" height="24" class="velib-picto"><circle cx="7" cy="17" r="3" fill="#555"/><circle cx="17" cy="17" r="3" fill="#555"/><rect x="10" y="16" width="4" height="2" fill="#555"/><rect x="9" y="10" width="6" height="2" fill="#0a0"/></svg>
-        <span>${data.mechanical}</span>
+        <svg width="28" height="28" viewBox="0 0 28 28" style="background:#fff;border-radius:50%">
+          <circle cx="8" cy="20" r="5" fill="#fff" stroke="#2ecc40" stroke-width="2"/>
+          <rect x="12" y="15" width="8" height="2" fill="#2ecc40" rx="1"/>
+          <rect x="17" y="12" width="2" height="8" fill="#2ecc40" rx="1"/>
+        </svg>
+        <span style="font-size:1.2em;font-weight:bold;">${data.mechanical}</span>
       </span>
       <span title="Vélos électriques" style="display:flex;align-items:center;gap:6px;">
-        <svg viewBox="0 0 24 24" width="24" height="24" class="velib-picto"><circle cx="7" cy="17" r="3" fill="#555"/><circle cx="17" cy="17" r="3" fill="#555"/><polyline points="11,13 13,13 12,16" fill="none" stroke="#fc0" stroke-width="2"/><rect x="9" y="10" width="6" height="2" fill="#0af"/></svg>
-        <span>${data.ebike}</span>
+        <svg width="28" height="28" viewBox="0 0 28 28" style="background:#fff;border-radius:50%">
+          <circle cx="8" cy="20" r="5" fill="#fff" stroke="#0074d9" stroke-width="2"/>
+          <rect x="12" y="15" width="8" height="2" fill="#0074d9" rx="1"/>
+          <rect x="17" y="12" width="2" height="8" fill="#0074d9" rx="1"/>
+          <polyline points="13,14 15,18 11,18" fill="none" stroke="#f4d03f" stroke-width="2"/>
+        </svg>
+        <span style="font-size:1.2em;font-weight:bold;">${data.ebike}</span>
       </span>
       <span title="Bornes libres" style="display:flex;align-items:center;gap:6px;">
-        <svg viewBox="0 0 24 24" width="24" height="24" class="velib-picto"><rect x="10" y="8" width="4" height="8" rx="1" fill="#aaa"/><rect x="11" y="10" width="2" height="4" fill="#fff"/></svg>
-        <span>${data.free_docks}</span>
+        <svg width="28" height="28" viewBox="0 0 28 28" style="background:#fff;border-radius:50%">
+          <rect x="11" y="7" width="6" height="14" rx="2" fill="#aaa" stroke="#555" stroke-width="1"/>
+          <rect x="13" y="11" width="2" height="6" fill="#fff"/>
+        </svg>
+        <span style="font-size:1.2em;font-weight:bold;">${data.free_docks}</span>
       </span>
     </div>
     <div style="margin-top:6px; font-size:0.98em;">
-      <span style="color:#ffd900;">Total dispo : ${data.mechanical + data.ebike}</span> · 
+      <span style="color:#ffd900;">Total dispo : ${parseInt(data.mechanical) + parseInt(data.ebike)}</span> · 
       <span style="color:${data.status === "OPEN" ? "#0c0" : "#f00"};">${data.status === "OPEN" ? "Ouverte" : "Fermée"}</span>
     </div>
   `;
 }
 
-// --- INFOS TRAFIC ---
-async function fetchIDFMDisruptions(lineId) {
-  const url = `${PROXY_URL}?url=https://prim.iledefrance-mobilites.fr/marketplace/lines/${encodeURIComponent(lineId)}/disruptions`;
+// --- INFOS TRAFIC NAVITIA (RER/BUS) ---
+async function fetchNavitiaDisruptions(lineId) {
+  const navitiaDisruptionsUrl = `https://prim.iledefrance-mobilites.fr/marketplace/navitia/coverage/fr-idf/lines/${lineId}/disruptions`;
+  const url = `${PROXY_URL}?url=${encodeURIComponent(navitiaDisruptionsUrl)}`;
   try {
     const res = await fetch(url, {cache:"no-store"});
     if (!res.ok) throw new Error("Erreur " + res.status);
     const data = await res.json();
-    const disruptions = data.disruptions || [];
-    if (disruptions.length) {
-      return `<div class="status warning" style="margin-top:10px;">🚧 ${disruptions.map(d => d.cause || d.title).join('<br>')}</div>`;
+    if (data.disruptions && data.disruptions.length) {
+      return `<div class="status warning" style="margin-top:10px;">🚧 ${data.disruptions.map(
+        d => d.cause || d.messages?.[0]?.text || d.severity?.effect_name || d.severity?.name || "Perturbation"
+      ).join('<br>')}</div>`;
     }
     return `<div class="status">Trafic normal</div>`;
   } catch {
     return `<div class="status warning">Info trafic indisponible</div>`;
+  }
+}
+
+// --- HORAIRES THÉORIQUES NAVITIA ---
+async function fetchTheoreticalServiceHours(stopAreaId) {
+  const today = new Date().toISOString().split("T")[0].replace(/-/g,"");
+  const navitiaUrl = `https://prim.iledefrance-mobilites.fr/marketplace/navitia/coverage/fr-idf/stop_areas/${stopAreaId}/route_schedules?from_datetime=${today}T000000`;
+  const url = `${PROXY_URL}?url=${encodeURIComponent(navitiaUrl)}`;
+  try {
+    const res = await fetch(url, {cache: "no-store"});
+    if (!res.ok) throw new Error("Erreur " + res.status);
+    const data = await res.json();
+    let allTimes = [];
+    for (const rs of data.route_schedules || []) {
+      for (const row of rs.table?.rows || []) {
+        for (const stopTime of row.stop_date_times || []) {
+          if (stopTime.arrival_time) allTimes.push(stopTime.arrival_time);
+        }
+      }
+    }
+    allTimes = allTimes.sort();
+    if (allTimes.length) {
+      return {
+        start: allTimes[0].slice(0,5), // "HH:MM"
+        end: allTimes[allTimes.length-1].slice(0,5)
+      };
+    }
+    return null;
+  } catch (e) {
+    return null;
   }
 }
 
@@ -163,20 +222,21 @@ async function fetchIDFMRealtime(ref, containerId, options = {}) {
       html += `</div></div>`;
     });
 
-    // Heures de début/fin de service (sur la journée)
-    const todayStr = new Date().toISOString().split("T")[0];
-    const allToday = visits
-      .map(v => v.MonitoredVehicleJourney?.MonitoredCall?.AimedArrivalTime)
-      .filter(t => t && t.startsWith(todayStr))
-      .map(t => new Date(t))
-      .sort((a, b) => a - b);
-    if (allToday.length) {
-      html += `<div class="service-hours">⏰ Début service : ${allToday[0].toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})} · Fin service : ${allToday[allToday.length-1].toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</div>`;
+    // Horaires théoriques début/fin de service (Navitia)
+    const stopAreaId = stopAreaIdMap[containerId];
+    if (stopAreaId) {
+      const serviceHours = await fetchTheoreticalServiceHours(stopAreaId);
+      if (serviceHours) {
+        html += `<div class="service-hours">⏰ Service théorique : ${serviceHours.start} - ${serviceHours.end}</div>`;
+      }
     }
-    // Trafic (retard, travaux)
-    if (options.lineId) {
-      html += await fetchIDFMDisruptions(options.lineId);
+
+    // Info trafic via Navitia
+    const lineId = lineIdMap[containerId];
+    if (lineId) {
+      html += await fetchNavitiaDisruptions(lineId);
     }
+
     el.innerHTML = html;
   } catch (e) {
     el.innerHTML = `<div class="status warning">⛔ Temps réel IDFM indisponible (${e.message})</div>`;
@@ -233,10 +293,9 @@ async function refreshAll() {
   updateDateTime();
   updateWeather();
   fetchAndDisplayAllVelibStations();
-  // Les fetchIDFMRealtime vont eux-mêmes appeler l'affichage avec pictos/direction/trafic
-  fetchIDFMRealtime("STIF:StopArea:SP:43135:", "rer-content", { lineId: "STIF:Line::C01742:" });     // RER A Vincennes
-  fetchIDFMRealtime("STIF:StopArea:SP:463641:", "bus77-content", { lineId: "STIF:Line::C01777:" }); // Bus 77
-  fetchIDFMRealtime("STIF:StopArea:SP:463644:", "bus201-content", { lineId: "STIF:Line::C01201:" });// Bus 201
+  fetchIDFMRealtime("STIF:StopArea:SP:43135:", "rer-content");
+  fetchIDFMRealtime("STIF:StopArea:SP:463641:", "bus77-content");
+  fetchIDFMRealtime("STIF:StopArea:SP:463644:", "bus201-content");
   updateLastUpdate();
 }
 

@@ -1,4 +1,17 @@
-
+.values {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 24px;
+  font-size: 1.1em;
+  align-items: center;
+}
+.value .picto-velib {
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
 html, body {
   height: 100%;
   margin: 0;

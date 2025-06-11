@@ -1,12 +1,12 @@
-// script.js — Dashboard VHP
-
+script_js_final = """
 const RER_API_URL = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:43135:";
 const BUS77_API_URL = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463641:";
 const BUS201_API_URL = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463644:";
 const VELIB_API_URL = "https://prim.iledefrance-mobilites.fr/marketplace/velib/station_status.json";
-const VELIB_STATIONS = {
-  "velib-vincennes": 1074333296,
-  "velib-breuil": 508042092
+
+const VELIB_STATION_CODES = {
+  "velib-vincennes": "12163",
+  "velib-breuil": "12128"
 };
 
 function updateDateTime() {
@@ -23,7 +23,6 @@ function formatTime(str) {
 
 function renderDepartures(id, data, label) {
   const container = document.getElementById(id);
-  container.innerHTML = `<h2>${label}</h2>`;
   const times = [];
 
   try {
@@ -49,13 +48,12 @@ function renderDepartures(id, data, label) {
 }
 
 function renderVelibStations(data) {
-  for (const [elementId, stationId] of Object.entries(VELIB_STATIONS)) {
-    const station = data.data.stations.find(s => parseInt(s.station_id) === stationId);
+  for (const [elementId, stationCode] of Object.entries(VELIB_STATION_CODES)) {
+    const station = data.data.stations.find(s => s.stationCode === stationCode);
     const container = document.getElementById(elementId);
 
     if (station) {
-      container.innerHTML = `
-        <h2>Vélib' - ${stationId === 1074333296 ? "Vincennes" : "Breuil"}</h2>
+      container.innerHTML += `
         <p>Vélos disponibles : <strong>${station.num_bikes_available}</strong></p>
         <p>Places libres : <strong>${station.num_docks_available}</strong></p>
       `;

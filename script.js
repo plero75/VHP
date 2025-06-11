@@ -1,4 +1,4 @@
-// === DASHBOARD TEMPS RÉEL VINCENNES ===
+// === DASHBOARD TEMPS RÉEL VINCENNES/JOINVILLE ===
 
 // --- CONFIG PROXY ---
 const PROXY_URL = 'https://ratp-proxy.hippodrome-proxy42.workers.dev/';
@@ -11,16 +11,16 @@ const velibStations = [
 
 // --- Map des stop_area_id Navitia pour horaires théoriques ---
 const stopAreaIdMap = {
-  'rer-content': 'stop_area:IDFM:43135',
-  'bus77-content': 'stop_area:IDFM:463641',
-  'bus201-content': 'stop_area:IDFM:463644',
+  'rer-joinville-content': 'stop_area:IDFM:43134',   // RER A Joinville-le-Pont
+  'bus77-content': 'stop_area:IDFM:463641',          // Bus 77
+  'bus201-content': 'stop_area:IDFM:463644',         // Bus 201
 };
 
 // --- Map des line_id Navitia pour disruptions ---
 const lineIdMap = {
-  'rer-content': 'line:IDFM:C01742',
-  'bus77-content': 'line:IDFM:C01777',
-  'bus201-content': 'line:IDFM:C01201',
+  'rer-joinville-content': 'line:IDFM:C01742', // RER A
+  'bus77-content': 'line:IDFM:C01777',         // Bus 77
+  'bus201-content': 'line:IDFM:C01201',        // Bus 201
 };
 
 // --- Normalisation de chaînes ---
@@ -94,18 +94,15 @@ function updateVelibCard(stationId, data) {
 
 // --- INFO TRAFIC (NOUVEL ENDPOINT) ---
 async function fetchNavitiaDisruptions(lineId) {
-  const disruptionsUrl = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/${lineId}/line_reports`;
+  const disruptionsUrl = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/lines/${lineId}/disruptions`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(disruptionsUrl)}`;
   try {
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error("Erreur " + res.status);
     const data = await res.json();
-    if (data.line_reports && data.line_reports.length > 0) {
-      const messages = data.line_reports
-        .map(report => {
-          const disruption = report.disruption || {};
-          return disruption.messages?.[0]?.text || disruption.cause || disruption.severity?.effect_name || "Perturbation";
-        })
+    if (data.disruptions && data.disruptions.length > 0) {
+      const messages = data.disruptions
+        .map(d => d.cause || d.messages?.[0]?.text || d.severity?.effect_name || d.severity?.name || "Perturbation")
         .filter(Boolean);
       return `<div class="status warning" style="margin-top:10px;">🚧 ${messages.join('<br>')}</div>`;
     }
@@ -115,10 +112,10 @@ async function fetchNavitiaDisruptions(lineId) {
   }
 }
 
-// --- EXTRACTION HORAIRES DÉBUT / FIN SERVICE ---
+// --- EXTRACTION HORAIRES DÉBUT / FIN SERVICE (NOUVEL ENDPOINT) ---
 async function fetchTheoreticalServiceHours(stopAreaId) {
   const today = new Date().toISOString().split("T")[0].replace(/-/g,"");
-  const navitiaUrl = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/coverage/fr-idf/stop_areas/${stopAreaId}/route_schedules?from_datetime=${today}T000000`;
+  const navitiaUrl = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_areas/${stopAreaId}/route_schedules?from_datetime=${today}T000000`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(navitiaUrl)}`;
   try {
     const res = await fetch(url, { cache: "no-store" });
@@ -144,7 +141,6 @@ async function fetchTheoreticalServiceHours(stopAreaId) {
     return null;
   }
 }
-
 
 // --- HORLOGE EN TEMPS RÉEL ---
 function updateDateTime() {
@@ -187,7 +183,7 @@ function updateLastUpdate() {
 
 // --- RÉINITIALISATION DES BLOCS ---
 function clearAllBlocks() {
-  ["bus77-content", "bus201-content", "rer-content", "velib-breuil", "velib-vincennes"].forEach(id => {
+  ["bus77-content", "bus201-content", "rer-joinville-content", "velib-breuil", "velib-vincennes"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = "";
   });
@@ -199,13 +195,47 @@ async function refreshAll() {
   updateDateTime();
   updateWeather();
   fetchAndDisplayAllVelibStations();
-  fetchIDFMRealtime("STIF:StopArea:SP:43135:", "rer-content");
-  fetchIDFMRealtime("STIF:StopArea:SP:463641:", "bus77-content");
-  fetchIDFMRealtime("STIF:StopArea:SP:463644:", "bus201-content");
+
+  // RER A Joinville-le-Pont
+  const rerContent = document.getElementById("rer-joinville-content");
+  if (rerContent) {
+    const [disrupt, hours] = await Promise.all([
+      fetchNavitiaDisruptions(lineIdMap["rer-joinville-content"]),
+      fetchTheoreticalServiceHours(stopAreaIdMap["rer-joinville-content"])
+    ]);
+    rerContent.innerHTML = "";
+    if (disrupt) rerContent.innerHTML += disrupt;
+    if (hours) rerContent.innerHTML += `<div class="status">Service de ${hours.start} à ${hours.end}</div>`;
+  }
+
+  // Bus 77
+  const bus77Content = document.getElementById("bus77-content");
+  if (bus77Content) {
+    const [disrupt, hours] = await Promise.all([
+      fetchNavitiaDisruptions(lineIdMap["bus77-content"]),
+      fetchTheoreticalServiceHours(stopAreaIdMap["bus77-content"])
+    ]);
+    bus77Content.innerHTML = "";
+    if (disrupt) bus77Content.innerHTML += disrupt;
+    if (hours) bus77Content.innerHTML += `<div class="status">Service de ${hours.start} à ${hours.end}</div>`;
+  }
+
+  // Bus 201
+  const bus201Content = document.getElementById("bus201-content");
+  if (bus201Content) {
+    const [disrupt, hours] = await Promise.all([
+      fetchNavitiaDisruptions(lineIdMap["bus201-content"]),
+      fetchTheoreticalServiceHours(stopAreaIdMap["bus201-content"])
+    ]);
+    bus201Content.innerHTML = "";
+    if (disrupt) bus201Content.innerHTML += disrupt;
+    if (hours) bus201Content.innerHTML += `<div class="status">Service de ${hours.start} à ${hours.end}</div>`;
+  }
+
   updateLastUpdate();
 }
 
 // --- INIT ---
 refreshAll();
-setInterval(refreshAll, 60000); // rafraîchit toutes les 60 secondes
-setInterval(updateDateTime, 1000); // mise à jour de l’horloge chaque seconde
+setInterval(refreshAll, 60000); // Rafraîchit toutes les 60 secondes
+setInterval(updateDateTime, 1000); // Mise à jour de l’horloge chaque seconde

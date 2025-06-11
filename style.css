@@ -1,43 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Panneau Mobilités Hippodrome</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="img/picto-rer-a.svg">
+</head>
+<body>
+  <main class="dashboard">
+    <header class="dashboard-header">
+      <div class="datetime-alert-zone">
+        <div id="datetime" class="datetime-big">
+          <span id="current-date"></span>
+          <span id="current-time"></span>
+        </div>
+        <div id="traffic-alert" class="traffic-alert hidden"></div>
+      </div>
+    </header>
 
-html, body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: #10141a;
-  color: white;
-}
-.dashboard {
-  padding: 1rem;
-}
-.dashboard-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-}
-.dashboard-card {
-  background: #14203a;
-  padding: 1rem;
-  border-radius: 1rem;
-  box-shadow: 0 0 15px rgba(0,0,0,0.4);
-}
-.datetime-big {
-  text-align: center;
-  font-size: 2rem;
-  margin-bottom: 1rem;
-}
-.traffic-alert {
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background: yellow;
-  color: black;
-  border-radius: 0.5rem;
-}
-.traffic-alert.hidden {
-  display: none;
-}
-.dashboard-footer {
-  margin-top: 2rem;
-  text-align: center;
-  font-size: 0.9rem;
-  color: #ccc;
-}
+    <section class="dashboard-grid">
+      <div class="dashboard-card rer-card" id="rer-card">
+        <h2>RER A</h2>
+        <ul id="rer-predictions"></ul>
+        <div id="rer-times"></div>
+      </div>
+
+      <div class="dashboard-card bus-card" id="bus77-card">
+        <h2>BUS 77</h2>
+        <ul id="bus77-predictions"></ul>
+        <div id="bus77-times"></div>
+      </div>
+
+      <div class="dashboard-card bus-card" id="bus201-card">
+        <h2>BUS 201</h2>
+        <ul id="bus201-predictions"></ul>
+        <div id="bus201-times"></div>
+      </div>
+
+      <div class="dashboard-card velib-card" id="velib-vincennes"></div> 
+      <div class="dashboard-card velib-card" id="velib-breuil"></div> 
+      <div class="dashboard-card meteo-card" id="weather-content"></div>
+      <div class="dashboard-card motjour-card" id="motjour-card"></div>
+      <div class="dashboard-card meteo-hours-card" id="meteo-hours-card"></div>
+    </section>
+
+    <footer class="dashboard-footer">
+      Mise à jour : <span id="last-update"></span>
+    </footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

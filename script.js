@@ -1,4 +1,3 @@
-
 // === DASHBOARD TEMPS RÉEL VINCENNES ===
 
 // --- CONFIG PROXY ---
@@ -26,7 +25,7 @@ const lineIdMap = {
 
 // --- Normalisation de chaînes ---
 function normalizeString(str) {
-  return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return (str || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 function getValue(val) {
@@ -145,3 +144,68 @@ async function fetchTheoreticalServiceHours(stopAreaId) {
     return null;
   }
 }
+
+
+// --- HORLOGE EN TEMPS RÉEL ---
+function updateDateTime() {
+  const now = new Date();
+  const dateEl = document.getElementById("current-date");
+  const timeEl = document.getElementById("current-time");
+  if (dateEl) dateEl.textContent = now.toLocaleDateString("fr-FR");
+  if (timeEl) timeEl.textContent = now.toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+}
+
+// --- MISE À JOUR MÉTÉO ---
+async function updateWeather() {
+  const el = document.getElementById("weather-content");
+  if (!el) return;
+  try {
+    const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=48.85&longitude=2.35&current_weather=true", { cache: "no-store" });
+    const data = await res.json();
+    const w = data.current_weather;
+    el.textContent = `🌤 ${w.temperature}°C · Vent ${w.windspeed} km/h`;
+  } catch {
+    el.textContent = "🌤 Météo indisponible";
+  }
+}
+
+// --- ACTUALISATION DE L’HEURE DE MISE À JOUR ---
+function updateLastUpdate() {
+  const el = document.getElementById("last-update");
+  if (el) {
+    el.textContent = new Date().toLocaleString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+  }
+}
+
+// --- RÉINITIALISATION DES BLOCS ---
+function clearAllBlocks() {
+  ["bus77-content", "bus201-content", "rer-content", "velib-breuil", "velib-vincennes"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = "";
+  });
+}
+
+// --- APPEL GLOBAL DE MISE À JOUR ---
+async function refreshAll() {
+  clearAllBlocks();
+  updateDateTime();
+  updateWeather();
+  fetchAndDisplayAllVelibStations();
+  fetchIDFMRealtime("STIF:StopArea:SP:43135:", "rer-content");
+  fetchIDFMRealtime("STIF:StopArea:SP:463641:", "bus77-content");
+  fetchIDFMRealtime("STIF:StopArea:SP:463644:", "bus201-content");
+  updateLastUpdate();
+}
+
+// --- INIT ---
+refreshAll();
+setInterval(refreshAll, 60000); // rafraîchit toutes les 60 secondes
+setInterval(updateDateTime, 1000); // mise à jour de l’horloge chaque seconde

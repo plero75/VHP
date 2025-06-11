@@ -1,1 +1,22 @@
-[...CSS content truncated for brevity in explanation; all the provided CSS is used here...]
+.dashboard-block {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+  background: #fff;
+}
+.status.warning {
+  color: #a00;
+  font-weight: bold;
+}
+.status {
+  color: #097;
+  margin-bottom: 6px;
+}
+.horaires-bloc {
+  margin-top: 8px;
+  font-size: 1.07em;
+  background: #f6f6f8;
+  padding: 6px 10px;
+  border-radius: 6px;
+}

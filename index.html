@@ -5,7 +5,7 @@
   <title>Panneau Mobilités Hippodrome</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' stroke='black' stroke-width='4' fill='white'/%3E%3Ctext x='50' y='60' text-anchor='middle' font-size='50' fill='black'%3EA%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="img/picto-rer-a.svg">
 </head>
 <body>
   <main class="dashboard">
@@ -19,15 +19,38 @@
       </div>
     </header>
     <section class="dashboard-grid">
-      <div class="dashboard-card rer-card" id="rer-content"></div>
-      <div class="dashboard-card bus-card" id="bus77-content"></div>
-      <div class="dashboard-card bus-card" id="bus201-content"></div>
-      <div class="dashboard-card velib-card" id="velib-vincennes"></div>
-      <div class="dashboard-card velib-card" id="velib-breuil"></div>
-      <div class="dashboard-card horaires-card" id="horaires-debut-fin"></div>
-      <div class="dashboard-card meteo-card" id="weather-content"></div>
-      <div class="dashboard-card meteo-hours-card" id="meteo-hours-card"></div>
-      <div class="dashboard-card motjour-card" id="motjour-card"></div>
+      <div class="dashboard-card rer-card" id="rer-content">
+        <img src="img/picto-rer-a.svg" alt="RER A">
+      </div>
+      <div class="dashboard-card bus-card" id="bus77-content">
+        <img src="img/picto-bus.svg" alt="Bus 77">
+      </div>
+      <div class="dashboard-card bus-card" id="bus201-content">
+        <img src="img/picto-bus.svg" alt="Bus 201">
+      </div>
+      <div class="dashboard-card velib-card" id="velib-vincennes">
+        <img src="img/picto-velib.svg" alt="Vélib Vincennes">
+      </div>
+      <div class="dashboard-card velib-card" id="velib-breuil">
+        <img src="img/picto-velib.svg" alt="Vélib Breuil">
+      </div>
+      <div class="dashboard-card horaires-card" id="horaires-debut-fin">
+        <h3>Horaires Premiers / Derniers Départs</h3>
+        <div id="first-last-rer"></div>
+        <div id="first-last-bus77"></div>
+        <div id="first-last-bus201"></div>
+      </div>
+      <div class="dashboard-card meteo-card" id="weather-content">
+        <img src="img/picto-meteo.svg" alt="Météo">
+      </div>
+      <div class="dashboard-card meteo-hours-card" id="meteo-hours-card">
+        <h3>Prévisions horaires</h3>
+        <div id="weather-hourly"></div>
+      </div>
+      <div class="dashboard-card motjour-card" id="motjour-card">
+        <h3>Le mot du jour</h3>
+        <p id="daily-message"></p>
+      </div>
     </section>
     <footer class="dashboard-footer">
       Mise à jour : <span id="last-update"></span>

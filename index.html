@@ -1,12 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Panneau Mobilités Hippodrome</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="img/picto-rer-a.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="img/picto-rer-a.svg">
 </head>
 <body>
   <main class="dashboard">
@@ -19,11 +18,33 @@
         <div id="traffic-alert" class="traffic-alert hidden"></div>
       </div>
     </header>
+
     <section class="dashboard-grid">
-      <div class="dashboard-card rer-card" id="rer-content"></div>
-      <div class="dashboard-card bus-card" id="bus77-content"></div>
-      <div class="dashboard-card bus-card" id="bus201-content"></div>
+      <div class="dashboard-card rer-card" id="rer-card">
+        <h2>RER A</h2>
+        <ul id="rer-predictions"></ul>
+        <div id="rer-times"></div>
+      </div>
+
+      <div class="dashboard-card bus-card" id="bus77-card">
+        <h2>BUS 77</h2>
+        <ul id="bus77-predictions"></ul>
+        <div id="bus77-times"></div>
+      </div>
+
+      <div class="dashboard-card bus-card" id="bus201-card">
+        <h2>BUS 201</h2>
+        <ul id="bus201-predictions"></ul>
+        <div id="bus201-times"></div>
+      </div>
+
+      <div class="dashboard-card velib-card" id="velib-vincennes"></div> 
+      <div class="dashboard-card velib-card" id="velib-breuil"></div> 
+      <div class="dashboard-card meteo-card" id="weather-content"></div>
+      <div class="dashboard-card motjour-card" id="motjour-card"></div>
+      <div class="dashboard-card meteo-hours-card" id="meteo-hours-card"></div>
     </section>
+
     <footer class="dashboard-footer">
       Mise à jour : <span id="last-update"></span>
     </footer>

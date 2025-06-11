@@ -11,16 +11,20 @@ const velibStations = [
 
 // --- Map des stop_area_id Navitia pour horaires théoriques ---
 const stopAreaIdMap = {
-  'rer-joinville-content': 'stop_area:IDFM:43134',   // Joinville-le-Pont (RER A)
-  'bus77-content':         'stop_area:IDFM:463641',  // Bus 77
-  'bus201-content':        'stop_area:IDFM:463644',  // Bus 201
+  'rer-joinville-content':    'stop_area:IDFM:43134',    // Joinville-le-Pont (RER A)
+  'bus77-content':            'stop_area:IDFM:463641',   // Champ de courses
+  'bus201-content':           'stop_area:IDFM:463644',   // Joinville Eglise
+  'breuil-bus201-content':    'stop_area:IDFM:463645',   // École du Breuil (Bus 201)
+  'hippodrome-bus77-content': 'stop_area:IDFM:463640',   // Hippodrome de Vincennes (Bus 77)
 };
 
 // --- Map des line_id Navitia pour disruptions et horaires ---
 const lineIdMap = {
-  'rer-joinville-content': 'line:IDFM:C01742', // RER A
-  'bus77-content':         'line:IDFM:C01777', // Bus 77
-  'bus201-content':        'line:IDFM:C01201', // Bus 201
+  'rer-joinville-content':    'line:IDFM:C01742', // RER A
+  'bus77-content':            'line:IDFM:C01777', // Bus 77
+  'bus201-content':           'line:IDFM:C01201', // Bus 201
+  'breuil-bus201-content':    'line:IDFM:C01201', // Bus 201
+  'hippodrome-bus77-content': 'line:IDFM:C01777', // Bus 77
 };
 
 // --- Normalisation de chaînes ---
@@ -79,7 +83,7 @@ function updateVelibCard(stationId, data) {
   `;
 }
 
-// --- INFO TRAFIC (NOUVEL ENDPOINT) ---
+// --- INFO TRAFIC ---
 async function fetchNavitiaDisruptions(lineId) {
   const disruptionsUrl = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/lines/${lineId}/disruptions`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(disruptionsUrl)}`;
@@ -99,7 +103,7 @@ async function fetchNavitiaDisruptions(lineId) {
   }
 }
 
-// --- EXTRACTION HORAIRES DÉBUT / FIN SERVICE (NOUVEL ENDPOINT, AVEC line= OBLIGATOIRE) ---
+// --- EXTRACTION HORAIRES DÉBUT / FIN SERVICE ---
 async function fetchTheoreticalServiceHours(stopAreaId, lineId) {
   const today = new Date().toISOString().split("T")[0].replace(/-/g,"");
   const navitiaUrl = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_areas/${stopAreaId}/route_schedules?from_datetime=${today}T000000&line=${lineId}`;
@@ -126,6 +130,38 @@ async function fetchTheoreticalServiceHours(stopAreaId, lineId) {
     return null;
   } catch {
     return null;
+  }
+}
+
+// --- HORAIRES TEMPS RÉEL (PROCHAINS PASSAGES) ---
+async function fetchNextDepartures(stopAreaId, lineId, max = 4) {
+  const now = new Date();
+  const datetime = now.toISOString().replace(/[-:]/g, '').slice(0, 15); // YYYYMMDDTHHMMSS
+  const url = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_areas/${stopAreaId}/departures?count=12&line=${lineId}&from_datetime=${datetime}`;
+  try {
+    const res = await fetch(`${PROXY_URL}?url=${encodeURIComponent(url)}`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Erreur API " + res.status);
+    const data = await res.json();
+    // Regrouper par direction
+    const byDirection = {};
+    for (const dep of data.departures || []) {
+      const dir = dep.display_informations.direction || "Sens inconnu";
+      if (!byDirection[dir]) byDirection[dir] = [];
+      byDirection[dir].push(dep);
+    }
+    // Pour chaque direction, garder max prochains passages
+    const blocks = Object.entries(byDirection)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([dir, deps]) => {
+        const horaires = deps
+          .slice(0, max)
+          .map(d => d.stop_date_time.departure_time.slice(0,5))
+          .join(" · ");
+        return `<div><b>→ ${dir}</b><br>${horaires || 'Aucun passage'}</div>`;
+      });
+    return `<div class="horaires-bloc">${blocks.join("")}</div>`;
+  } catch (e) {
+    return `<div class="status warning">Horaires indisponibles</div>`;
   }
 }
 
@@ -170,7 +206,11 @@ function updateLastUpdate() {
 
 // --- RÉINITIALISATION DES BLOCS ---
 function clearAllBlocks() {
-  ["bus77-content", "bus201-content", "rer-joinville-content", "velib-breuil", "velib-vincennes"].forEach(id => {
+  [
+    "bus77-content", "bus201-content", "rer-joinville-content", 
+    "velib-breuil", "velib-vincennes",
+    "breuil-bus201-content", "hippodrome-bus77-content"
+  ].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = "";
   });
@@ -186,37 +226,71 @@ async function refreshAll() {
   // RER A Joinville-le-Pont
   const rerContent = document.getElementById("rer-joinville-content");
   if (rerContent) {
-    const [disrupt, hours] = await Promise.all([
+    const [disrupt, hours, nextDeps] = await Promise.all([
       fetchNavitiaDisruptions(lineIdMap["rer-joinville-content"]),
-      fetchTheoreticalServiceHours(stopAreaIdMap["rer-joinville-content"], lineIdMap["rer-joinville-content"])
+      fetchTheoreticalServiceHours(stopAreaIdMap["rer-joinville-content"], lineIdMap["rer-joinville-content"]),
+      fetchNextDepartures(stopAreaIdMap["rer-joinville-content"], lineIdMap["rer-joinville-content"])
     ]);
     rerContent.innerHTML = "";
     if (disrupt) rerContent.innerHTML += disrupt;
     if (hours) rerContent.innerHTML += `<div class="status">Service de ${hours.start} à ${hours.end}</div>`;
+    if (nextDeps) rerContent.innerHTML += nextDeps;
   }
 
-  // Bus 77
+  // Bus 77 Champ de courses
   const bus77Content = document.getElementById("bus77-content");
   if (bus77Content) {
-    const [disrupt, hours] = await Promise.all([
+    const [disrupt, hours, nextDeps] = await Promise.all([
       fetchNavitiaDisruptions(lineIdMap["bus77-content"]),
-      fetchTheoreticalServiceHours(stopAreaIdMap["bus77-content"], lineIdMap["bus77-content"])
+      fetchTheoreticalServiceHours(stopAreaIdMap["bus77-content"], lineIdMap["bus77-content"]),
+      fetchNextDepartures(stopAreaIdMap["bus77-content"], lineIdMap["bus77-content"])
     ]);
     bus77Content.innerHTML = "";
     if (disrupt) bus77Content.innerHTML += disrupt;
     if (hours) bus77Content.innerHTML += `<div class="status">Service de ${hours.start} à ${hours.end}</div>`;
+    if (nextDeps) bus77Content.innerHTML += nextDeps;
   }
 
-  // Bus 201
+  // Bus 201 Joinville Eglise
   const bus201Content = document.getElementById("bus201-content");
   if (bus201Content) {
-    const [disrupt, hours] = await Promise.all([
+    const [disrupt, hours, nextDeps] = await Promise.all([
       fetchNavitiaDisruptions(lineIdMap["bus201-content"]),
-      fetchTheoreticalServiceHours(stopAreaIdMap["bus201-content"], lineIdMap["bus201-content"])
+      fetchTheoreticalServiceHours(stopAreaIdMap["bus201-content"], lineIdMap["bus201-content"]),
+      fetchNextDepartures(stopAreaIdMap["bus201-content"], lineIdMap["bus201-content"])
     ]);
     bus201Content.innerHTML = "";
     if (disrupt) bus201Content.innerHTML += disrupt;
     if (hours) bus201Content.innerHTML += `<div class="status">Service de ${hours.start} à ${hours.end}</div>`;
+    if (nextDeps) bus201Content.innerHTML += nextDeps;
+  }
+
+  // Bus 201 École du Breuil
+  const breuil201Content = document.getElementById("breuil-bus201-content");
+  if (breuil201Content) {
+    const [disrupt, hours, nextDeps] = await Promise.all([
+      fetchNavitiaDisruptions(lineIdMap["breuil-bus201-content"]),
+      fetchTheoreticalServiceHours(stopAreaIdMap["breuil-bus201-content"], lineIdMap["breuil-bus201-content"]),
+      fetchNextDepartures(stopAreaIdMap["breuil-bus201-content"], lineIdMap["breuil-bus201-content"])
+    ]);
+    breuil201Content.innerHTML = "";
+    if (disrupt) breuil201Content.innerHTML += disrupt;
+    if (hours) breuil201Content.innerHTML += `<div class="status">Service de ${hours.start} à ${hours.end}</div>`;
+    if (nextDeps) breuil201Content.innerHTML += nextDeps;
+  }
+
+  // Bus 77 Hippodrome de Vincennes
+  const hippo77Content = document.getElementById("hippodrome-bus77-content");
+  if (hippo77Content) {
+    const [disrupt, hours, nextDeps] = await Promise.all([
+      fetchNavitiaDisruptions(lineIdMap["hippodrome-bus77-content"]),
+      fetchTheoreticalServiceHours(stopAreaIdMap["hippodrome-bus77-content"], lineIdMap["hippodrome-bus77-content"]),
+      fetchNextDepartures(stopAreaIdMap["hippodrome-bus77-content"], lineIdMap["hippodrome-bus77-content"])
+    ]);
+    hippo77Content.innerHTML = "";
+    if (disrupt) hippo77Content.innerHTML += disrupt;
+    if (hours) hippo77Content.innerHTML += `<div class="status">Service de ${hours.start} à ${hours.end}</div>`;
+    if (nextDeps) hippo77Content.innerHTML += nextDeps;
   }
 
   updateLastUpdate();

@@ -1,4 +1,4 @@
-// === DASHBOARD TEMPS RÉEL VINCENNES/JOINVILLE ===
+// === DASHBOARD TEMPS RÉEL JOINVILLE/VINCENNES (IDFM 2024) ===
 
 // --- CONFIG PROXY ---
 const PROXY_URL = 'https://ratp-proxy.hippodrome-proxy42.workers.dev/';
@@ -11,34 +11,21 @@ const velibStations = [
 
 // --- Map des stop_area_id Navitia pour horaires théoriques ---
 const stopAreaIdMap = {
-  'rer-joinville-content': 'stop_area:IDFM:43134',   // RER A Joinville-le-Pont
-  'bus77-content': 'stop_area:IDFM:463641',          // Bus 77
-  'bus201-content': 'stop_area:IDFM:463644',         // Bus 201
+  'rer-joinville-content': 'stop_area:IDFM:43134',   // Joinville-le-Pont (RER A)
+  'bus77-content':         'stop_area:IDFM:463641',  // Bus 77
+  'bus201-content':        'stop_area:IDFM:463644',  // Bus 201
 };
 
-// --- Map des line_id Navitia pour disruptions ---
+// --- Map des line_id Navitia pour disruptions et horaires ---
 const lineIdMap = {
   'rer-joinville-content': 'line:IDFM:C01742', // RER A
-  'bus77-content': 'line:IDFM:C01777',         // Bus 77
-  'bus201-content': 'line:IDFM:C01201',        // Bus 201
+  'bus77-content':         'line:IDFM:C01777', // Bus 77
+  'bus201-content':        'line:IDFM:C01201', // Bus 201
 };
 
 // --- Normalisation de chaînes ---
 function normalizeString(str) {
   return (str || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-}
-
-function getValue(val) {
-  if (Array.isArray(val)) return getValue(val[0]);
-  if (typeof val === "object" && val !== null) {
-    if ("value" in val) return val.value;
-    if ("Name" in val) return val.Name;
-    if ("label" in val) return val.label;
-    const keys = Object.keys(val);
-    if (keys.length === 1) return getValue(val[keys[0]]);
-    return JSON.stringify(val);
-  }
-  return val ?? "";
 }
 
 // --- AFFICHAGE STATIONS VELIB ---
@@ -112,10 +99,10 @@ async function fetchNavitiaDisruptions(lineId) {
   }
 }
 
-// --- EXTRACTION HORAIRES DÉBUT / FIN SERVICE (NOUVEL ENDPOINT) ---
-async function fetchTheoreticalServiceHours(stopAreaId) {
+// --- EXTRACTION HORAIRES DÉBUT / FIN SERVICE (NOUVEL ENDPOINT, AVEC line= OBLIGATOIRE) ---
+async function fetchTheoreticalServiceHours(stopAreaId, lineId) {
   const today = new Date().toISOString().split("T")[0].replace(/-/g,"");
-  const navitiaUrl = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_areas/${stopAreaId}/route_schedules?from_datetime=${today}T000000`;
+  const navitiaUrl = `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_areas/${stopAreaId}/route_schedules?from_datetime=${today}T000000&line=${lineId}`;
   const url = `${PROXY_URL}?url=${encodeURIComponent(navitiaUrl)}`;
   try {
     const res = await fetch(url, { cache: "no-store" });
@@ -201,7 +188,7 @@ async function refreshAll() {
   if (rerContent) {
     const [disrupt, hours] = await Promise.all([
       fetchNavitiaDisruptions(lineIdMap["rer-joinville-content"]),
-      fetchTheoreticalServiceHours(stopAreaIdMap["rer-joinville-content"])
+      fetchTheoreticalServiceHours(stopAreaIdMap["rer-joinville-content"], lineIdMap["rer-joinville-content"])
     ]);
     rerContent.innerHTML = "";
     if (disrupt) rerContent.innerHTML += disrupt;
@@ -213,7 +200,7 @@ async function refreshAll() {
   if (bus77Content) {
     const [disrupt, hours] = await Promise.all([
       fetchNavitiaDisruptions(lineIdMap["bus77-content"]),
-      fetchTheoreticalServiceHours(stopAreaIdMap["bus77-content"])
+      fetchTheoreticalServiceHours(stopAreaIdMap["bus77-content"], lineIdMap["bus77-content"])
     ]);
     bus77Content.innerHTML = "";
     if (disrupt) bus77Content.innerHTML += disrupt;
@@ -225,7 +212,7 @@ async function refreshAll() {
   if (bus201Content) {
     const [disrupt, hours] = await Promise.all([
       fetchNavitiaDisruptions(lineIdMap["bus201-content"]),
-      fetchTheoreticalServiceHours(stopAreaIdMap["bus201-content"])
+      fetchTheoreticalServiceHours(stopAreaIdMap["bus201-content"], lineIdMap["bus201-content"])
     ]);
     bus201Content.innerHTML = "";
     if (disrupt) bus201Content.innerHTML += disrupt;

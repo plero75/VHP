@@ -1,95 +1,94 @@
-// script.js complet et fonctionnel pour VHP
+// script.js — Dashboard VHP
 
-const stopsConfig = [
-  {
-    name: "RER A",
-    containerId: "rer-content",
-    stopAreaId: "stop_area:IDFM:70640",
-    lineId: "line:IDFM:C01742",
-    monitoringRef: "STIF:StopArea:SP:43135:"
-  },
-  {
-    name: "BUS 77",
-    containerId: "bus77-content",
-    stopAreaId: "stop_area:IDFM:463641",
-    lineId: "line:IDFM:C01756",
-    monitoringRef: "STIF:StopArea:SP:463641:"
-  },
-  {
-    name: "BUS 201",
-    containerId: "bus201-content",
-    stopAreaId: "stop_area:IDFM:463644",
-    lineId: "line:IDFM:C01810",
-    monitoringRef: "STIF:StopArea:SP:463644:"
-  }
-];
+const RER_API_URL = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:43135:";
+const BUS77_API_URL = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463641:";
+const BUS201_API_URL = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463644:";
+const VELIB_API_URL = "https://prim.iledefrance-mobilites.fr/marketplace/velib/station_status.json";
+const VELIB_STATIONS = {
+  "velib-vincennes": 1074333296,
+  "velib-breuil": 508042092
+};
 
-const proxyURL = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=";
-const primBase = "https://prim.iledefrance-mobilites.fr/marketplace";
-
-function formatDateTime(isoString) {
-  const date = new Date(isoString);
-  if (isNaN(date)) return "Invalid Date";
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-function displayData(containerId, label, times, first, last) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = `
-    <h2>${label}</h2>
-    <ul>
-      ${times.map(t => `<li>▶ ${formatDateTime(t.departure)} → ${t.direction}</li>`).join("")}
-    </ul>
-    <p>Premier départ : ${formatDateTime(first)}</p>
-    <p>Dernier départ : ${formatDateTime(last)}</p>
-  `;
-}
-
-async function fetchRealtimeDepartures(ref) {
-  const url = `${proxyURL}${primBase}/stop-monitoring?MonitoringRef=${ref}`;
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    return data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit?.slice(0, 4).map(item => ({
-      departure: item.MonitoredVehicleJourney.MonitoredCall.ExpectedDepartureTime,
-      direction: item.MonitoredVehicleJourney.DirectionName || "?"
-    })) || [];
-  } catch {
-    return [];
-  }
-}
-
-async function fetchScheduledTimes(stopAreaId, lineId) {
-  const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
-  const url = `${proxyURL}${primBase}/v2/navitia/stop_areas/${stopAreaId}/route_schedules?line=${lineId}&from_datetime=${today}T000000`;
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    const times = data?.route_schedules?.[0]?.table?.rows?.[0]?.stop_date_times?.map(e => e.departure_date_time);
-    const parsed = times.map(dt => dt ? dt.slice(0, 4) + '-' + dt.slice(4, 6) + '-' + dt.slice(6, 8) + 'T' + dt.slice(9, 11) + ':' + dt.slice(11, 13) + ':' + dt.slice(13, 15) : null);
-    return {
-      first: parsed[0] || null,
-      last: parsed[parsed.length - 1] || null
-    };
-  } catch {
-    return { first: null, last: null };
-  }
-}
-
-async function refreshAll() {
+function updateDateTime() {
   const now = new Date();
+  document.getElementById("current-date").textContent = now.toLocaleDateString("fr-FR");
+  document.getElementById("current-time").textContent = now.toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit', hour12: false });
   document.getElementById("last-update").textContent = now.toLocaleString("fr-FR");
+}
 
-  for (const stop of stopsConfig) {
-    const [realTime, schedule] = await Promise.all([
-      fetchRealtimeDepartures(stop.monitoringRef),
-      fetchScheduledTimes(stop.stopAreaId, stop.lineId)
+function formatTime(str) {
+  const date = new Date(str);
+  return isNaN(date) ? "Invalid Date" : date.toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function renderDepartures(id, data, label) {
+  const container = document.getElementById(id);
+  container.innerHTML = `<h2>${label}</h2>`;
+  const times = [];
+
+  try {
+    const visits = data.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit;
+    visits.slice(0, 4).forEach(visit => {
+      const aimed = visit.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime;
+      const direction = visit.MonitoredVehicleJourney.DirectionName || "Direction inconnue";
+      times.push(new Date(aimed));
+      container.innerHTML += `<p>▶ ${formatTime(aimed)} → ${direction}</p>`;
+    });
+
+    if (times.length > 0) {
+      const sortedTimes = times.sort((a, b) => a - b);
+      container.innerHTML += `<p><strong>Premier départ :</strong> ${formatTime(sortedTimes[0])}</p>`;
+      container.innerHTML += `<p><strong>Dernier départ :</strong> ${formatTime(sortedTimes[times.length - 1])}</p>`;
+    } else {
+      container.innerHTML += `<p>Aucun passage à venir</p>`;
+    }
+  } catch (e) {
+    container.innerHTML += `<p>Erreur de données</p>`;
+    console.error(e);
+  }
+}
+
+function renderVelibStations(data) {
+  for (const [elementId, stationId] of Object.entries(VELIB_STATIONS)) {
+    const station = data.data.stations.find(s => parseInt(s.station_id) === stationId);
+    const container = document.getElementById(elementId);
+
+    if (station) {
+      container.innerHTML = `
+        <h2>Vélib' - ${stationId === 1074333296 ? "Vincennes" : "Breuil"}</h2>
+        <p>Vélos disponibles : <strong>${station.num_bikes_available}</strong></p>
+        <p>Places libres : <strong>${station.num_docks_available}</strong></p>
+      `;
+    } else {
+      container.innerHTML = `<p>Station non trouvée</p>`;
+    }
+  }
+}
+
+async function fetchAndDisplay() {
+  updateDateTime();
+  try {
+    const [rerRes, bus77Res, bus201Res, velibRes] = await Promise.all([
+      fetch(RER_API_URL),
+      fetch(BUS77_API_URL),
+      fetch(BUS201_API_URL),
+      fetch(VELIB_API_URL)
     ]);
 
-    displayData(stop.containerId, stop.name, realTime, schedule.first, schedule.last);
+    const rerData = await rerRes.json();
+    const bus77Data = await bus77Res.json();
+    const bus201Data = await bus201Res.json();
+    const velibData = await velibRes.json();
+
+    renderDepartures("rer-content", rerData, "RER A");
+    renderDepartures("bus77-content", bus77Data, "BUS 77");
+    renderDepartures("bus201-content", bus201Data, "BUS 201");
+    renderVelibStations(velibData);
+
+  } catch (error) {
+    console.error("Erreur dans fetchAndDisplay :", error);
   }
 }
 
-refreshAll();
-setInterval(refreshAll, 60000);
+setInterval(fetchAndDisplay, 60000);
+fetchAndDisplay();

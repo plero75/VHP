@@ -1,70 +1,16 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Panneau Mobilités Hippodrome</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="img/picto-rer-a.svg">
-  <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; }
-    .dashboard { max-width: 900px; margin: 30px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px #0001; padding: 24px; }
-    .dashboard-header { display: flex; justify-content: space-between; align-items: center; }
-    .dashboard-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 18px; margin-top: 18px; }
-    .dashboard-card { background: #f0f7ff; border-radius: 7px; min-height: 80px; padding: 14px 16px; box-sizing: border-box; }
-    h1 { margin: 0 0 8px 0; font-size: 1.6em; text-align: center; }
-    h2 { margin: 0 0 6px 0; font-size: 1.14em; }
-    .status { margin-top: 4px; }
-    .status.warning { color: #c00; font-weight: bold; }
-    .velib-station-name { font-weight: bold; }
-    .datetime-big { font-size: 1.25em; }
-    #last-update { font-size: 0.95em; color: #888; text-align: right; margin-top: 8px; }
-    @media (max-width: 700px) {
-      .dashboard-grid { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
-  <main class="dashboard">
-    <header class="dashboard-header">
-      <div>
-        <h1>Panneau Mobilités Joinville / Vincennes</h1>
-        <div class="datetime-big">
-          <span id="current-date"></span>
-          <span id="current-time"></span>
-        </div>
-      </div>
-      <div class="dashboard-card" id="weather-content"></div>
-    </header>
-    
-    <section class="dashboard-grid">
-    <div id="rer-joinville-content" class="dashboard-block">
-  <h3>RER A – Joinville-le-Pont</h3>
+<!-- index.html : blocs d’affichage -->
+
+<div class="dashboard-card rer-card" id="rer-content">
+  <h2>RER A — Joinville-le-Pont</h2>
+  <div id="rer-schedules"></div>
 </div>
-<div id="bus77-content" class="dashboard-block">
-  <h3>Bus 77 – Champ de courses</h3>
+
+<div class="dashboard-card bus-card" id="bus77-content">
+  <h2>Bus 77 — Hippodrome de Vincennes</h2>
+  <div id="bus77-schedules"></div>
 </div>
-<div id="bus201-content" class="dashboard-block">
-  <h3>Bus 201 – Joinville Eglise</h3>
+
+<div class="dashboard-card bus-card" id="bus201-content">
+  <h2>Bus 201 — École du Breuil</h2>
+  <div id="bus201-schedules"></div>
 </div>
-<div id="breuil-bus201-content" class="dashboard-block">
-  <h3>Bus 201 – École du Breuil</h3>
-</div>
-<div id="hippodrome-bus77-content" class="dashboard-block">
-  <h3>Bus 77 – Hippodrome de Vincennes</h3>
-</div>
-<!-- Optionnel : blocs Vélib, météo, horloge ... -->
-<div id="velib-breuil"></div>
-<div id="velib-vincennes"></div>
-<div id="weather-content"></div>
-<div id="current-date"></div>
-<div id="current-time"></div>
-<div id="last-update"></div>
-    </section>
-    <footer>
-      <div id="last-update"></div>
-    </footer>
-  </main>
-  <script src="script.js"></script>
-</body>
-</html>

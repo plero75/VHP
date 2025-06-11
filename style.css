@@ -1,22 +1,43 @@
-.dashboard-block {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 16px;
-  margin: 12px 0;
-  background: #fff;
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #10141a;
+  color: white;
 }
-.status.warning {
-  color: #a00;
-  font-weight: bold;
+.dashboard {
+  padding: 1rem;
 }
-.status {
-  color: #097;
-  margin-bottom: 6px;
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
-.horaires-bloc {
-  margin-top: 8px;
-  font-size: 1.07em;
-  background: #f6f6f8;
-  padding: 6px 10px;
-  border-radius: 6px;
+.dashboard-card {
+  background: #14203a;
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+}
+.datetime-big {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+.traffic-alert {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: yellow;
+  color: black;
+  border-radius: 0.5rem;
+}
+.traffic-alert.hidden {
+  display: none;
+}
+.dashboard-footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #ccc;
 }

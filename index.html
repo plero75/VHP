@@ -1,16 +1,33 @@
-<!-- index.html : blocs d’affichage -->
 
-<div class="dashboard-card rer-card" id="rer-content">
-  <h2>RER A — Joinville-le-Pont</h2>
-  <div id="rer-schedules"></div>
-</div>
-
-<div class="dashboard-card bus-card" id="bus77-content">
-  <h2>Bus 77 — Hippodrome de Vincennes</h2>
-  <div id="bus77-schedules"></div>
-</div>
-
-<div class="dashboard-card bus-card" id="bus201-content">
-  <h2>Bus 201 — École du Breuil</h2>
-  <div id="bus201-schedules"></div>
-</div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panneau Mobilités Hippodrome</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="img/picto-rer-a.svg" />
+</head>
+<body>
+  <main class="dashboard">
+    <header class="dashboard-header">
+      <div class="datetime-alert-zone">
+        <div id="datetime" class="datetime-big">
+          <span id="current-date"></span>
+          <span id="current-time"></span>
+        </div>
+        <div id="traffic-alert" class="traffic-alert hidden"></div>
+      </div>
+    </header>
+    <section class="dashboard-grid">
+      <div class="dashboard-card rer-card" id="rer-content"></div>
+      <div class="dashboard-card bus-card" id="bus77-content"></div>
+      <div class="dashboard-card bus-card" id="bus201-content"></div>
+    </section>
+    <footer class="dashboard-footer">
+      Mise à jour : <span id="last-update"></span>
+    </footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+html_content = """<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <title>Panneau Mobilités Hippodrome</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="dashboard-style.css">
   <link rel="icon" href="img/picto-rer-a.svg">
 </head>
 <body>
@@ -19,21 +19,19 @@
       </div>
     </header>
     <section class="dashboard-grid">
-<section class="dashboard-grid">
-  <div class="dashboard-card velib-card" id="velib-vincennes"></div> 
-  <div class="dashboard-card velib-card" id="velib-breuil"></div> 
-  <div class="dashboard-card rer-card" id="rer-content"></div>
-    <div class="dashboard-card bus-card" id="bus77-content"></div>
-  <div class="dashboard-card bus-card" id="bus201-content"></div>
-  <div class="dashboard-card meteo-card" id="weather-content"></div>
-  <div class="dashboard-card motjour-card" id="motjour-card"></div> <!-- AJOUT -->
-  <div class="dashboard-card meteo-hours-card" id="meteo-hours-card"></div>
-</section> 
+      <div class="dashboard-card velib-card" id="velib-vincennes"></div>
+      <div class="dashboard-card velib-card" id="velib-breuil"></div>
+      <div class="dashboard-card rer-card" id="rer-content"></div>
+      <div class="dashboard-card bus-card" id="bus77-content"></div>
+      <div class="dashboard-card bus-card" id="bus201-content"></div>
+      <div class="dashboard-card meteo-card" id="weather-content"></div>
+      <div class="dashboard-card motjour-card" id="motjour-card"></div>
+      <div class="dashboard-card meteo-hours-card" id="meteo-hours-card"></div>
     </section>
     <footer class="dashboard-footer">
       Mise à jour : <span id="last-update"></span>
     </footer>
   </main>
-  <script src="script.js"></script>
+  <script src="dashboard-vincennes-script.js"></script>
 </body>
 </html>

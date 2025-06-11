@@ -1,44 +1,99 @@
+// script.js - version finale pour dashboard VHP
 
-const stops = {
-  rer: "STIF:StopArea:SP:43135:",
-  bus77: "STIF:StopArea:SP:463641:",
-  bus201: "STIF:StopArea:SP:463644:"
+const STOPS = {
+  rer: {
+    monitoringRef: "STIF:StopArea:SP:43135:",
+    scheduleRef: "stop_area:IDFM:70640",
+    lineRef: "line:IDFM:C01742",
+    label: "RER A",
+    containerId: "rer-content",
+  },
+  bus77: {
+    monitoringRef: "STIF:StopArea:SP:463641:",
+    scheduleRef: "stop_area:IDFM:463641",
+    lineRef: "line:IDFM:C01756",
+    label: "BUS 77",
+    containerId: "bus77-content",
+  },
+  bus201: {
+    monitoringRef: "STIF:StopArea:SP:463644:",
+    scheduleRef: "stop_area:IDFM:463644",
+    lineRef: "line:IDFM:C01810",
+    label: "BUS 201",
+    containerId: "bus201-content",
+  },
 };
-const endpoints = Object.entries(stops).map(([key, id]) => [
-  key,
-  `https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${id}`
-]);
 
-function updateDateTime() {
-  const now = new Date();
-  document.getElementById("current-date").textContent = now.toLocaleDateString("fr-FR");
-  document.getElementById("current-time").textContent = now.toLocaleTimeString("fr-FR");
-  document.getElementById("last-update").textContent = now.toLocaleTimeString("fr-FR");
-}
+const proxy = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=";
 
-async function fetchAndRenderTransport() {
-  for (const [key, url] of endpoints) {
-    try {
-      const res = await fetch(url);
-      const json = await res.json();
-      const container = document.getElementById(`${key}-content`);
-      container.innerHTML = `<h2>${key.toUpperCase()}</h2>`;
-      json.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit.slice(0, 4).forEach((visit) => {
-        const line = visit.MonitoredVehicleJourney.PublishedLineName;
-        const dest = visit.MonitoredVehicleJourney.DestinationName;
-        const aimed = visit.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime;
-        const date = new Date(aimed);
-        container.innerHTML += `<div><strong>Ligne ${line}</strong> → ${dest}<br/>Départ : ${date.toLocaleTimeString("fr-FR")}</div>`;
-      });
-      // Ajout fictif pour premiers/derniers horaires (à remplacer par données GTFS ensuite)
-      container.innerHTML += `<div class="schedules"><em>Premier départ : 05:30</em><br/><em>Dernier départ : 23:45</em></div>`;
-    } catch (e) {
-      console.error("Erreur chargement : ", e);
-    }
+function getFormattedTime(dateStr) {
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return "-";
   }
 }
 
-updateDateTime();
-fetchAndRenderTransport();
-setInterval(updateDateTime, 60000);
-setInterval(fetchAndRenderTransport, 60000);
+async function fetchMonitoringData(stop) {
+  const url = `${proxy}https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${encodeURIComponent(stop.monitoringRef)}`;
+  const res = await fetch(url);
+  const json = await res.json();
+  return json?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
+}
+
+async function fetchScheduleData(stop) {
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "") + "T000000";
+  const url = `${proxy}https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_areas/${stop.scheduleRef}/route_schedules?line=${stop.lineRef}&from_datetime=${dateStr}`;
+  const res = await fetch(url);
+  const json = await res.json();
+  const schedules = json?.route_schedules?.[0]?.table?.rows || [];
+  const departures = schedules.map(row => row.stop_date_times?.[0]?.departure_date_time).filter(Boolean);
+  return departures;
+}
+
+async function updateBlock(stopKey) {
+  const stop = STOPS[stopKey];
+  const container = document.getElementById(stop.containerId);
+  if (!container) return;
+
+  const visits = await fetchMonitoringData(stop);
+  const nextDepartures = visits.slice(0, 4).map(v => {
+    const t = getFormattedTime(v.MonitoredVehicleJourney?.MonitoredCall?.AimedDepartureTime);
+    const dest = v.MonitoredVehicleJourney?.DestinationName || "";
+    return `▶ ${t} → ${dest}`;
+  });
+
+  const scheduled = await fetchScheduleData(stop);
+  const firstTime = getFormattedTime(scheduled[0]);
+  const lastTime = getFormattedTime(scheduled[scheduled.length - 1]);
+
+  container.innerHTML = `
+    <h2>${stop.label}</h2>
+    <ul class="horaire-list">
+      ${nextDepartures.map(d => `<li>${d}</li>`).join("")}
+    </ul>
+    <div class="horaire-extremes">
+      <span>Premier départ : <strong>${firstTime}</strong></span><br>
+      <span>Dernier départ : <strong>${lastTime}</strong></span>
+    </div>
+  `;
+}
+
+function updateDateTime() {
+  const now = new Date();
+  document.getElementById("current-date").textContent = now.toLocaleDateString();
+  document.getElementById("current-time").textContent = now.toLocaleTimeString();
+  document.getElementById("last-update").textContent = now.toLocaleString();
+}
+
+async function refreshAll() {
+  updateDateTime();
+  for (const key of Object.keys(STOPS)) {
+    await updateBlock(key);
+  }
+}
+
+setInterval(refreshAll, 60000);
+refreshAll();

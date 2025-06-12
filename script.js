@@ -40,16 +40,19 @@ function updateDateTime() {
 }
 
 function formatTime(isoString) {
-  try {
-    return new Date(isoString).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return "Invalid Date";
-  }
+  if (!isoString) return "Heure inconnue";
+  const date = new Date(isoString);
+  if (isNaN(date)) return "Heure invalide";
+  return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
 function getDestinationName(name) {
   if (typeof name === "string") return name;
-  if (typeof name === "object") return Object.values(name)[0];
+  if (typeof name === "object") {
+    if (name.value) return name.value;
+    const firstKey = Object.keys(name)[0];
+    return name[firstKey];
+  }
   return "Destination inconnue";
 }
 
@@ -57,7 +60,7 @@ function renderDepartures(elementId, title, data, iconPath, first, last) {
   const container = document.getElementById(elementId);
   let html = `<div class='title-line'><img src='${iconPath}' class='icon-inline'>${title}</div><ul>`;
   for (let d of data.slice(0, 4)) {
-    const time = formatTime(d.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime);
+    const time = formatTime(d.MonitoredVehicleJourney.MonitoredCall?.AimedDepartureTime);
     const destination = getDestinationName(d.MonitoredVehicleJourney.DestinationName);
     html += `<li>▶ ${time} → ${destination}</li>`;
   }

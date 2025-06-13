@@ -1,4 +1,4 @@
- 
+
 const STOP_POINTS = {
   rer: {
     name: "RER A – Joinville-le-Pont",
@@ -32,7 +32,8 @@ async function fetchJSON(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   return await response.json();
-} 
+}
+
 function updateDateTime() {
   const now = new Date();
   document.getElementById("current-date").textContent = now.toLocaleDateString("fr-FR");
@@ -67,6 +68,7 @@ function renderDepartures(elementId, title, data, iconPath, first, last, traffic
   html += "<ul>";
   if (Array.isArray(data)) {
     for (let d of data.slice(0, 4)) {
+      console.log("Départ brut :", d);
       const time = formatTime(d.MonitoredVehicleJourney?.MonitoredCall?.AimedDepartureTime);
       const destination = getDestinationName(d.MonitoredVehicleJourney?.DestinationName);
       html += `<li>▶ ${time} → ${destination}</li>`;
@@ -76,6 +78,16 @@ function renderDepartures(elementId, title, data, iconPath, first, last, traffic
   }
   html += `</ul><div class='schedule-extremes'>Premier départ : ${first || "-"}<br>Dernier départ : ${last || "-"}</div>`;
   container.innerHTML = html;
+}
+
+async function fetchTraffic(stopKey) {
+  try {
+    const data = await fetchJSON(STOP_POINTS[stopKey].trafficUrl);
+    return data?.line_reports?.[0]?.messages?.[0]?.text || "";
+  } catch (e) {
+    console.error("Erreur info trafic :", e);
+    return "";
+  }
 }
 
 async function fetchTransport(stopKey, elementId) {
@@ -99,16 +111,6 @@ async function fetchTransport(stopKey, elementId) {
   }
 }
 
-async function fetchTraffic(stopKey) {
-  try {
-    const data = await fetchJSON(STOP_POINTS[stopKey].trafficUrl);
-    return data?.line_reports?.[0]?.messages?.[0]?.text || "";
-  } catch (e) {
-    console.error("Erreur info trafic :", e);
-    return "";
-  }
-}
-
 async function fetchSchedulesOncePerDay() {
   const today = new Date().toISOString().split("T")[0];
   const savedDay = localStorage.getItem("schedule-day");
@@ -122,9 +124,12 @@ async function fetchSchedulesOncePerDay() {
       const data = await fetchJSON(url);
       const rows = data?.route_schedules?.[0]?.table?.rows || [];
       const times = rows.flatMap(r => r.date_times?.map(dt => dt.departure_date_time.slice(9, 13)) || []);
+      console.log(`Horaires ${key}:`, times);
       if (times.length > 0) {
         const sorted = times.sort();
         const format = t => `${t.slice(0, 2)}:${t.slice(2, 4)}`;
+        console.log(`${key} - Premier départ : ${format(sorted[0])}`);
+        console.log(`${key} - Dernier départ : ${format(sorted[sorted.length - 1])}`);
         localStorage.setItem(`${key}-first`, format(sorted[0]));
         localStorage.setItem(`${key}-last`, format(sorted[sorted.length - 1]));
       }
@@ -140,7 +145,7 @@ async function fetchVelib(stationId, elementId) {
   try {
     const proxyUrl = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/velib/station_status.json";
     const statusData = await fetchJSON(proxyUrl);
-    const station = statusData.data?.stations?.find(s => s.station_id === stationId);
+    const station = statusData.data?.stations?.find(s => s.stationCode === stationId);
     if (!station) throw new Error("Station Vélib non trouvée");
 
     const mec = station.num_bikes_available_types?.find(b => b.ebike === 0)?.bikes || 0;

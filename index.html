@@ -2,60 +2,46 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Panneau Mobilités Hippodrome</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de bord mobilités – Hippodrome Paris-Vincennes</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="img/picto-rer-a.svg">
 </head>
 <body>
-  <main class="dashboard">
-    <header class="dashboard-header">
-      <div class="datetime-alert-zone">
-        <div id="datetime" class="datetime-big">
-          <span id="current-date"></span>
-          <span id="current-time"></span>
-        </div>
-        <div id="traffic-alert" class="traffic-alert hidden"></div>
-      </div>
-    </header>
-    <section class="dashboard-grid">
-      <div class="dashboard-card rer-card" id="rer-content">
-        <img src="img/picto-rer-a.svg" alt="RER A">
-      </div>
-      <div class="dashboard-card bus-card" id="bus77-content">
-        <img src="img/picto-bus.svg" alt="Bus 77">
-      </div>
-      <div class="dashboard-card bus-card" id="bus201-content">
-        <img src="img/picto-bus.svg" alt="Bus 201">
-      </div>
-      <div class="dashboard-card velib-card" id="velib-vincennes">
-        <img src="img/picto-velib.svg" alt="Vélib Vincennes">
-      </div>
-      <div class="dashboard-card velib-card" id="velib-breuil">
-        <img src="img/picto-velib.svg" alt="Vélib Breuil">
-      </div>
-      <div class="dashboard-card horaires-card" id="horaires-debut-fin">
-        <h3>Horaires Premiers / Derniers Départs</h3>
-        <div id="first-last-rer"></div>
-        <div id="first-last-bus77"></div>
-        <div id="first-last-bus201"></div>
-      </div>
-      <div class="dashboard-card meteo-card" id="weather-content">
-        <img src="img/picto-meteo.svg" alt="Météo">
-      </div>
-      <div class="dashboard-card meteo-hours-card" id="meteo-hours-card">
-        <h3>Prévisions horaires</h3>
-        <div id="weather-hourly"></div>
-      </div>
-      <div class="dashboard-card motjour-card" id="motjour-card">
-        <h3>Le mot du jour</h3>
-        <p id="daily-message"></p>
-      </div>
+  <header>
+    <div class="header-logos">
+      <img src="img/logo-vincennes.png" alt="Hippodrome de Vincennes">
+      <h1>Tableau de bord mobilités</h1>
+      <img src="img/logo-idfm.png" alt="Île-de-France Mobilités">
+    </div>
+    <div class="datetime">
+      <span id="current-date"></span> – <span id="current-time"></span>
+    </div>
+  </header>
+
+  <main>
+    <section id="rer-content" class="bloc"></section>
+    <section id="bus77-content" class="bloc"></section>
+    <section id="bus201-content" class="bloc"></section>
+    <section id="velib-vincennes" class="bloc"></section>
+    <section id="velib-breuil" class="bloc"></section>
+    <section id="weather" class="bloc">
+      <div class="title-line"><img src="img/picto-meteo.svg" class="icon-inline">Météo</div>
+      <div id="weather-content">À venir</div>
     </section>
-    <footer class="dashboard-footer">
-      Mise à jour : <span id="last-update"></span>
-    </footer>
+    <section id="extras" class="bloc">
+      <div class="title-line">Prévisions horaires</div>
+      <div class="subtitle">Horaires Premiers / Derniers Départs</div>
+    </section>
+    <section id="mot-du-jour" class="bloc">
+      <div class="title-line">Le mot du jour</div>
+      <div id="mot-content">À insérer ici.</div>
+    </section>
   </main>
-  <script src="script.js"></script>
+
+  <footer>
+    <p>Mise à jour : <span id="last-update"></span></p>
+    <p>© 2025 – Hippodrome Paris-Vincennes</p>
+  </footer>
+
+  <script src="dashboard-complet.js"></script>
 </body>
 </html>

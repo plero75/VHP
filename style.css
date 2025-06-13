@@ -1,79 +1,99 @@
-style_css_updated = """
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
-  padding: 0;
-  background-color: #f7f7f7;
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
   color: #333;
 }
-.dashboard {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-.dashboard-header {
-  background-color: #004080;
+
+header {
+  background: #002f6c;
   color: white;
-  padding: 1em;
+  padding: 10px;
   text-align: center;
 }
-.dashboard-header h1 {
-  margin: 0.3em 0;
-  font-size: 1.8em;
+
+.header-logos {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
 }
-.datetime-big {
-  font-size: 1.2em;
+
+.header-logos img {
+  height: 40px;
+}
+
+.datetime {
+  font-size: 0.9em;
+}
+
+main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 10px;
+}
+
+.bloc {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  margin: 10px;
+  padding: 10px 15px;
+  width: 360px;
+}
+
+.title-line {
   font-weight: bold;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  font-size: 1.2em;
 }
-.traffic-alert.hidden {
-  display: none;
+
+.icon-inline {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
 }
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1em;
-  padding: 1em;
+
+.subtitle {
+  font-style: italic;
+  color: #666;
 }
-.dashboard-card {
-  background-color: white;
-  border-radius: 10px;
-  padding: 1em;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-.dashboard-card h2 {
-  font-size: 1.3em;
-  color: #004080;
-  margin-top: 0;
-}
-.rer-card ul,
-.bus-card ul {
-  list-style-type: none;
+
+ul {
+  list-style: none;
   padding-left: 0;
 }
-.rer-card li,
-.bus-card li {
-  margin: 0.5em 0;
-  padding: 0.5em;
-  background-color: #eef6ff;
-  border-radius: 6px;
+
+li {
+  margin: 4px 0;
 }
-#rer-times,
-#bus77-times,
-#bus201-times {
-  margin-top: 1em;
+
+.schedule-extremes {
+  margin-top: 8px;
   font-size: 0.9em;
-  font-style: italic;
-  color: #444;
-}
-.velib-card p {
-  margin: 0.5em 0;
-  font-size: 1.1em;
-}
-footer.dashboard-footer {
-  background-color: #eee;
-  text-align: center;
-  padding: 1em;
-  font-size: 0.85em;
-  margin-top: auto;
   color: #666;
+}
+
+.info-trafic {
+  margin: 6px 0;
+  padding: 6px;
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  font-size: 0.9em;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+footer {
+  text-align: center;
+  font-size: 0.8em;
+  color: #666;
+  padding: 15px;
 }

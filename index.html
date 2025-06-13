@@ -1,1 +1,46 @@
-<!DOCTYPE html><html><head><title>VHP</title></head><body><script src='script-corrige-velib.js'></script></body></html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Tableau de bord mobilités – Hippodrome</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-logos">
+      <img src="img/logo-vincennes.png" alt="Hippodrome de Vincennes">
+      <h1>Tableau de bord mobilités</h1>
+      <img src="img/logo-idfm.png" alt="Île-de-France Mobilités">
+    </div>
+    <div class="datetime">
+      <span id="current-date"></span> – <span id="current-time"></span>
+    </div>
+  </header>
+
+  <main>
+    <section id="rer-content" class="bloc"></section>
+    <section id="bus77-content" class="bloc"></section>
+    <section id="bus201-content" class="bloc"></section>
+
+    <section id="velib-vincennes" class="bloc"></section>
+    <section id="velib-breuil" class="bloc"></section>
+
+    <section id="weather" class="bloc">
+      <div class="title-line"><img src="img/picto-meteo.svg" class="icon-inline">Météo</div>
+      <div id="weather-content">À venir</div>
+    </section>
+
+    <section id="mot-du-jour" class="bloc">
+      <div class="title-line">Le mot du jour</div>
+      <div id="mot-content">À insérer ici.</div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Mise à jour : <span id="last-update"></span></p>
+    <p>© 2025 – Hippodrome Paris-Vincennes</p>
+  </footer>
+
+  <script src="script-corrige-velib.js"></script>
+</body>
+</html>

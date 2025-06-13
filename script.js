@@ -1,4 +1,3 @@
-
 // Script complet pour RER A, Bus 77, Bus 201, Vélib' avec horaires, info trafic et détection de fin de service
 
 const STOP_POINTS = {

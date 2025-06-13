@@ -60,6 +60,7 @@ main {
 .subtitle {
   font-style: italic;
   color: #666;
+  margin-bottom: 8px;
 }
 
 ul {
@@ -75,14 +76,6 @@ li {
   margin-top: 8px;
   font-size: 0.9em;
   color: #666;
-}
-
-.info-trafic {
-  margin: 6px 0;
-  padding: 6px;
-  background: #fff3cd;
-  border-left: 4px solid #ffc107;
-  font-size: 0.9em;
 }
 
 .error {

@@ -1,25 +1,22 @@
-// Script complet pour RER A, Bus 77, Bus 201, Vélib' avec horaires, info trafic et détection de fin de service
+// Script sans API trafic, corrigé pour éviter les erreurs si les données ne sont pas disponibles
 
 const STOP_POINTS = {
   rer: {
     name: "RER A",
     url: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:43135:",
     scheduleUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_points/stop_point:IDFM:monomodalStopPlace:43135/route_schedules?line=line:IDFM:C01742&from_datetime=",
-    infoUrl: "https://traffic.api.iledefrance-mobilites.fr/v1/tr-messages-it?LineRef=RER-A",
     icon: "img/picto-rer-a.svg"
   },
   bus77: {
     name: "Bus 77",
     url: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463641:",
     scheduleUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_points/stop_point:IDFM:463640/route_schedules?line=line:IDFM:C02251&from_datetime=",
-    infoUrl: "https://traffic.api.iledefrance-mobilites.fr/v1/tr-messages-it?LineRef=C02251",
     icon: "img/picto-bus.svg"
   },
   bus201: {
     name: "Bus 201",
     url: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463644:",
     scheduleUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_points/stop_point:IDFM:463646/route_schedules?line=line:IDFM:C02119&from_datetime=",
-    infoUrl: "https://traffic.api.iledefrance-mobilites.fr/v1/tr-messages-it?LineRef=C02119",
     icon: "img/picto-bus.svg"
   }
 };
@@ -60,14 +57,10 @@ function isServiceTerminated(firstTime, lastTime, now) {
   return now < first || now > last;
 }
 
-function renderDepartures(elementId, title, data, iconPath, first, last, infoTrafic) {
+function renderDepartures(elementId, title, data, iconPath, first, last) {
   const container = document.getElementById(elementId);
   const now = new Date();
   let html = `<div class='title-line'><img src='${iconPath}' class='icon-inline'>${title}</div>`;
-
-  if (infoTrafic) {
-    html += `<div class='info-trafic'>⚠️ ${infoTrafic}</div>`;
-  }
 
   if (isServiceTerminated(first, last, now)) {
     html += `<div class='error'>Service terminé pour aujourd’hui. Rendez-vous demain à ${first}</div>`;
@@ -98,23 +91,9 @@ async function fetchJSON(url) {
   return await response.json();
 }
 
-async function fetchInfoTrafic(stopKey) {
-  try {
-    const url = STOP_POINTS[stopKey].infoUrl;
-    const response = await fetch(url);
-    const json = await response.json();
-    return json.messages?.[0]?.text || "";
-  } catch {
-    return "";
-  }
-}
-
 async function fetchTransport(stopKey, elementId) {
   try {
-    const [data, info] = await Promise.all([
-      fetchJSON(STOP_POINTS[stopKey].url),
-      fetchInfoTrafic(stopKey)
-    ]);
+    const data = await fetchJSON(STOP_POINTS[stopKey].url);
     const visits = data.Siri.ServiceDelivery.StopMonitoringDelivery?.[0]?.MonitoredStopVisit;
     renderDepartures(
       elementId,
@@ -122,8 +101,7 @@ async function fetchTransport(stopKey, elementId) {
       visits,
       STOP_POINTS[stopKey].icon,
       localStorage.getItem(`${stopKey}-first`) || "?",
-      localStorage.getItem(`${stopKey}-last`) || "?",
-      info
+      localStorage.getItem(`${stopKey}-last`) || "?"
     );
   } catch (e) {
     console.error(`Erreur fetchTransport (${stopKey}):`, e);
@@ -144,7 +122,7 @@ async function fetchSchedulesOncePerDay() {
       const url = STOP_POINTS[key].scheduleUrl + datetime;
       const data = await fetchJSON(url);
       const rows = data?.route_schedules?.[0]?.table?.rows || [];
-      const times = rows.flatMap(r => r.date_times?.map(dt => dt.departure_date_time.slice(9, 13)) || []);
+      const times = rows.flatMap(r => r.date_times?.map(dt => dt.departure_date_time?.slice(9, 13)).filter(Boolean) || []);
       if (times.length > 0) {
         const sorted = times.sort();
         const format = t => `${t.slice(0, 2)}:${t.slice(2, 4)}`;
@@ -199,3 +177,28 @@ function refreshAll() {
 
 setInterval(refreshAll, 60000);
 refreshAll();
+
+
+
+async function fetchTraffic(lineCode, elementId) {
+  const url = `https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:${lineCode}`;
+  try {
+    const data = await fetchJSON(url);
+    const report = data.line_reports?.[0];
+    if (report && report.messages?.length) {
+      const severity = report.severity?.name || "Info trafic";
+      const message = report.messages[0]?.text || "Alerte trafic en cours";
+      const container = document.getElementById(elementId);
+      if (container) {
+        container.innerHTML += `<div class="info-trafic">⚠️ <strong>${severity}</strong><br>${message}</div>`;
+      }
+    }
+  } catch (e) {
+    console.warn("Erreur info trafic :", e);
+  }
+}
+
+// Appels spécifiques aux lignes
+fetchTraffic("C01742", "rer-content");
+fetchTraffic("C02251", "bus77-content");
+fetchTraffic("C02119", "bus201-content");

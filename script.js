@@ -24,8 +24,8 @@ const STOP_POINTS = {
 };
 
 const VELIB_IDS = {
-  vincennes: "1074333296",
-  breuil: "508042092"
+  vincennes: "12163",
+  breuil: "12128"
 };
 
 async function fetchJSON(url) {

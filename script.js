@@ -1,4 +1,3 @@
-
 const STOP_POINTS = {
   rer: {
     name: "RER A – Joinville-le-Pont",
@@ -65,16 +64,28 @@ function renderDepartures(elementId, title, data, iconPath, first, last, traffic
   if (trafficMsg) {
     html += `<div class='subtitle'>⚠️ ${trafficMsg}</div>`;
   }
+
+  const now = new Date();
+  const [firstH, firstM] = (first || "00:00").split(":").map(Number);
+  const [lastH, lastM] = (last || "23:59").split(":").map(Number);
+  const start = new Date(now).setHours(firstH, firstM);
+  const end = new Date(now).setHours(lastH, lastM);
+
   html += "<ul>";
-  if (Array.isArray(data)) {
+  if (Array.isArray(data) && data.length > 0) {
     for (let d of data.slice(0, 4)) {
-      console.log("Départ brut :", d);
       const time = formatTime(d.MonitoredVehicleJourney?.MonitoredCall?.AimedDepartureTime);
       const destination = getDestinationName(d.MonitoredVehicleJourney?.DestinationName);
       html += `<li>▶ ${time} → ${destination}</li>`;
     }
   } else {
-    html += "<li>Aucune donnée disponible</li>";
+    if (now < start) {
+      html += "<li>🕐 Service non commencé</li>";
+    } else if (now > end) {
+      html += "<li>⛔ Service terminé – prochain passage demain</li>";
+    } else {
+      html += "<li>Aucune donnée disponible</li>";
+    }
   }
   html += `</ul><div class='schedule-extremes'>Premier départ : ${first || "-"}<br>Dernier départ : ${last || "-"}</div>`;
   container.innerHTML = html;
@@ -124,17 +135,14 @@ async function fetchSchedulesOncePerDay() {
       const data = await fetchJSON(url);
       const rows = data?.route_schedules?.[0]?.table?.rows || [];
       const times = rows.flatMap(r => r.date_times?.map(dt => dt.departure_date_time.slice(9, 13)) || []);
-      console.log(`Horaires ${key}:`, times);
       if (times.length > 0) {
         const sorted = times.sort();
         const format = t => `${t.slice(0, 2)}:${t.slice(2, 4)}`;
-        console.log(`${key} - Premier départ : ${format(sorted[0])}`);
-        console.log(`${key} - Dernier départ : ${format(sorted[sorted.length - 1])}`);
         localStorage.setItem(`${key}-first`, format(sorted[0]));
         localStorage.setItem(`${key}-last`, format(sorted[sorted.length - 1]));
       }
     } catch (e) {
-      console.error(`Erreur fetchSchedulesOncePerDay (${key}):`, e);
+      console.error(`Erreur horaires (${key}):`, e);
     }
   }
 
@@ -162,6 +170,44 @@ async function fetchVelib(stationId, elementId) {
   }
 }
 
+async function fetchWeather() {
+  const el = document.getElementById("meteo");
+  try {
+    const data = await fetchJSON("https://api.open-meteo.com/v1/forecast?latitude=48.823&longitude=2.448&current=temperature_2m,weathercode,windspeed_10m&timezone=Europe%2FParis");
+    const w = data.current;
+    const icon = getWeatherIcon(w.weathercode);
+    el.innerHTML = `<div class='title-line'><img src='img/picto-meteo.svg' class='icon-inline'>Météo</div>${icon} ${Math.round(w.temperature_2m)}°C – Vent ${Math.round(w.windspeed_10m)} km/h`;
+  } catch (e) {
+    console.error("Erreur météo :", e);
+    el.innerHTML = `<div class='title-line'><img src='img/picto-meteo.svg' class='icon-inline'>Météo</div><div class='error'>Indispo</div>`;
+  }
+}
+
+function getWeatherIcon(code) {
+  if ([0, 1].includes(code)) return "☀️";
+  if ([2, 3].includes(code)) return "⛅";
+  if ([45, 48].includes(code)) return "🌫";
+  if ([51, 61, 80, 81].includes(code)) return "🌧";
+  if ([71, 73, 75].includes(code)) return "❄️";
+  return "🌦";
+}
+
+async function fetchTrafficRoad() {
+  const el = document.getElementById("trafic-routier");
+  try {
+    const data = await fetchJSON("https://data.cerema.fr/api/records/1.0/search/?dataset=etat-du-trafic-en-temps-reel&rows=100&q=A86");
+    const html = data.records
+      .filter(r => /A86|Périphérique/i.test(r.fields.nom_route))
+      .slice(0, 3)
+      .map(r => `🚘 ${r.fields.nom_route} : ${r.fields.etat_trafic_libelle}`)
+      .join("<br>");
+    el.innerHTML = `<div class='title-line'><img src='img/picto-trafic.svg' class='icon-inline'>Trafic routier</div>${html}`;
+  } catch (e) {
+    console.error("Erreur trafic routier :", e);
+    el.innerHTML = `<div class='title-line'><img src='img/picto-trafic.svg' class='icon-inline'>Trafic routier</div><div class='error'>Indispo</div>`;
+  }
+}
+
 function refreshAll() {
   updateDateTime();
   fetchSchedulesOncePerDay();
@@ -170,6 +216,8 @@ function refreshAll() {
   fetchTransport("bus201", "bus201-content");
   fetchVelib(VELIB_IDS.vincennes, "velib-vincennes");
   fetchVelib(VELIB_IDS.breuil, "velib-breuil");
+  fetchWeather();
+  fetchTrafficRoad();
 }
 
 setInterval(refreshAll, 60000);

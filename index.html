@@ -2,44 +2,35 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Tableau de bord mobilités – Hippodrome</title>
+  <title>Tableau de bord Mobilités – Hippodrome Vincennes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="img/picto-rer-a.svg">
 </head>
 <body>
-  <header>
-    <div class="header-logos">
-      <img src="img/logo-vincennes.png" alt="Hippodrome de Vincennes">
-      <h1>Tableau de bord mobilités</h1>
-      <img src="img/logo-idfm.png" alt="Île-de-France Mobilités">
-    </div>
-    <div class="datetime">
-      <span id="current-date"></span> – <span id="current-time"></span>
-    </div>
-  </header>
+  <main class="dashboard">
+    <header class="dashboard-header">
+      <div class="datetime-alert-zone">
+        <div id="datetime" class="datetime-big">
+          <span id="current-date"></span>
+          <span id="current-time"></span>
+        </div>
+        <div id="traffic-alert" class="traffic-alert hidden"></div>
+      </div>
+    </header>
 
-  <main>
-    <section id="rer-content" class="bloc"></section>
-    <section id="bus77-content" class="bloc"></section>
-    <section id="bus201-content" class="bloc"></section>
-
-    <section id="velib-vincennes" class="bloc"></section>
-    <section id="velib-breuil" class="bloc"></section>
-
-    <section id="weather" class="bloc">
-      <div class="title-line"><img src="img/picto-meteo.svg" class="icon-inline">Météo</div>
-      <div id="weather-content">À venir</div>
+    <section class="dashboard-grid">
+      <div class="dashboard-card rer-card" id="rer-content"></div>
+      <div class="dashboard-card bus-card" id="bus77-content"></div>
+      <div class="dashboard-card bus-card" id="bus201-content"></div>
+      <div class="dashboard-card velib-card" id="velib-vincennes"></div>
+      <div class="dashboard-card velib-card" id="velib-breuil"></div>
     </section>
 
-    <section id="mot-du-jour" class="bloc">
-      <div class="title-line">Le mot du jour</div>
-      <div id="mot-content">À insérer ici.</div>
-    </section>
+    <footer class="dashboard-footer">
+      Mise à jour : <span id="last-update"></span>
+    </footer>
   </main>
-
-  <footer>
-    <p>Mise à jour : <span id="last-update"></span></p>
-    <p>© 2025 – Hippodrome Paris-Vincennes</p>
-  </footer>
 
   <script src="script.js"></script>
 </body>

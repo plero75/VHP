@@ -1,5 +1,4 @@
 /* Styles RATP-like */
-
 body {
   margin: 0;
   padding: 0;
@@ -7,14 +6,11 @@ body {
   background-color: #f5f5f5;
   color: #212121;
 }
-
 .dashboard {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
-
-/* En-tête */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -24,13 +20,11 @@ body {
   padding: 12px 20px;
   border-bottom: 4px solid #00a1de;
 }
-
 .datetime-alert-zone div {
   font-size: 1.4rem;
   font-weight: 700;
   text-transform: uppercase;
 }
-
 #traffic-alert {
   background-color: #e00034;
   color: #ffffff;
@@ -39,17 +33,15 @@ body {
   font-weight: 600;
   text-align: center;
 }
-
-.hidden { display: none; }
-
-/* Grille et cartes */
+.hidden {
+  display: none;
+}
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
   margin-top: 20px;
 }
-
 .dashboard-card {
   position: relative;
   background-color: #ffffff;
@@ -57,7 +49,6 @@ body {
   border-top: 4px solid #00a1de;
   padding: 16px;
 }
-
 .title-line {
   font-size: 1.1rem;
   font-weight: 700;
@@ -67,40 +58,105 @@ body {
   margin-bottom: 8px;
   color: #14295e;
 }
-
-.icon-inline { width: 20px; height: 20px; margin-right: 8px; }
-
-ul { list-style: none; padding: 0; margin: 0; }
-li { margin-bottom: 6px; position: relative; padding-left: 18px; }
-li:before { content: '▶'; position: absolute; left: 0; color: #00a1de; }
-
-.schedule-extremes { font-size: 0.85rem; margin-top: 10px; color: #424242; }
-
+.icon-inline {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+li {
+  margin-bottom: 6px;
+  position: relative;
+  padding-left: 18px;
+}
+li:before {
+  content: '▶';
+  position: absolute;
+  left: 0;
+  color: #00a1de;
+}
+.schedule-extremes {
+  font-size: 0.85rem;
+  margin-top: 10px;
+  color: #424242;
+}
+.traffic-info {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #e00034;
+  font-weight: 600;
+}
+.error {
+  color: #e00034;
+  font-style: italic;
+}
+.dashboard-footer {
+  text-align: right;
+  font-size: 0.8rem;
+  color: #424242;
+  margin-top: 30px;
+}
 /* Perturbations */
-.perturb-header { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; z-index: 10; }
-.perturb-icon, .delay-icon, .cancel-icon { width: 24px; height: 24px; }
-.delay-icon { filter: hue-rotate(90deg); }    /* couleur orange pour retards */
-.cancel-icon { filter: hue-rotate(0deg) saturate(200%); } /* rouge pour suppression */
+.perturb-header {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+}
+.perturb-icon { width: 24px; height: 24px; }
+.delay-icon { width: 24px; height: 24px; filter: hue-rotate(45deg); }
+.cancel-icon { width: 24px; height: 24px; filter: hue-rotate(0deg) saturate(200%); }
 .perturb-more {
-  display: flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px; background: #e0e0e0;
-  color: #333; font-weight: bold; border-radius: 2px; font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #e0e0e0;
+  color: #333;
+  font-weight: bold;
+  border-radius: 2px;
+  font-size: 0.85rem;
 }
-
 .perturb-panel {
-  margin-top: 12px; padding: 8px; background: #fff;
-  border: 1px solid #ccc; border-left: 4px solid #e00034;
-  max-height: 120px; overflow-y: auto; font-size: 0.9rem;
+  margin-top: 12px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-left: 4px solid #e00034;
+  max-height: 120px;
+  overflow-y: auto;
+  font-size: 0.9rem;
 }
-
 /* Vélib’ */
-.velib-stats { display: flex; justify-content: space-between; margin-top: 8px; }
-.velib-stats > div { text-align: center; flex: 1; }
-.velib-icon { font-size: 1.5rem; margin-bottom: 4px; }
-.velib-count { font-size: 1.2rem; font-weight: bold; }
-.velib-label { font-size: 0.85rem; color: #666; margin-top: 2px; }
+.velib-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.velib-stats > div {
+  text-align: center;
+  flex: 1;
+}
+.velib-icon {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+.velib-count {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.velib-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 2px;
+}
 .velib-mechanical .velib-icon { color: #007bff; }
-.velib-electric   .velib-icon { color: #e91e63; }
-.velib-free       .velib-icon { color: #4caf50; }
-
-.dashboard-footer { text-align: right; font-size: 0.8rem; color: #424242; margin-top: 30px; }
+.velib-electric .velib-icon { color: #e91e63; }
+.velib-free .velib-icon { color: #4caf50; }

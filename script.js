@@ -110,16 +110,32 @@ async function fetchTransportBlock(key, containerId) {
       fetchJSON(STOP_POINTS[key].trafficUrl)
     ]);
 
-    const visits = realtime.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit || [];
+    let visits = realtime
+      .Siri
+      .ServiceDelivery[0]
+      .StopMonitoringDelivery[0]
+      .MonitoredStopVisit || [];
+
+    // ————— FILTRE DIRECTION —————
+    const cfg = STOP_POINTS[key];
+    if (cfg.directionRef) {
+      visits = visits.filter(v =>
+        v.MonitoredVehicleJourney.DirectionRef === cfg.directionRef
+      );
+    }
+    // ————————————————————————
+
     const disruptionsData = traffic.disruptions || [];
     const message = disruptionsData.map(d => d.messages[0]?.text).join("<br>");
-    const disruptions = disruptionsData.map(d => ({ lineId: d.line_id, messages: d.messages }));
+    const disruptions = disruptionsData.map(d => ({
+      lineId: d.line_id, messages: d.messages
+    }));
 
     renderDepartures(
       containerId,
-      STOP_POINTS[key].name,
+      cfg.name,
       visits,
-      STOP_POINTS[key].icon,
+      cfg.icon,
       localStorage.getItem(`${key}-first`) || "-",
       localStorage.getItem(`${key}-last`) || "-",
       message,
@@ -130,7 +146,10 @@ async function fetchTransportBlock(key, containerId) {
   } catch (err) {
     console.error("Erreur sur " + key, err);
     document.getElementById(containerId).innerHTML = `
-      <div class="title-line"><img src="${STOP_POINTS[key].icon}" class="icon-inline">${STOP_POINTS[key].name}</div>
+      <div class="title-line">
+        <img src="${STOP_POINTS[key].icon}" class="icon-inline">
+        ${STOP_POINTS[key].name}
+      </div>
       <div class="error">Données indisponibles</div>`;
   }
 }

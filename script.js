@@ -143,19 +143,38 @@ async function fetchVelib(stationId, containerId) {
     const station = data.data.stations.find(s => s.station_id == stationId);
     if (!station) throw new Error("Station non trouvée");
 
+    // On sépare les vélos mécaniques et électriques
     const mech = station.num_bikes_available_types.find(b => b.ebike === 0)?.bikes || 0;
     const elec = station.num_bikes_available_types.find(b => b.ebike === 1)?.bikes || 0;
     const free = station.num_docks_available;
 
     document.getElementById(containerId).innerHTML = `
-      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-      🚲 Mécaniques : ${mech}<br>
-      ⚡ Électriques : ${elec}<br>
-      🅿️ Places libres : ${free}`;
+      <div class='title-line'>
+        <img src='img/picto-velib.svg' class='icon-inline'>Vélib'
+      </div>
+      <div class="velib-stats">
+        <div class="velib-mechanical">
+          <span class="velib-icon">🚲</span>
+          <span class="velib-count">${mech}</span>
+          <span class="velib-label">Mécaniques</span>
+        </div>
+        <div class="velib-electric">
+          <span class="velib-icon">⚡</span>
+          <span class="velib-count">${elec}</span>
+          <span class="velib-label">Électriques</span>
+        </div>
+        <div class="velib-free">
+          <span class="velib-icon">🅿️</span>
+          <span class="velib-count">${free}</span>
+          <span class="velib-label">Places libres</span>
+        </div>
+      </div>`;
   } catch (e) {
     console.error("Erreur Vélib", e);
     document.getElementById(containerId).innerHTML = `
-      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+      <div class='title-line'>
+        <img src='img/picto-velib.svg' class='icon-inline'>Vélib'
+      </div>
       <div class='error'>Erreur chargement</div>`;
   }
 }

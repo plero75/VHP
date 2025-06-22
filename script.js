@@ -95,27 +95,41 @@ async function fetchTransportBlock(key, containerId) {
       fetchJSON(STOP_POINTS[key].realtimeUrl),
       fetchJSON(STOP_POINTS[key].trafficUrl)
     ]);
-    let visits = realtime.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit||[];
-    const disruptionsData = traffic.disruptions||[];
-    const enrichedMsg = disruptionsData.map(d => d.messages[0]?.text||'').join("<br>");
-    const disruptions = disruptionsData.map(d => ({ lineId: d.line_id, messages: d.messages, type: d.kind==='major'?'cancel':d.kind==='delay'?'delay':'normal' }));
+
+    let visits = realtime.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit || [];
+    const disruptionsData = traffic.disruptions || [];
+    const enrichedMsg = disruptionsData.map(d => d.messages[0]?.text || '').join("<br>");
+
+    const disruptions = disruptionsData
+      .filter(d => d.line_id) // On s'assure que line_id existe
+      .map(d => ({
+        lineId: d.line_id,
+        messages: d.messages,
+        type: d.kind === 'major' ? 'cancel' : (d.kind === 'delay' ? 'delay' : 'normal')
+      }));
 
     renderDepartures(
       containerId,
       STOP_POINTS[key].name,
       visits,
       STOP_POINTS[key].icon,
-      localStorage.getItem(`${key}-first`)||"-",
-      localStorage.getItem(`${key}-last`)||"-",
+      localStorage.getItem(`${key}-first`) || "-",
+      localStorage.getItem(`${key}-last`) || "-",
       enrichedMsg,
-      key==="rer",
+      key === "rer",
       disruptions
     );
   } catch(err) {
     console.error(`Erreur sur ${key}`, err);
-    document.getElementById(containerId).innerHTML = `<div class=\"title-line\"><img src=\"${STOP_POINTS[key].icon}\" class=\"icon-inline\">${STOP_POINTS[key].name}</div><div class=\"error\">Données indisponibles</div>`;
+    document.getElementById(containerId).innerHTML = `
+      <div class="title-line">
+        <img src="${STOP_POINTS[key].icon}" class="icon-inline">
+        ${STOP_POINTS[key].name}
+      </div>
+      <div class="error">Données indisponibles</div>`;
   }
 }
+
 
 async function fetchVelib(stationId, containerId) {
   try {

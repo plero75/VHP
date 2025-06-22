@@ -1,4 +1,4 @@
-// Fonction pour décoder les entités HTML
+// Décodage d'entités HTML
 function decodeEntities(encoded) {
   const txt = document.createElement('textarea');
   txt.innerHTML = encoded;
@@ -12,7 +12,7 @@ const STOP_POINTS = {
     realtimeUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:43135:",
     scheduleUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_points/stop_point:IDFM:monomodalStopPlace:43135/route_schedules?line=line:IDFM:C01742&from_datetime=",
     trafficUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C01742",
-    directionRef: null // Renseigner si on veut filtrer un sens
+    directionRef: null // Filtrer un seul sens si nécessaire (ex: "IDFM:Direction:3-C")
   },
   bus77: {
     name: "BUS 77",
@@ -58,12 +58,14 @@ function getDestination(dest) {
 function renderDepartures(id, name, visits, icon, first, last, message, isRer, disruptions) {
   const el = document.getElementById(id);
   let iconsHtml = '';
-  if (disruptions.length) {
-    disruptions.slice(0, 4).forEach(d => {
-      iconsHtml += `<img src="img/picto-${d.lineId}.svg" class="perturb-icon" title="${decodeEntities(d.messages[0]?.text||'')}">`;
-    });
-    if (disruptions.length > 4) iconsHtml += `<div class="perturb-more">+${disruptions.length - 4}</div>`;
-  }
+  disruptions.forEach(d => {
+    let cls = 'perturb-icon';
+    if (d.type === 'delay') cls = 'delay-icon';
+    else if (d.type === 'cancel') cls = 'cancel-icon';
+    iconsHtml += `<img src="img/picto-${d.lineId}.svg" class="${cls}" title="${decodeEntities(d.messages[0]?.text||'')}">`;
+  });
+  if (disruptions.length > 4) iconsHtml += `<div class="perturb-more">+${disruptions.length - 4}</div>`;
+
   let html = `<div class="title-line"><img src="${icon}" class="icon-inline">${name}</div>`;
   html += `<div class="perturb-header">${iconsHtml}</div><ul>`;
   visits.slice(0, 4).forEach(d => {
@@ -73,6 +75,7 @@ function renderDepartures(id, name, visits, icon, first, last, message, isRer, d
   html += `</ul><div class="schedule-extremes">Premier départ : ${first||"-"}<br>Dernier départ : ${last||"-"}</div>`;
   html += `<div class="perturb-panel">${message?decodeEntities(message):'Pas de message'}</div>`;
   el.innerHTML = html;
+
   if (isRer) {
     const alertEl = document.getElementById("traffic-alert");
     if (message) { alertEl.innerHTML = decodeEntities(message); alertEl.classList.remove("hidden"); }
@@ -92,17 +95,19 @@ async function fetchTransportBlock(key, containerId) {
       fetchJSON(STOP_POINTS[key].realtimeUrl),
       fetchJSON(STOP_POINTS[key].trafficUrl)
     ]);
-    let visits = realtime.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit || [];
-    console.log('Directions dispo', key, [...new Set(visits.map(v=>v.MonitoredVehicleJourney.DirectionRef))]);
+    let visits = realtime.Siri.ServiceDelivery[0].StopMonitoringDelivery[0].MonitoredStopVisit||[];
     const cfg = STOP_POINTS[key];
-    if (cfg.directionRef) visits = visits.filter(v => v.MonitoredVehicleJourney.DirectionRef === cfg.directionRef);
+    if (cfg.directionRef) visits = visits.filter(v=>v.MonitoredVehicleJourney.DirectionRef===cfg.directionRef);
+
     const disruptionsData = traffic.disruptions || [];
-    const enrichedMsg = disruptionsData.map(d => {
-      const txt = d.messages[0]?.text||'';
-      const stops = Array.isArray(d.affectedStopPoints) ? d.affectedStopPoints.map(s => s.name || s).join(', ') : '';
-      return stops ? `${txt} (Arrêts : ${stops})` : txt;
-    }).join("<br>");
-    const disruptions = disruptionsData.map(d => ({ lineId: d.line_id, messages: d.messages }));
+    const enrichedMsg = disruptionsData.map(d=>d.messages[0]?.text||'').join("<br>");
+    const disruptions = disruptionsData.map(d => ({
+      lineId: d.line_id,
+      messages: d.messages,
+      // gestion des types de perturbation
+      type: d.kind === 'major' ? 'cancel' : d.kind === 'delay' ? 'delay' : 'normal'
+    }));
+
     renderDepartures(
       containerId,
       cfg.name,
@@ -115,8 +120,10 @@ async function fetchTransportBlock(key, containerId) {
       disruptions
     );
   } catch(err) {
-    console.error("Erreur sur " + key, err);
-    document.getElementById(containerId).innerHTML = `<div class=\"title-line\"><img src=\"${STOP_POINTS[key].icon}\" class=\"icon-inline\">${STOP_POINTS[key].name}</div><div class=\"error\">Données indisponibles</div>`;
+    console.error(`Erreur sur ${key}`, err);
+    document.getElementById(containerId).innerHTML = `
+      <div class="title-line"><img src="${STOP_POINTS[key].icon}" class="icon-inline">${STOP_POINTS[key].name}</div>
+      <div class="error">Données indisponibles</div>`;
   }
 }
 
@@ -126,13 +133,15 @@ async function fetchVelib(stationId, containerId) {
     const data = await fetchJSON(url);
     const station = data.data.stations.find(s => String(s.station_id) === String(stationId));
     if (!station) throw new Error("Station non trouvée");
-    if (station.is_installed === 0) throw new Error("Station en cours d'installation");
-    if (station.is_renting === 0) throw new Error("Location de vélos indisponible");
-    if (station.is_returning === 0) throw new Error("Retour de vélos indisponible");
+    if (!station.is_installed) throw new Error("Station en cours d'installation");
+    if (!station.is_renting) throw new Error("Location de vélos indisponible");
+    if (!station.is_returning) throw new Error("Retour de vélos indisponible");
+
     const types = station.num_bikes_available_types[0] || {};
     const mech = types.mechanical || 0;
     const elec = types.ebike || 0;
     const free = station.num_docks_available;
+
     document.getElementById(containerId).innerHTML = `
       <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
       <div class="velib-stats">
@@ -144,7 +153,9 @@ async function fetchVelib(stationId, containerId) {
     `;
   } catch(e) {
     console.error("Erreur Vélib", e);
-    document.getElementById(containerId).innerHTML = `<div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div><div class='error'>${e.message}</div>`;
+    document.getElementById(containerId).innerHTML = `
+      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+      <div class='error'>${e.message}</div>`;
   }
 }
 

@@ -1,35 +1,31 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Tableau de bord Mobilités – Hippodrome Vincennes</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="img/picto-rer-a.svg">
-</head>
-<body>
-  <main class="dashboard">
-    <header class="dashboard-header">
-      <div class="datetime-alert-zone">
-        <div id="current-date"></div>
-        <div id="current-time"></div>
-      </div>
-      <div id="traffic-alert" class="hidden"></div>
-    </header>
-
-    <section class="dashboard-grid">
-      <div class="dashboard-card" id="rer-content"></div>
-      <div class="dashboard-card" id="bus77-content"></div>
-      <div class="dashboard-card" id="bus201-content"></div>
-      <div class="dashboard-card" id="velib-vincennes"></div>
-      <div class="dashboard-card" id="velib-breuil"></div>
-    </section>
-
-    <footer class="dashboard-footer">
-      Mise à jour : <span id="last-update"></span>
-    </footer>
-  </main>
-
-  <script src="script.js"></script>
-</body>
-</html>
+VHP/:1  Access to fetch at 'https://velib-metropole-opendata.smovengo.cloud/opendata/Velib_Metropole/station_status.json' from origin 'https://plero75.github.io' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+velib-metropole-opendata.smovengo.cloud/opendata/Velib_Metropole/station_status.json:1 
+            
+            
+            Failed to load resource: net::ERR_FAILED
+script.js:155  Erreur Vélib TypeError: Failed to fetch
+    at fetchJSON (script.js:87:21)
+    at fetchVelib (script.js:133:24)
+    at refreshAll (script.js:187:3)
+    at script.js:192:1
+fetchVelib @ script.js:155
+VHP/:1  Access to fetch at 'https://velib-metropole-opendata.smovengo.cloud/opendata/Velib_Metropole/station_status.json' from origin 'https://plero75.github.io' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+velib-metropole-opendata.smovengo.cloud/opendata/Velib_Metropole/station_status.json:1 
+            
+            
+            Failed to load resource: net::ERR_FAILED
+script.js:155  Erreur Vélib TypeError: Failed to fetch
+    at fetchJSON (script.js:87:21)
+    at fetchVelib (script.js:133:24)
+    at refreshAll (script.js:188:3)
+    at script.js:192:1
+fetchVelib @ script.js:155
+script.js:123  Erreur sur rer TypeError: Cannot read properties of undefined (reading 'StopMonitoringDelivery')
+    at fetchTransportBlock (script.js:98:51)
+fetchTransportBlock @ script.js:123
+script.js:123  Erreur sur bus201 TypeError: Cannot read properties of undefined (reading 'StopMonitoringDelivery')
+    at fetchTransportBlock (script.js:98:51)
+fetchTransportBlock @ script.js:123
+script.js:123  Erreur sur bus77 TypeError: Cannot read properties of undefined (reading 'StopMonitoringDelivery')
+    at fetchTransportBlock (script.js:98:51)
+fetchTransportBlock @ script.js:123

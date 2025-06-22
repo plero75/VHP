@@ -119,7 +119,8 @@ async function fetchTransportBlock(key, containerId) {
 
 async function fetchVelib(stationId, containerId) {
   try {
-    const url = "https://velib-metropole-opendata.smovengo.cloud/opendata/Velib_Metropole/station_status.json";
+    const proxy = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=";
+    const url = proxy + encodeURIComponent("https://velib-metropole-opendata.smovengo.cloud/opendata/Velib_Metropole/station_status.json");
     const data = await fetchJSON(url);
     const station = data.data.stations.find(s => String(s.station_id) === String(stationId));
     if (!station) throw new Error("Station non trouvée");
@@ -127,23 +128,25 @@ async function fetchVelib(stationId, containerId) {
     if (!station.is_renting) throw new Error("Location de vélos indisponible");
     if (!station.is_returning) throw new Error("Retour de vélos indisponible");
 
-    const types = station.num_bikes_available_types[0]||{};
-    const mech = types.mechanical||0;
-    const elec = types.ebike||0;
+    const types = station.num_bikes_available_types[0] || {};
+    const mech = types.mechanical || 0;
+    const elec = types.ebike || 0;
     const free = station.num_docks_available;
 
     document.getElementById(containerId).innerHTML = `
       <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
       <div class="velib-stats">
-        <div class="velib-mechanical"><span class="velib-icon">🚲</span><span class="velib-count">${mech}</span><span class="velib-label">Mécaniques</span></div>
-        <div class="velib-electric"><span class="velib-icon">⚡</span><span class="velib-count">${elec}</span><span class="velib-label">Électriques</span></div>
-        <div class="velib-free"><span class="velib-icon">🅿️</span><span class="velib-count">${free}</span><span class="velib-label">Places libres</span></div>
+        <div class="velib-mechanical">🚲 Mécaniques : ${mech}</div>
+        <div class="velib-electric">⚡ Électriques : ${elec}</div>
+        <div class="velib-free">🅿️ Places libres : ${free}</div>
       </div>
       <div class="velib-last">Dernière MAJ : ${new Date(station.last_reported*1000).toLocaleTimeString("fr-FR")}</div>
     `;
   } catch(e) {
     console.error("Erreur Vélib", e);
-    document.getElementById(containerId).innerHTML = `<div class=\"title-line\"><img src=\"img/picto-velib.svg\" class=\"icon-inline\">Vélib'</div><div class=\"error\">${e.message}</div>`;
+    document.getElementById(containerId).innerHTML = `
+      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+      <div class='error'>${e.message}</div>`;
   }
 }
 

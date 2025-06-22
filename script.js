@@ -95,24 +95,16 @@ async function fetchTransportBlock(key, containerId) {
       fetchJSON(STOP_POINTS[key].realtimeUrl),
       fetchJSON(STOP_POINTS[key].trafficUrl)
     ]);
-    let visits = realtime.Siri.ServiceDelivery[0].StopMonitoringDelivery[0].MonitoredStopVisit||[];
-    const cfg = STOP_POINTS[key];
-    if (cfg.directionRef) visits = visits.filter(v=>v.MonitoredVehicleJourney.DirectionRef===cfg.directionRef);
-
-    const disruptionsData = traffic.disruptions || [];
-    const enrichedMsg = disruptionsData.map(d=>d.messages[0]?.text||'').join("<br>");
-    const disruptions = disruptionsData.map(d => ({
-      lineId: d.line_id,
-      messages: d.messages,
-      // gestion des types de perturbation
-      type: d.kind === 'major' ? 'cancel' : d.kind === 'delay' ? 'delay' : 'normal'
-    }));
+    let visits = realtime.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit||[];
+    const disruptionsData = traffic.disruptions||[];
+    const enrichedMsg = disruptionsData.map(d => d.messages[0]?.text||'').join("<br>");
+    const disruptions = disruptionsData.map(d => ({ lineId: d.line_id, messages: d.messages, type: d.kind==='major'?'cancel':d.kind==='delay'?'delay':'normal' }));
 
     renderDepartures(
       containerId,
-      cfg.name,
+      STOP_POINTS[key].name,
       visits,
-      cfg.icon,
+      STOP_POINTS[key].icon,
       localStorage.getItem(`${key}-first`)||"-",
       localStorage.getItem(`${key}-last`)||"-",
       enrichedMsg,
@@ -121,9 +113,7 @@ async function fetchTransportBlock(key, containerId) {
     );
   } catch(err) {
     console.error(`Erreur sur ${key}`, err);
-    document.getElementById(containerId).innerHTML = `
-      <div class="title-line"><img src="${STOP_POINTS[key].icon}" class="icon-inline">${STOP_POINTS[key].name}</div>
-      <div class="error">Données indisponibles</div>`;
+    document.getElementById(containerId).innerHTML = `<div class=\"title-line\"><img src=\"${STOP_POINTS[key].icon}\" class=\"icon-inline\">${STOP_POINTS[key].name}</div><div class=\"error\">Données indisponibles</div>`;
   }
 }
 
@@ -137,9 +127,9 @@ async function fetchVelib(stationId, containerId) {
     if (!station.is_renting) throw new Error("Location de vélos indisponible");
     if (!station.is_returning) throw new Error("Retour de vélos indisponible");
 
-    const types = station.num_bikes_available_types[0] || {};
-    const mech = types.mechanical || 0;
-    const elec = types.ebike || 0;
+    const types = station.num_bikes_available_types[0]||{};
+    const mech = types.mechanical||0;
+    const elec = types.ebike||0;
     const free = station.num_docks_available;
 
     document.getElementById(containerId).innerHTML = `
@@ -153,40 +143,39 @@ async function fetchVelib(stationId, containerId) {
     `;
   } catch(e) {
     console.error("Erreur Vélib", e);
-    document.getElementById(containerId).innerHTML = `
-      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-      <div class='error'>${e.message}</div>`;
+    document.getElementById(containerId).innerHTML = `<div class=\"title-line\"><img src=\"img/picto-velib.svg\" class=\"icon-inline\">Vélib'</div><div class=\"error\">${e.message}</div>`;
   }
 }
 
 async function fetchScheduleOncePerDay() {
   const today = new Date().toISOString().split("T")[0];
-  if (localStorage.getItem("schedule-day") === today) return;
+  if (localStorage.getItem("schedule-day")==
+today) return;
   for (const key in STOP_POINTS) {
     try {
-      const param = today.replace(/-/g, "") + "T000000";
-      const data = await fetchJSON(STOP_POINTS[key].scheduleUrl + param);
-      const times = (data.route_schedules?.[0]?.table?.rows || []).flatMap(r => r.date_times?.map(d => d.departure_date_time.slice(9,13)) || []);
-      if (times.length) {
-        const sorted = times.sort();
-        const fmt = t => `${t.slice(0,2)}:${t.slice(2)}`;
-        localStorage.setItem(`${key}-first`, fmt(sorted[0]));
-        localStorage.setItem(`${key}-last`, fmt(sorted[sorted.length-1]));
+      const param = today.replace(/-/g,"")+"T000000";
+      const data = await fetchJSON(STOP_POINTS[key].scheduleUrl+param);
+      const times=(data.route_schedules?.[0]?.table?.rows||[]).flatMap(r=>r.date_times?.map(d=>d.departure_date_time.slice(9,13))||[]);
+      if(times.length) {
+        const sorted=times.sort();
+        const fmt=t=>`${t.slice(0,2)}:${t.slice(2)}`;
+        localStorage.setItem(`${key}-first`,fmt(sorted[0]));
+        localStorage.setItem(`${key}-last`,fmt(sorted[sorted.length-1]));
       }
-    } catch(e) { console.error(`Erreur schedule ${key}`, e); }
+    }catch(e){console.error(`Erreur schedule ${key}`,e)}
   }
-  localStorage.setItem("schedule-day", today);
+  localStorage.setItem("schedule-day",today);
 }
 
 function refreshAll() {
   updateDateTime();
   fetchScheduleOncePerDay();
-  fetchTransportBlock("rer", "rer-content");
-  fetchTransportBlock("bus77", "bus77-content");
-  fetchTransportBlock("bus201", "bus201-content");
-  fetchVelib(VELIB_IDS.vincennes, "velib-vincennes");
-  fetchVelib(VELIB_IDS.breuil, "velib-breuil");
+  fetchTransportBlock("rer","rer-content");
+  fetchTransportBlock("bus77","bus77-content");
+  fetchTransportBlock("bus201","bus201-content");
+  fetchVelib(VELIB_IDS.vincennes,"velib-vincennes");
+  fetchVelib(VELIB_IDS.breuil,"velib-breuil");
 }
 
-setInterval(refreshAll, 60000);
+setInterval(refreshAll,60000);
 refreshAll();

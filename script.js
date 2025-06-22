@@ -1,5 +1,5 @@
 // Décodage d'entités HTML
-function decodeEntities(encoded) {
+tĥfunction decodeEntities(encoded) {
   const txt = document.createElement('textarea');
   txt.innerHTML = encoded;
   return txt.value;
@@ -12,7 +12,7 @@ const STOP_POINTS = {
     realtimeUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:43135:",
     scheduleUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/stop_points/stop_point:IDFM:monomodalStopPlace:43135/route_schedules?line=line:IDFM:C01742&from_datetime=",
     trafficUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C01742",
-    directionRef: null // à renseigner si besoin de ne garder qu'un seul sens
+    directionRef: null // Remplir pour filtrer un seul sens (ex: "IDFM:Direction:3-C")
   },
   bus77: {
     name: "BUS 77",
@@ -56,76 +56,60 @@ function getDestination(dest) {
 }
 
 function renderDepartures(id, name, visits, icon, first, last, message, isRer, disruptions) {
-  // ... (inchangé, conserve les perturbations et le filtrage RER) ...
-}
-
-// 🟢 NOUVELLE FONCTION fetchVelib adaptée à l’API Velib_Metropole
-async function fetchVelib(stationId, containerId) {
-  try {
-    // Appel direct à l’open data Vélib’ Métropole
-    const url = "https://velib-metropole-opendata.smovengo.cloud/opendata/Velib_Metropole/station_status.json";
-    const data = await fetchJSON(url);
-
-    // On trouve la station par son station_id
-    const station = data.data.stations.find(s => String(s.station_id) === String(stationId));
-    if (!station) throw new Error("Station non trouvée");
-
-    // Statuts opérationnels
-    if (station.is_installed === 0) {
-      throw new Error("Station en cours d'installation");
-    }
-    if (station.is_renting === 0) {
-      throw new Error("Location de vélos indisponible");
-    }
-    if (station.is_returning === 0) {
-      throw new Error("Retour de vélos indisponible");
-    }
-
-    // Séparation mécanique vs électrique
-    const types = station.num_bikes_available_types[0] || {};
-    const mech = types.mechanical || 0;
-    const elec = types.ebike || 0;
-    const free = station.num_docks_available;
-
-    // Construction de l'affichage
-    document.getElementById(containerId).innerHTML = `
-      <div class='title-line'>
-        <img src='img/picto-velib.svg' class='icon-inline'>Vélib'
-      </div>
-      <div class="velib-stats">
-        <div class="velib-mechanical">
-          <span class="velib-icon">🚲</span>
-          <span class="velib-count">${mech}</span>
-          <span class="velib-label">Mécaniques</span>
-        </div>
-        <div class="velib-electric">
-          <span class="velib-icon">⚡</span>
-          <span class="velib-count">${elec}</span>
-          <span class="velib-label">Électriques</span>
-        </div>
-        <div class="velib-free">
-          <span class="velib-icon">🅿️</span>
-          <span class="velib-count">${free}</span>
-          <span class="velib-label">Places libres</span>
-        </div>
-      </div>
-      <div class="velib-last">${new Date(station.last_reported * 1000).toLocaleTimeString("fr-FR")}</div>
-    `;
-  } catch (e) {
-    console.error("Erreur Vélib", e);
-    document.getElementById(containerId).innerHTML = `
-      <div class='title-line'>
-        <img src='img/picto-velib.svg' class='icon-inline'>Vélib'
-      </div>
-      <div class='error'>${e.message}</div>`;
+  const el = document.getElementById(id);
+  let iconsHtml = '';
+  if (disruptions.length) {
+    disruptions.slice(0, 4).forEach(d => {
+      iconsHtml += `<img src="img/picto-${d.lineId}.svg" class="perturb-icon" title="${decodeEntities(d.messages[0]?.text||'')}">`;
+    });
+    if (disruptions.length > 4) iconsHtml += `<div class="perturb-more">+${disruptions.length - 4}</div>`;
+  }
+  let html = `<div class="title-line"><img src="${icon}" class="icon-inline">${name}</div>`;
+  html += `<div class="perturb-header">${iconsHtml}</div><ul>`;
+  visits.forEach(d => {
+    const call = d.MonitoredVehicleJourney.MonitoredCall;
+    html += `<li>▶ ${formatTime(call.AimedDepartureTime||call.ExpectedDepartureTime)} → ${getDestination(d.MonitoredVehicleJourney.DestinationName)}</li>`;
+  });
+  html += `</ul><div class="schedule-extremes">Premier départ : ${first}<br>Dernier départ : ${last}</div>`;
+  html += `<div class="perturb-panel">${message?decodeEntities(message):'Pas de message'}</div>`;
+  el.innerHTML = html;
+  if (isRer) {
+    const alertEl = document.getElementById("traffic-alert");
+    if (message) { alertEl.innerHTML = decodeEntities(message); alertEl.classList.remove("hidden"); }
+    else { alertEl.classList.add("hidden"); }
   }
 }
 
-// Le reste du script (fetchTransportBlock, fetchScheduleOncePerDay, refreshAll…) reste inchangé  
-
-// Exemple minimal de fetchJSON pour mémoire
 async function fetchJSON(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
   return res.json();
 }
+
+async function fetchTransportBlock(key, containerId) {
+  try {
+    const [realtime, traffic] = await Promise.all([
+      fetchJSON(STOP_POINTS[key].realtimeUrl),
+      fetchJSON(STOP_POINTS[key].trafficUrl)
+    ]);
+    let visits = realtime.Siri.ServiceDelivery[0].StopMonitoringDelivery[0].MonitoredStopVisit||[];
+    console.log('Directions dispo', key, [...new Set(visits.map(v=>v.MonitoredVehicleJourney.DirectionRef))]);
+    const cfg=STOP_POINTS[key];
+    if(cfg.directionRef) visits=visits.filter(v=>v.MonitoredVehicleJourney.DirectionRef===cfg.directionRef);
+    const disruptionsData=traffic.disruptions||[];
+    const messageData=disruptionsData.map(d=>d.messages[0]?.text);
+    const enrichedMsg=disruptionsData.map(d=>{
+      const txt=d.messages[0]?.text||'';
+      const stops=Array.isArray(d.affectedStopPoints)?d.affectedStopPoints.map(s=>s.name||s).join(', '):'';
+      return stops?`${txt} (Arrêts : ${stops})`:txt;
+    }).join("<br>");
+    const disruptions=disruptionsData.map(d=>({lineId:d.line_id,messages:d.messages}));
+    renderDepartures(
+      containerId,
+      cfg.name,
+      visits,
+      cfg.icon,
+      localStorage.getItem(`${key}-first`)||"-",
+      localStorage.getItem(`${key}-last`)||"-",
+      enrichedMsg,
+      key==="rer",

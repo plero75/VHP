@@ -177,3 +177,38 @@ li:before {
 .dot.active {
   background: #333;
 }
+
+/* ==== Vélib’ dissocié ==== */
+.velib-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.velib-stats > div {
+  text-align: center;
+  flex: 1;
+}
+
+.velib-icon {
+  display: block;
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.velib-count {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.velib-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+/* Couleurs spécifiques */
+.velib-mechanical .velib-icon { color: #007bff; }
+.velib-electric   .velib-icon { color: #e91e63; }
+.velib-free       .velib-icon { color: #4caf50; }

@@ -175,4 +175,4 @@ function refreshAll() {
 
 setInterval(refreshAll, 60000);
 refreshAll();
-```
+ 

@@ -37,10 +37,14 @@ function updateDateTime() {
   document.getElementById("last-update").textContent = now.toLocaleString("fr-FR");
 }
 
-function formatTime(iso) {
+function formatTime(iso, withSeconds = false) {
   if (!iso) return "-";
   const date = new Date(iso);
-  return isNaN(date.getTime()) ? "-" : date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  if (isNaN(date.getTime())) return "-";
+  const options = withSeconds
+    ? { hour: "2-digit", minute: "2-digit", second: "2-digit" }
+    : { hour: "2-digit", minute: "2-digit" };
+  return date.toLocaleTimeString("fr-FR", options);
 }
 
 function getDestinationName(d) {
@@ -55,25 +59,36 @@ function minutesUntil(dateTimeStr) {
   const now = new Date();
   const target = new Date(dateTimeStr);
   const diff = (target - now) / 60000;
-  if (isNaN(diff)) return "-";
-  return diff < 1.5 ? "(passage imminent)" : `(${Math.round(diff)} min)`;
+  if (isNaN(diff)) return "";
+  if (diff < 1.5) return `<span class='imminent'>(passage imminent)</span>`;
+  return `<span class='temps'> (${Math.round(diff)} min)</span>`;
 }
 
 function renderDepartures(id, title, data, icon, first, last) {
   const el = document.getElementById(id);
-  let html = `<div class='title-line'><img src='${icon}' class='icon-inline'>${title}</div><ul>`;
+  let html = `<div class='title-line'><img src='${icon}' class='icon-inline'>${title}</div>`;
   if (!data || data.length === 0) {
-    html += `<li>Aucun passage à venir</li>`;
+    html += `<ul><li>Aucun passage à venir</li></ul>`;
   } else {
-    for (let d of data.slice(0, 4)) {
-      const call = d.MonitoredVehicleJourney.MonitoredCall;
-      const timeRaw = call.ExpectedDepartureTime || call.AimedDepartureTime;
-      const time = formatTime(timeRaw);
-      const dest = getDestinationName(d.MonitoredVehicleJourney.DestinationName);
-      html += `<li>▶ ${time} → ${dest} ${minutesUntil(timeRaw)}</li>`;
+    const grouped = {};
+    data.forEach(d => {
+      const dir = getDestinationName(d.MonitoredVehicleJourney.DirectionName);
+      if (!grouped[dir]) grouped[dir] = [];
+      grouped[dir].push(d);
+    });
+    for (const dir in grouped) {
+      html += `<h4 class='direction-title'>Direction ${dir}</h4><ul>`;
+      grouped[dir].slice(0, 4).forEach(d => {
+        const call = d.MonitoredVehicleJourney.MonitoredCall;
+        const timeRaw = call.ExpectedDepartureTime || call.AimedDepartureTime;
+        const time = formatTime(timeRaw);
+        const dest = getDestinationName(d.MonitoredVehicleJourney.DestinationName);
+        html += `<li>▶ ${time} → ${dest}${minutesUntil(timeRaw)}</li>`;
+      });
+      html += `</ul>`;
     }
   }
-  html += `</ul><div class='schedule-extremes'>Premier départ : ${first || "-"}<br>Dernier départ : ${last || "-"}</div>`;
+  html += `<div class='schedule-extremes'>Premier départ : ${first || "-"}<br>Dernier départ : ${last || "-"}</div>`;
   el.innerHTML = html;
 }
 

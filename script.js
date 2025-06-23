@@ -110,8 +110,9 @@ async function fetchTransportBlock(key, containerId) {
       STOP_POINTS[key].name,
       visits,
       STOP_POINTS[key].icon,
-      localStorage.getItem(`${key}-first`) || "-",
-      localStorage.getItem(`${key}-last`) || "-",
+localStorage.getItem(key + "-first") || "-"
+localStorage.getItem(key + "-last") || "-"
+
       enrichedMsg,
       key === "rer",
       disruptions

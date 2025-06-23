@@ -10,23 +10,23 @@ const STOP_POINTS = {
 rer: {
 name: "RER A",
 icon: "img/picto-rer-a.svg",
-realtimeUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF\:StopArea\:SP:43135](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:43135):",
-scheduleUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point\:IDFM\:monomodalStopPlace:43135/route_schedules?line=line\:IDFM\:C01742\&from_datetime=](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point:IDFM:monomodalStopPlace:43135/route_schedules?line=line:IDFM:C01742&from_datetime=)",
-trafficUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line\:IDFM\:C01742](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C01742)"
+realtimeUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:43135](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:43135):",
+scheduleUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point:IDFM:monomodalStopPlace:43135/route_schedules?line=line:IDFM:C01742&from_datetime=](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point:IDFM:monomodalStopPlace:43135/route_schedules?line=line:IDFM:C01742&from_datetime=)",
+trafficUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C01742](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C01742)"
 },
 bus77: {
 name: "BUS 77",
 icon: "img/picto-bus.svg",
-realtimeUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF\:StopArea\:SP:463641](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463641):",
-scheduleUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point\:IDFM:463641/route_schedules?line=line\:IDFM\:C02251\&from_datetime=](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point:IDFM:463641/route_schedules?line=line:IDFM:C02251&from_datetime=)",
-trafficUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line\:IDFM\:C02251](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C02251)"
+realtimeUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463641](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463641):",
+scheduleUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point:IDFM:463641/route_schedules?line=line:IDFM:C02251&from_datetime=](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point:IDFM:463641/route_schedules?line=line:IDFM:C02251&from_datetime=)",
+trafficUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C02251](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C02251)"
 },
 bus201: {
 name: "BUS 201",
 icon: "img/picto-bus.svg",
-realtimeUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF\:StopArea\:SP:463644](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463644):",
-scheduleUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point\:IDFM:463644/route_schedules?line=line\:IDFM\:C01219\&from_datetime=](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point:IDFM:463644/route_schedules?line=line:IDFM:C01219&from_datetime=)",
-trafficUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line\:IDFM\:C01219](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C01219)"
+realtimeUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463644](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopArea:SP:463644):",
+scheduleUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point:IDFM:463644/route_schedules?line=line:IDFM:C01219&from_datetime=](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/STOP_POINTS/stop_point:IDFM:463644/route_schedules?line=line:IDFM:C01219&from_datetime=)",
+trafficUrl: "[https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C01219](https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports/lines/line:IDFM:C01219)"
 }
 };
 
@@ -37,9 +37,9 @@ breuil: "508042092"
 
 function updateDateTime() {
 const now = new Date();
-document.getElementById("current-date").textContent = now\.toLocaleDateString("fr-FR");
-document.getElementById("current-time").textContent = now\.toLocaleTimeString("fr-FR");
-document.getElementById("last-update").textContent = now\.toLocaleString("fr-FR");
+document.getElementById("current-date").textContent = now.toLocaleDateString("fr-FR");
+document.getElementById("current-time").textContent = now.toLocaleTimeString("fr-FR");
+document.getElementById("last-update").textContent = now.toLocaleString("fr-FR");
 }
 
 function formatTime(iso) {
@@ -52,10 +52,10 @@ function getDestination(dest) {
 if (!dest) return "–";
 if (typeof dest === "string") return dest;
 if (Array.isArray(dest)) {
-const first = dest\[0];
-return typeof first === "string" ? first : Object.values(first)\[0] || "–";
+const first = dest[0];
+return typeof first === "string" ? first : Object.values(first)[0] || "–";
 }
-return Object.values(dest)\[0] || "–";
+return Object.values(dest)[0] || "–";
 }
 
 function renderDepartures(id, name, visits, icon, first, last, message, isRer, disruptions) {
@@ -91,9 +91,9 @@ return res.json();
 
 async function fetchTransportBlock(key, containerId) {
 try {
-const \[realtime, traffic] = await Promise.all(\[
-fetchJSON(STOP_POINTS\[key].realtimeUrl),
-fetchJSON(STOP_POINTS\[key].trafficUrl)
+const [realtime, traffic] = await Promise.all([
+fetchJSON(STOP_POINTS[key].realtimeUrl),
+fetchJSON(STOP_POINTS[key].trafficUrl)
 ]);
 
 ```
@@ -164,18 +164,18 @@ document.getElementById(containerId).innerHTML = `       <div class='title-line'
 }
 
 async function fetchScheduleOncePerDay() {
-const today = new Date().toISOString().split("T")\[0];
+const today = new Date().toISOString().split("T")[0];
 if (localStorage.getItem("schedule-day") === today) return;
 for (const key in STOP_POINTS) {
 try {
 const param = today.replace(/-/g, "") + "T000000";
-const data = await fetchJSON(STOP_POINTS\[key].scheduleUrl + param);
-const times = (data.route_schedules?.\[0]?.table?.rows || \[]).flatMap(r => r.date_times?.map(d => d.departure_date_time.slice(9, 13)) || \[]);
+const data = await fetchJSON(STOP_POINTS[key].scheduleUrl + param);
+const times = (data.route_schedules?.[0]?.table?.rows || []).flatMap(r => r.date_times?.map(d => d.departure_date_time.slice(9, 13)) || []);
 if (times.length) {
 const sorted = times.sort();
 const fmt = t => `${t.slice(0, 2)}:${t.slice(2)}`;
-localStorage.setItem(`${key}-first`, fmt(sorted\[0]));
-localStorage.setItem(`${key}-last`, fmt(sorted\[sorted.length - 1]));
+localStorage.setItem(`${key}-first`, fmt(sorted[0]));
+localStorage.setItem(`${key}-last`, fmt(sorted[sorted.length - 1]));
 }
 } catch (e) {
 console.error(`Erreur schedule ${key}`, e);

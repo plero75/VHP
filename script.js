@@ -1,4 +1,4 @@
-// script.js – version corrigée (22/06/2025)
+ // script.js – version corrigée (22/06/2025)
 
 // Fonction utilitaire pour décoder les entités HTML
 function decodeEntities(encoded) {

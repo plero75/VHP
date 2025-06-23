@@ -51,6 +51,14 @@ function getDestinationName(d) {
   return "Destination inconnue";
 }
 
+function minutesUntil(dateTimeStr) {
+  const now = new Date();
+  const target = new Date(dateTimeStr);
+  const diff = (target - now) / 60000;
+  if (isNaN(diff)) return "-";
+  return diff < 1.5 ? "(passage imminent)" : `(${Math.round(diff)} min)`;
+}
+
 function renderDepartures(id, title, data, icon, first, last) {
   const el = document.getElementById(id);
   let html = `<div class='title-line'><img src='${icon}' class='icon-inline'>${title}</div><ul>`;
@@ -59,9 +67,10 @@ function renderDepartures(id, title, data, icon, first, last) {
   } else {
     for (let d of data.slice(0, 4)) {
       const call = d.MonitoredVehicleJourney.MonitoredCall;
-      const time = formatTime(call.ExpectedDepartureTime || call.AimedDepartureTime);
+      const timeRaw = call.ExpectedDepartureTime || call.AimedDepartureTime;
+      const time = formatTime(timeRaw);
       const dest = getDestinationName(d.MonitoredVehicleJourney.DestinationName);
-      html += `<li>▶ ${time} → ${dest}</li>`;
+      html += `<li>▶ ${time} → ${dest} ${minutesUntil(timeRaw)}</li>`;
     }
   }
   html += `</ul><div class='schedule-extremes'>Premier départ : ${first || "-"}<br>Dernier départ : ${last || "-"}</div>`;
@@ -99,7 +108,7 @@ async function fetchSchedulesOncePerDay() {
       const times = [];
       rows.forEach(row => {
         row.stop_date_times?.forEach(sdt => {
-          if (sdt.arrival_time) times.push(sdt.arrival_time);
+          if (sdt.departure_time) times.push(sdt.departure_time);
         });
       });
       times.sort();

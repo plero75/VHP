@@ -160,3 +160,15 @@ li:before {
 .velib-mechanical .velib-icon { color: #007bff; }
 .velib-electric .velib-icon { color: #e91e63; }
 .velib-free .velib-icon { color: #4caf50; }
+
+.imminent {
+  color: #ffd900;
+  font-weight: bold;
+  animation: blink 1.2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+

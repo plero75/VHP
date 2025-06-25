@@ -30,7 +30,7 @@ const STOP_POINTS = {
 const VEHICLE_JOURNEY_CACHE = {};
 
 // ===================
-//  UTILS
+//   UTILS
 // ===================
 
 async function fetchJSON(url, apiKey = false) {
@@ -70,9 +70,8 @@ function getDestinationName(d) {
 }
 
 // ===================
-//  FETCH & CACHE STOPS
+//  NAVITIA – Liste des arrêts desservis pour un train/bus
 // ===================
-
 async function fetchStopsForJourney(vehicleJourneyRef) {
   if (VEHICLE_JOURNEY_CACHE[vehicleJourneyRef]) return VEHICLE_JOURNEY_CACHE[vehicleJourneyRef];
   const url = PROXY + `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/vehicle_journeys/${encodeURIComponent(vehicleJourneyRef)}/stop_points`;
@@ -91,11 +90,13 @@ async function fetchStopsForJourney(vehicleJourneyRef) {
 //  AFFICHAGE DES BLOCS
 // ===================
 
+// Date/heure en français (dans les spans existants)
 function updateDateBloc() {
-  document.getElementById("date-bloc").innerHTML =
-    `Nous sommes le <strong>${formatDateFr()}</strong> — il est <strong>${formatTime(new Date())}</strong>`;
+  document.getElementById("current-date").textContent = formatDateFr();
+  document.getElementById("current-time").textContent = formatTime(new Date());
 }
 
+// Météo (exemple statique, à brancher sur une vraie API si besoin)
 function updateWeatherBloc(temp = 32, condition = "Soleil") {
   document.getElementById("weather-bloc").innerHTML =
     `<div class='bloc-titre'><img src='img/picto-meteo.svg' class='icon-inline'>Météo</div>
@@ -103,6 +104,7 @@ function updateWeatherBloc(temp = 32, condition = "Soleil") {
      <div>☀️ ${condition}</div>`;
 }
 
+// Trafic (exemple statique)
 function updateInfoTraficBloc(txt = "Travaux d'été RER A<br>Bus 77 : arrêt Hippodrome en service<br>Bus 201 : trafic normal") {
   document.getElementById("info-trafic-bloc").innerHTML =
     `<div class='bloc-titre'><img src='img/picto-info.svg' class='icon-inline'>Info trafic</div>
@@ -237,5 +239,6 @@ async function refreshAll() {
   }
 }
 
+// Lancement périodique
 refreshAll();
 setInterval(refreshAll, 60000);

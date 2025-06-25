@@ -1,174 +1,110 @@
-/* Styles RATP-like */
 body {
   margin: 0;
-  padding: 0;
-  font-family: "Helvetica Neue", Arial, sans-serif;
-  background-color: #f5f5f5;
-  color: #212121;
+  background: #13192d;
+  color: #fff;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 .dashboard {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  width: 100vw; height: 100vh;
+  display: flex; flex-direction: column; justify-content: stretch;
 }
 .dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #14295e;
-  color: #ffffff;
-  padding: 12px 20px;
-  border-bottom: 4px solid #00a1de;
-}
-.datetime-alert-zone div {
-  font-size: 1.4rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-#traffic-alert {
-  background-color: #e00034;
-  color: #ffffff;
-  padding: 8px 12px;
-  border-radius: 2px;
-  font-weight: 600;
   text-align: center;
+  padding: 18px 0 6px 0;
 }
-.hidden {
-  display: none;
+.dashboard-title {
+  font-size: 2.3em;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #ffd900;
+  text-shadow: 1px 2px 8px #0005;
+  letter-spacing: 0.01em;
+}
+.datetime {
+  font-size: 1.18em;
+  color: #fff9;
+  margin-bottom: 8px;
 }
 .dashboard-grid {
+  flex: 1 1 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 12px;
+  padding: 6px 14px 0 14px;
+  align-items: stretch;
+  box-sizing: border-box;
+  height: 80vh;
 }
 .dashboard-card {
+  background: #1c2546;
+  border-radius: 17px;
+  box-shadow: 0 6px 32px #0005;
+  padding: 13px 10px 12px 14px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  font-size: 1.13em;
+  transition: background 0.2s;
   position: relative;
-  background-color: #ffffff;
-  border: 1px solid #d1d3d4;
-  border-top: 4px solid #00a1de;
-  padding: 16px;
+}
+.rer-card { border-left: 6px solid #e2001a; }
+.bus-card { border-left: 6px solid #009f4d; }
+.velib-card { border-left: 6px solid #258af5; }
+.meteo-card, .info-card { border-left: 6px solid #ffd900; }
+.dashboard-footer {
+  text-align: center;
+  color: #fff6;
+  background: #14203a;
+  border-radius: 0 0 12px 12px;
+  font-size: 1.06em;
+  padding: 8px 0 8px 0;
+  letter-spacing: 0.03em;
 }
 .title-line {
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 1.13em;
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
-  color: #14295e;
+  gap: 9px;
 }
 .icon-inline {
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
+  width: 27px;
+  height: 27px;
+  vertical-align: middle;
 }
-ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-li {
-  margin-bottom: 6px;
-  position: relative;
-  padding-left: 18px;
-}
-li:before {
-  content: '▶';
-  position: absolute;
-  left: 0;
-  color: #00a1de;
-}
+ul { margin: 7px 0 2px 0; padding-left: 1em; }
+li { margin-bottom: 4px; }
+.direction-title { font-size: 1.04em; color: #ffd900; margin: 6px 0 2px 0; }
 .schedule-extremes {
-  font-size: 0.85rem;
-  margin-top: 10px;
-  color: #424242;
-}
-.traffic-info {
-  margin-top: 12px;
-  font-size: 0.9rem;
-  color: #e00034;
-  font-weight: 600;
-}
-.error {
-  color: #e00034;
+  margin-top: 8px;
+  font-size: 0.98em;
+  color: #fff7;
   font-style: italic;
 }
-.dashboard-footer {
-  text-align: right;
-  font-size: 0.8rem;
-  color: #424242;
-  margin-top: 30px;
-}
-/* Perturbations */
-.perturb-header {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  gap: 4px;
-  z-index: 10;
-}
-.perturb-icon { width: 24px; height: 24px; }
-.delay-icon { width: 24px; height: 24px; filter: hue-rotate(45deg); }
-.cancel-icon { width: 24px; height: 24px; filter: hue-rotate(0deg) saturate(200%); }
-.perturb-more {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: #e0e0e0;
-  color: #333;
-  font-weight: bold;
-  border-radius: 2px;
-  font-size: 0.85rem;
-}
-.perturb-panel {
-  margin-top: 12px;
-  padding: 8px;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-left: 4px solid #e00034;
-  max-height: 120px;
-  overflow-y: auto;
-  font-size: 0.9rem;
-}
-/* Vélib’ */
-.velib-stats {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-}
-.velib-stats > div {
-  text-align: center;
-  flex: 1;
-}
-.velib-icon {
-  font-size: 1.5rem;
-  margin-bottom: 4px;
-}
-.velib-count {
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-.velib-label {
-  font-size: 0.85rem;
-  color: #666;
+.imminent { color: #ff6666; font-weight: bold; margin-left: 6px; }
+.temps { color: #ffd900; font-weight: 700; margin-left: 8px; }
+.last-train { color: #e2001a; font-weight: bold; }
+.defile-arrets {
   margin-top: 2px;
+  font-size: 0.99em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: defile 12s linear infinite;
 }
-.velib-mechanical .velib-icon { color: #007bff; }
-.velib-electric .velib-icon { color: #e91e63; }
-.velib-free .velib-icon { color: #4caf50; }
-
-.imminent {
-  color: #ffd900;
-  font-weight: bold;
-  animation: blink 1.2s infinite;
+@keyframes defile {
+  0% { text-indent: 0; }
+  100% { text-indent: -100%; }
 }
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
+.error { color: #ff8888; font-weight: bold; padding: 5px 0;}
+/* Responsive portrait 16/9 fix */
+@media (max-width: 750px) or (max-height: 1080px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(7, 1fr);
+    padding: 5px 6px 0 6px;
+   

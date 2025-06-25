@@ -98,4 +98,84 @@ ul, .defile-arrets {
   letter-spacing: 0.01em;
 }
 li {
-  list-style
+  list-style: none;
+  margin: 0.18em 0 0.18em 0;
+  font-size: 1.06em;
+  line-height: 1.18;
+}
+.icon-inline {
+  height: 1.33em;
+  width: 1.33em;
+  vertical-align: middle;
+  margin-right: 0.39em;
+  margin-bottom: -0.17em;
+}
+.temps {
+  color: #ffd900;
+  margin-left: 7px;
+  font-weight: 600;
+}
+.imminent {
+  color: #ff5353;
+  font-weight: 700;
+  margin-left: 7px;
+}
+.delay {
+  color: #ffd900;
+  font-size: 0.96em;
+  margin-left: 7px;
+}
+.last-train {
+  color: #F06292;
+  margin-left: 7px;
+  font-weight: 600;
+}
+.defile-arrets {
+  font-size: 0.95em;
+  margin-top: 2px;
+  color: #ccc;
+  white-space: nowrap;
+  overflow-x: auto;
+  animation: defile 13s linear infinite;
+}
+@keyframes defile {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-80%); }
+}
+.schedule-extremes {
+  color: #ffd900;
+  font-size: 1.07em;
+  font-weight: 500;
+  margin-top: 7px;
+  margin-bottom: 1px;
+}
+.title-line {
+  font-size: 1.13em;
+  font-weight: bold;
+  color: #b0ceff;
+  margin-bottom: 3px;
+  margin-top: -4px;
+  display: flex;
+  align-items: center;
+}
+footer {
+  text-align: center;
+  color: #fff;
+  font-size: 1.02em;
+  background: #11182c;
+  border-radius: 11px;
+  padding: 7px 0 4px 0;
+  margin-top: 6px;
+}
+.error { color: #e67; font-weight: bold; margin-top: 10px; }
+@media (max-width: 1200px) {
+  main#dashboard { max-width: 100vw; }
+  .transport-blocks { flex-direction: column; gap: 14px; }
+  .transport-card { max-width: 98vw; min-width: 220px;}
+  .velib-blocks { flex-direction: column; gap: 7px; }
+}
+@media (max-width: 750px) {
+  h1 { font-size: 1.13em;}
+  .transport-card { min-width: 90vw; max-width: 99vw;}
+  #weather-traffic-zone { flex-direction: column; gap: 6px;}
+}

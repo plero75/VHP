@@ -1,32 +1,34 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Disponibilités des transports en commun autour de l’hippodrome</title>
-  <meta name="viewport" content="width=600, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Disponibilités des transports - Hippodrome</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="img/picto-rer-a.svg">
 </head>
 <body>
-  <main class="dashboard">
-    <header class="dashboard-header">
-      <div class="dashboard-title">Disponibilités des transports en commun autour de l’hippodrome</div>
-      <div class="datetime">
-        <span id="current-date"></span> — il est <span id="current-time"></span>
+  <main id="dashboard">
+    <header>
+      <h1>Disponibilités des transports en commun autour de l’hippodrome</h1>
+      <div id="datetime-zone">
+        <span id="current-date"></span> | Il est <span id="current-time"></span>
       </div>
     </header>
-
-    <section class="dashboard-grid">
-      <div class="dashboard-card meteo-card" id="weather-content"></div>
-      <div class="dashboard-card info-card" id="info-trafic"></div>
-
-      <div class="dashboard-card rer-card" id="rer-content"></div>
-      <div class="dashboard-card bus-card" id="bus77-content"></div>
-      <div class="dashboard-card bus-card" id="bus201-content"></div>
-      <div class="dashboard-card velib-card" id="velib-vincennes"></div>
-      <div class="dashboard-card velib-card" id="velib-breuil"></div>
+    <section id="weather-traffic-zone">
+      <div id="weather-content"></div>
+      <div id="infofute-content"></div>
     </section>
-    <footer class="dashboard-footer">
+    <section class="transport-blocks">
+      <div class="transport-card" id="rer-content"></div>
+      <div class="transport-card" id="bus77-content"></div>
+      <div class="transport-card" id="bus201-content"></div>
+    </section>
+    <section class="velib-blocks">
+      <div class="velib-card" id="velib-vincennes"></div>
+      <div class="velib-card" id="velib-breuil"></div>
+    </section>
+    <footer>
       <span id="last-update"></span>
     </footer>
   </main>

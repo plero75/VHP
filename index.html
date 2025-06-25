@@ -1,37 +1,44 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Disponibilités des transports - Hippodrome</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=1280, initial-scale=1.0">
+  <title>Disponibilités des transports – Hippodrome de Vincennes</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="img/picto-rer-a.svg">
 </head>
 <body>
-  <main id="dashboard">
+  <div id="dashboard-main">
     <header>
       <h1>Disponibilités des transports en commun autour de l’hippodrome</h1>
-      <div id="datetime-zone">
-        <span id="current-date"></span> | Il est <span id="current-time"></span>
+      <div id="date-block">
+        <span id="current-date"></span>
+        &nbsp;–&nbsp;Il est <span id="current-time"></span>
       </div>
     </header>
-    <section id="weather-traffic-zone">
-      <div id="weather-content"></div>
-      <div id="infofute-content"></div>
-    </section>
-    <section class="transport-blocks">
-      <div class="transport-card" id="rer-content"></div>
-      <div class="transport-card" id="bus77-content"></div>
-      <div class="transport-card" id="bus201-content"></div>
-    </section>
-    <section class="velib-blocks">
-      <div class="velib-card" id="velib-vincennes"></div>
-      <div class="velib-card" id="velib-breuil"></div>
-    </section>
+    <div id="dashboard-content">
+      <section id="meteo-bloc">
+        <div class="title-line">
+          <img src="img/picto-meteo.svg" class="icon-inline">Météo
+        </div>
+        <div id="weather-content">Chargement météo...</div>
+      </section>
+      <section id="info-trafic-bloc">
+        <div class="title-line">
+          <img src="img/picto-info.svg" class="icon-inline">Infos trafic “Petit Futé”
+        </div>
+        <div id="info-trafic-content">À venir</div>
+      </section>
+      <section id="rer-content"></section>
+      <section id="bus77-content"></section>
+      <section id="bus201-content"></section>
+      <section id="velib-vincennes"></section>
+      <section id="velib-breuil"></section>
+    </div>
     <footer>
-      <span id="last-update"></span>
+      <div id="last-update">Dernière mise à jour...</div>
+      <div style="font-size:0.8em;opacity:0.7;margin-top:4px;">© 2025 – Hippodrome Paris-Vincennes</div>
     </footer>
-  </main>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>

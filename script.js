@@ -1,3 +1,7 @@
+// =============================
+//  CONFIGURATION & CONSTANTES
+// =============================
+
 const STOP_POINTS = {
   rer: {
     name: "RER A Joinville-le-Pont",
@@ -24,7 +28,10 @@ const VELIB_IDS = {
   breuil: "508042092"
 };
 
-// UTILITAIRES
+// ===================
+//   UTILS
+// ===================
+
 async function fetchJSON(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
@@ -64,6 +71,115 @@ function getDestinationName(d) {
   return "Destination inconnue";
 }
 
+// ===================
+//   MÉTÉO DYNAMIQUE (Open-Meteo)
+// ===================
+
+async function fetchWeather() {
+  // Paris-Vincennes
+  const lat = 48.8327, lon = 2.4382;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Europe%2FParis`;
+  let html = `<div class='bloc-titre'><img src='img/picto-meteo.svg' class='icon-inline'>Météo</div>`;
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.current_weather) {
+      html += `<div>🌡️ Température : <b>${Math.round(data.current_weather.temperature)}°C</b></div>`;
+      html += `<div>💨 Vent : ${data.current_weather.windspeed} km/h</div>`;
+      html += `<div>🌤️ Temps : ${weatherCodeToString(data.current_weather.weathercode)}</div>`;
+    } else {
+      html += "<div>Météo indisponible</div>";
+    }
+  } catch (e) {
+    html += "<div>Erreur météo</div>";
+  }
+  document.getElementById("weather-bloc").innerHTML = html;
+}
+
+// Traduction code météo Open-Meteo
+function weatherCodeToString(code) {
+  const mapping = {
+    0: "Ciel dégagé", 1: "Principalement dégagé", 2: "Partiellement nuageux", 3: "Couvert",
+    45: "Brouillard", 48: "Brouillard givrant", 51: "Bruine légère", 53: "Bruine modérée",
+    55: "Bruine dense", 56: "Bruine verglaçante légère", 57: "Bruine verglaçante dense",
+    61: "Pluie faible", 63: "Pluie modérée", 65: "Pluie forte", 66: "Pluie verglaçante légère",
+    67: "Pluie verglaçante forte", 71: "Neige faible", 73: "Neige modérée", 75: "Neige forte",
+    77: "Grains de neige", 80: "Averses faibles", 81: "Averses modérées", 82: "Averses violentes",
+    85: "Averses de neige faibles", 86: "Averses de neige fortes", 95: "Orage",
+    96: "Orage avec grêle légère", 99: "Orage avec grêle forte"
+  };
+  return mapping[code] || "Inconnu";
+}
+
+// ===================
+//   SYTADIN (Info Trafic)
+// ===================
+
+function renderSytadin() {
+  document.getElementById("info-trafic-bloc").innerHTML =
+    `<div class='bloc-titre'><img src='img/picto-info.svg' class='icon-inline'>Info trafic</div>
+     <div>
+       <a href="https://www.sytadin.fr/" target="_blank" rel="noopener">
+         <button style="padding:8px 16px;font-size:1em;">Voir la carte trafic Sytadin</button>
+       </a>
+       <br>
+       <a href="https://www.bison-fute.gouv.fr/paris-ile-de-france.html" target="_blank" rel="noopener">
+         Bison Futé Paris/Île-de-France
+       </a>
+     </div>`;
+}
+
+// ===================
+//   VELIB (avec fallback OpenData Paris)
+// ===================
+
+async function fetchVelib(stationId, elementId) {
+  // Essai PRIM IDFM
+  try {
+    const url = "https://prim.iledefrance-mobilites.fr/marketplace/velib/station_status.json";
+    const data = await fetchJSON(url);
+    const station = data?.data?.stations?.find(s => s.station_id == stationId);
+    if (!station) throw new Error("Station Vélib non trouvée");
+    const mechanical = station.num_bikes_available_types.find(b => b.mechanical !== undefined)?.mechanical || 0;
+    const ebike = station.num_bikes_available_types.find(b => b.ebike !== undefined)?.ebike || 0;
+    const free = station.num_docks_available || 0;
+    document.getElementById(elementId).innerHTML = `
+      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+      🚲 Mécaniques : ${mechanical}<br>
+      ⚡ Électriques : ${ebike}<br>
+      🅿️ Places libres : ${free}
+    `;
+    return;
+  } catch (e) {
+    // Fallback OpenData Paris
+    try {
+      const url = "https://opendata.paris.fr/api/v2/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json";
+      const data = await fetchJSON(url);
+      const station = data.find(s => s.stationcode == stationId);
+      if (!station) throw new Error("Station Vélib non trouvée (OpenData)");
+      const mechanical = station.mechanical || 0;
+      const ebike = station.ebike || 0;
+      const free = station.numdocksavailable || 0;
+      document.getElementById(elementId).innerHTML = `
+        <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+        🚲 Mécaniques : ${mechanical}<br>
+        ⚡ Électriques : ${ebike}<br>
+        🅿️ Places libres : ${free}
+      `;
+      return;
+    } catch (e2) {
+      document.getElementById(elementId).innerHTML = `
+        <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+        <div class='error'>Erreur chargement Vélib</div>
+      `;
+    }
+  }
+}
+
+// ===================
+//   HORAIRES TRANSPORTS
+// ===================
+
 // CACHE D'ARRETS POUR CHAQUE TRAIN/JOURNEY
 async function fetchStopsForJourney(vehicleJourneyId, lineId) {
   if (!vehicleJourneyId || !lineId) return [];
@@ -75,12 +191,10 @@ async function fetchStopsForJourney(vehicleJourneyId, lineId) {
     const today = new Date().toISOString().split("T")[0].replace(/-/g,"") + "T000000";
     const url = `https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/journeys?from_datetime=${today}&max_nb_journeys=1&line=${encodeURIComponent(lineId)}&vehicle_journey_id=${encodeURIComponent(vehicleJourneyId)}`;
     const data = await fetchJSON(url);
-    // Parcours pour extraire les arrêts (adapte si le JSON Navitia évolue)
     const stops = data.journeys?.[0]?.sections?.[0]?.stop_date_times?.map(s => s.stop_point?.name).filter(Boolean) || [];
     if (stops.length) localStorage.setItem(cacheKey, JSON.stringify(stops));
     return stops;
   } catch (e) {
-    // Stocker un flag "fail" si quota dépassé, pour ne pas réessayer trop vite
     localStorage.setItem(cacheKey, "[]");
     return [];
   }
@@ -180,54 +294,15 @@ async function fetchSchedulesOncePerDay() {
   localStorage.setItem("schedule-day", today);
 }
 
-// --- VELIB EN FALLBACK ---
-async function fetchVelib(stationId, elementId) {
-  // 1. Essai PRIM IDFM
-  try {
-    const url = "https://prim.iledefrance-mobilites.fr/marketplace/velib/station_status.json";
-    const data = await fetchJSON(url);
-    const station = data.data.stations.find(s => s.station_id == stationId);
-    if (!station) throw new Error("Station Vélib non trouvée");
-    const mechanical = station.num_bikes_available_types.find(b => b.mechanical !== undefined)?.mechanical || 0;
-    const ebike = station.num_bikes_available_types.find(b => b.ebike !== undefined)?.ebike || 0;
-    const free = station.num_docks_available || 0;
-    document.getElementById(elementId).innerHTML = `
-      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-      🚲 Mécaniques : ${mechanical}<br>
-      ⚡ Électriques : ${ebike}<br>
-      🅿️ Places libres : ${free}
-    `;
-    return;
-  } catch (e) {
-    // Si quota/401, fallback OpenData
-    try {
-      const url = "https://opendata.paris.fr/api/v2/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json";
-      const data = await fetchJSON(url);
-      const station = data.find(s => s.stationcode == stationId);
-      if (!station) throw new Error("Station Vélib non trouvée (OpenData)");
-      const mechanical = station.mechanical || 0;
-      const ebike = station.ebike || 0;
-      const free = station.numdocksavailable || 0;
-      document.getElementById(elementId).innerHTML = `
-        <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-        🚲 Mécaniques : ${mechanical}<br>
-        ⚡ Électriques : ${ebike}<br>
-        🅿️ Places libres : ${free}
-      `;
-      return;
-    } catch (e2) {
-      document.getElementById(elementId).innerHTML = `
-        <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-        <div class='error'>Erreur chargement Vélib</div>
-      `;
-    }
-  }
-}
+// ===================
+//   RAFFRAICHISSEMENT GLOBAL
+// ===================
 
-// --- RAFFRAICHISSEMENT ---
 function refreshAll() {
   updateDateTime();
   fetchSchedulesOncePerDay();
+  fetchWeather(); // météo dynamique
+  renderSytadin(); // info trafic Sytadin
   fetchTransport("rer", "rer-content");
   fetchTransport("bus77", "bus77-content");
   fetchTransport("bus201", "bus201-content");

@@ -1,4 +1,4 @@
-const STOP_POINTS = {
+ const STOP_POINTS = {
   rer: {
     name: "RER A Joinville-le-Pont",
     realtimeUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopPoint:Q:43135:",

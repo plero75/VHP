@@ -32,9 +32,9 @@ async function fetchJSON(url) {
 
 function updateDateTime() {
   const now = new Date();
-  document.getElementById("current-date").textContent = now.toLocaleDateString("fr-FR");
-  document.getElementById("current-time").textContent = now.toLocaleTimeString("fr-FR");
-  document.getElementById("last-update").textContent = now.toLocaleString("fr-FR");
+  document.getElementById("current-date").textContent = "Nous sommes le " + now.toLocaleDateString("fr-FR", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById("current-time").textContent = now.toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' });
+  document.getElementById("last-update").textContent = "Dernière mise à jour : " + now.toLocaleString("fr-FR");
 }
 
 function formatTime(iso, withSeconds = false) {
@@ -70,6 +70,7 @@ function renderDepartures(id, title, data, icon, first, last) {
   if (!data || data.length === 0) {
     html += `<ul><li>Aucun passage à venir</li></ul>`;
   } else {
+    // Regrouper par direction
     const grouped = {};
     data.forEach(d => {
       const dir = getDestinationName(d.MonitoredVehicleJourney.DirectionName);
@@ -80,10 +81,17 @@ function renderDepartures(id, title, data, icon, first, last) {
       html += `<h4 class='direction-title'>Direction ${dir}</h4><ul>`;
       grouped[dir].slice(0, 4).forEach(d => {
         const call = d.MonitoredVehicleJourney.MonitoredCall;
-        const timeRaw = call.ExpectedDepartureTime || call.AimedDepartureTime;
-        const time = formatTime(timeRaw);
-        const dest = getDestinationName(d.MonitoredVehicleJourney.DestinationName);
-        html += `<li>▶ ${time} → ${dest}${minutesUntil(timeRaw)}</li>`;
+        const expected = call.ExpectedDepartureTime;
+        const aimed = call.AimedDepartureTime;
+        const isLast = d.MonitoredVehicleJourney.FirstOrLastJourney?.value === "LAST_SERVICE_OF_DAY";
+        // Listes des arrêts défilants
+        const stops = call?.StopPointName?.map(p => p.value).join(" – ") || "";
+        // Afficher le retard
+        const delay = expected && aimed && expected !== aimed ?
+          `<span class='delay'>(+${Math.round((new Date(expected) - new Date(aimed)) / 60000)} min)</span>` : "";
+        html += `<li>▶ ${formatTime(expected)}${minutesUntil(expected)} ${delay} ${isLast ? "<span class='last-train'>(dernier train)</span>" : ""}
+          <div class='defile-arrets'>${stops}</div>
+        </li>`;
       });
       html += `</ul>`;
     }
@@ -163,8 +171,34 @@ async function fetchVelib(stationId, elementId) {
   }
 }
 
+// Bloc météo exemple (remplace l'appel API par ton endpoint préféré)
+async function fetchWeather() {
+  try {
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=48.82&longitude=2.44&current_weather=true&hourly=temperature_2m,precipitation";
+    const data = await fetchJSON(url);
+    const w = data.current_weather;
+    document.getElementById("weather-content").innerHTML =
+      `<div class="title-line"><img src="img/picto-meteo.svg" class="icon-inline">Météo</div>
+       🌡️ Température : <b>${w.temperature}°C</b><br>
+       ☀️ ${w.weathercode === 0 ? "Soleil" : w.weathercode === 2 ? "Nuages" : "Variable"}<br>
+       💨 Vent : ${w.windspeed} km/h`;
+  } catch (e) {
+    document.getElementById("weather-content").innerHTML = "<b>Météo indisponible</b>";
+  }
+}
+
+// Bloc info trafic : tu peux personnaliser ici (affichage du jour)
+async function fetchInfoTrafic() {
+  document.getElementById("info-trafic").innerHTML = `
+    <div class="title-line"><img src="img/picto-info.svg" class="icon-inline">Info trafic</div>
+    <span style="font-size:1.09em;">Travaux d'été RER A<br>Bus 77 : arrêt Hippodrome en service<br>Bus 201 : trafic normal</span>
+  `;
+}
+
 function refreshAll() {
   updateDateTime();
+  fetchWeather();
+  fetchInfoTrafic();
   fetchSchedulesOncePerDay();
   fetchTransport("rer", "rer-content");
   fetchTransport("bus77", "bus77-content");

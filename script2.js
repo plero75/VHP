@@ -32,6 +32,32 @@ const VEHICLE_JOURNEY_CACHE = {};
 // ===================
 //   UTILS
 // ===================
+function updateInfoTraficBloc() {
+  document.getElementById("info-trafic-bloc").innerHTML =
+    `<div class='bloc-titre'>
+        <img src='img/picto-info.svg' class='icon-inline'>
+        Info trafic autour de l’hippodrome
+     </div>
+     <div style="margin-top:10px">
+        Consultez en temps réel les conditions de circulation autour de l’hippodrome via :
+        <ul>
+          <li>
+            <a href="https://www.sytadin.fr/" target="_blank" rel="noopener">Sytadin</a>
+             (trafic, bouchons, perturbations)
+          </li>
+          <li>
+            <a href="https://www.bison-fute.gouv.fr/paris-ile-de-france.html" target="_blank" rel="noopener">
+                Bison Futé Paris/Île-de-France
+            </a>
+          </li>
+        </ul>
+     </div>
+     <div style="margin-top:10px">
+        <a href="https://www.sytadin.fr/" target="_blank" rel="noopener">
+          <button style="padding:8px 16px;font-size:1em;">Voir la carte trafic Sytadin</button>
+        </a>
+     </div>`;
+}
 
 async function fetchJSON(url, apiKey = false) {
   const options = apiKey ? { headers: { apikey: API_KEY } } : {};
@@ -210,10 +236,11 @@ async function fetchVelib(stationId, elementId) {
 }
 
 // Rafraîchissement global
-async function refreshAll() {
+function refreshAll() {
   updateDateBloc();
   updateWeatherBloc();
   updateInfoTraficBloc();
+  
 
   fetchVelib(VELIB_IDS.vincennes, "velib-vincennes");
   fetchVelib(VELIB_IDS.breuil, "velib-breuil");

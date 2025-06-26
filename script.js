@@ -8,7 +8,11 @@ const STOP_AREAS = {
   bus77: "STIF:StopArea:SP:463641:",
   bus201: "STIF:StopArea:SP:463644:"
 };
-
+const STOP_POINTS_IDFM = {
+  rer: "STIF:StopPoint:Q:43135:",
+  bus77: "STIF:StopPoint:Q:463641:",
+  bus201: "STIF:StopPoint:Q:463644:"
+};
 const VELIB_IDS = { vincennes: "1074333296", breuil: "508042092" };
 
 const STOP_POINTS = {
@@ -118,12 +122,13 @@ async function updateTrafficBloc() {
 }
 
 async function renderDepartures(elementId, stopKey) {
-  const visits = await fetchRealTime(STOP_AREAS[stopKey]);
+  const visits = await fetchRealTime(STOP_POINTS_IDFM[stopKey]);
   const now = new Date();
 
   if (!visits.length) {
-    const nextStartTime = await getNextScheduledTime(STOP_AREAS[stopKey]);
-    let message = "Aucun passage prévu actuellement";
+    const nextStartTime = await getNextScheduledTime(STOP_POINTS_IDFM[stopKey]);
+  
+  let message = "Aucun passage prévu actuellement";
     if (nextStartTime) {
       const nextDate = new Date(nextStartTime);
       const label = stopKey === "rer" ? "train" : "bus";

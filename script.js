@@ -17,9 +17,10 @@ const STOP_POINTS = {
 };
 
 const VELIB_IDS = {
-  vincennes: "12163",
-  breuil: "12128"
+  vincennes: "1074333296", // stationCode: 12163
+  breuil: "508042092"      // stationCode: 12128
 };
+
 
 async function fetchJSON(url) {
   const res = await fetch(url);
@@ -137,20 +138,30 @@ async function fetchVelib(stationId, elementId) {
     const url = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/velib/station_status.json";
     const data = await fetchJSON(url);
     const station = data.data.stations.find(s => s.station_id == stationId);
-    const mech = station.num_bikes_available_types.find(b => b.mechanical !== undefined)?.mechanical || 0;
-    const elec = station.num_bikes_available_types.find(b => b.ebike !== undefined)?.ebike || 0;
-    const free = station.num_docks_available || 0;
+
+    if (!station) throw new Error("Station non trouvée");
+
+    const mechanical = station.num_bikes_available_types?.find(t => t.mechanical !== undefined)?.mechanical || 0;
+    const ebike = station.num_bikes_available_types?.find(t => t.ebike !== undefined)?.ebike || 0;
+    const docks = station.num_docks_available || 0;
+    const isOpen = station.is_installed && station.is_renting && station.is_returning;
+
     document.getElementById(elementId).innerHTML = `
       <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-      🚲 Mécaniques : ${mech}<br>
-      ⚡ Électriques : ${elec}<br>
-      🅿️ Places libres : ${free}
+      🚲 Mécaniques : ${mechanical}<br>
+      ⚡ Électriques : ${ebike}<br>
+      🅿️ Places libres : ${docks}<br>
+      ${isOpen ? "✅ Station : ouverte" : "⛔ Station fermée"}
     `;
   } catch (e) {
     console.error("Erreur Vélib :", e);
-    document.getElementById(elementId).innerHTML = "<b>Erreur Vélib</b>";
+    document.getElementById(elementId).innerHTML = `
+      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+      ⚠️ Données Vélib' indisponibles
+    `;
   }
 }
+
 
 async function fetchWeather() {
   try {

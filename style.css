@@ -84,3 +84,18 @@ footer {
     padding: 7px;
   }
 }
+
+ 
+.defile-arrets {
+  font-size: 0.95em;
+  color: #555;
+  display: block;
+  margin-top: 2px;
+  white-space: normal;
+}
+.retard {
+  color: #b00;
+  font-weight: bold;
+  margin-left: 6px;
+}
+ 

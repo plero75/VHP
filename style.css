@@ -99,3 +99,12 @@ footer {
   margin-left: 6px;
 }
  
+ 
+.defile-arrets {
+  font-size: 0.95em;
+  color: #555;
+  display: block;
+  margin-top: 2px;
+  white-space: normal;
+}
+ 

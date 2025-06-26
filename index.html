@@ -2,38 +2,35 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard Hippodrome Vincennes</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="style.css"> <!-- Ton CSS ici -->
+  <title>Mobilité Hippodrome de Vincennes</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>Tableau de bord Hippodrome Vincennes</h1>
-    <div>
-      <span id="current-date"></span> — <span id="current-time"></span>
-    </div>
-  </header>
+  <div class="main-container">
 
-  <main>
-    <section id="weather-bloc" class="bloc"></section>
+    <header>
+      <h1>Mobilité autour de l’Hippodrome de Vincennes</h1>
+      <div id="current-date"></div>
+      <div id="current-time"></div>
+    </header>
 
-    <section id="info-trafic-bloc" class="bloc"></section>
-
-    <section class="blocs-flex">
-      <div id="velib-vincennes" class="bloc"></div>
-      <div id="velib-breuil" class="bloc"></div>
+    <section id="horaires">
+      <div id="rer-content"></div>
+      <div id="bus77E-content"></div>
+      <div id="bus77O-content"></div>
+      <div id="bus201A-content"></div>
+      <div id="bus201B-content"></div>
     </section>
 
-    <section class="blocs-flex">
-      <div id="rer-content" class="bloc"></div>
-      <div id="bus77-content" class="bloc"></div>
-      <div id="bus201-content" class="bloc"></div>
+    <section id="velib">
+      <div id="velib-vincennes"></div>
+      <div id="velib-breuil"></div>
     </section>
-  </main>
 
-  <footer>
-    <small>© 2025 Hippodrome Vincennes — Données en temps réel (Open-Meteo, IDFM, Vélib, Sytadin)</small>
-  </footer>
+    <section id="weather-bloc"></section>
+    <section id="info-trafic-bloc"></section>
+
+  </div>
 
   <script src="script.js"></script>
 </body>

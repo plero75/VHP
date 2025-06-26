@@ -1,4 +1,3 @@
-
 // =============================
 //  CONFIGURATION & CONSTANTES
 // =============================
@@ -84,11 +83,13 @@ function updateDateBloc() {
   document.getElementById("current-time").textContent = formatTime(new Date());
 }
 
-// remplacé par fetchWeather(temp = 32, condition = "Soleil") {
-  document.getElementById("weather-bloc").innerHTML =
-    `<div class='bloc-titre'><img src='img/picto-meteo.svg' class='icon-inline'>Météo</div>
-     <div>🌡️ Température : <b>${temp}°C</b></div>
-     <div>☀️ ${condition}</div>`;
+function updateVelibBloc(elementId, mechanical = 8, ebike = 2, free = 6) {
+  document.getElementById(elementId).innerHTML = `
+    <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+    🚲 Mécaniques : ${mechanical}<br>
+    ⚡ Électriques : ${ebike}<br>
+    🅿️ Places libres : ${free}
+  `;
 }
 
 async function updateTrafficBloc() {
@@ -114,15 +115,6 @@ async function updateTrafficBloc() {
       <div class='bloc-titre'><img src='img/picto-info.svg' class='icon-inline'>Info trafic routier autour de l’hippodrome</div>
       <div style="margin-top:10px">⚠️ Données routières indisponibles.</div>`;
   }
-}
-
-function updateVelibBloc(elementId, mechanical = 8, ebike = 2, free = 6) {
-  document.getElementById(elementId).innerHTML = `
-    <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-    🚲 Mécaniques : ${mechanical}<br>
-    ⚡ Électriques : ${ebike}<br>
-    🅿️ Places libres : ${free}
-  `;
 }
 
 async function renderDepartures(elementId, stopKey) {
@@ -167,23 +159,8 @@ async function renderDepartures(elementId, stopKey) {
 }
 
 // ===================
-//  Rafraîchissement global
+//  METEO DYNAMIQUE (Open-Meteo)
 // ===================
-
-function refreshAll() {
-  updateDateBloc();
-  fetchWeather();
-  updateTrafficBloc();
-  updateVelibBloc("velib-vincennes");
-  updateVelibBloc("velib-breuil");
-  renderDepartures("rer-content", "rer");
-  renderDepartures("bus77-content", "bus77");
-  renderDepartures("bus201-content", "bus201");
-}
-
-refreshAll();
-setInterval(refreshAll, 60000);
-
 
 async function fetchWeather() {
   const lat = 48.8327, lon = 2.4382;
@@ -233,3 +210,21 @@ function weatherCodeToString(code) {
   };
   return mapping[code] || "Inconnu";
 }
+
+// ===================
+//  Rafraîchissement global
+// ===================
+
+function refreshAll() {
+  updateDateBloc();
+  fetchWeather();
+  updateTrafficBloc();
+  updateVelibBloc("velib-vincennes");
+  updateVelibBloc("velib-breuil");
+  renderDepartures("rer-content", "rer");
+  renderDepartures("bus77-content", "bus77");
+  renderDepartures("bus201-content", "bus201");
+}
+
+refreshAll();
+setInterval(refreshAll, 60000);

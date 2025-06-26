@@ -5,7 +5,7 @@
 const API_PROXY = "https://ratp-proxy.hippodrome-proxy42.workers.dev";
 const STOP_POINTS = {
   rer: {
-    monitoringRef: "STIF:StopArea:SP:475771:",
+    monitoringRef: "STIF:StopPoint:Q:43135:", // Joinville-le-Pont (RER A)
     lineRef: "STIF:Line::C01742:",
     name: "RER A Joinville-le-Pont",
     icon: "img/picto-rer-a.svg"
@@ -74,22 +74,27 @@ async function fetchRealTime(monitoringRef, lineRef) {
   }
 }
 
-async function getExtremes(monitoringRef, lineRef) {
-  // Option la plus fiable : GTFS local, sinon API PreviewInterval (risque de quota)
+// ===================
+//  ARRÊTS DESSERVIS (cache)
+// ===================
+const stopsCache = {};
+
+async function fetchStopsForVehicleJourney(vehicleJourneyRef) {
+  if (!vehicleJourneyRef) return [];
+  if (stopsCache[vehicleJourneyRef]) return stopsCache[vehicleJourneyRef];
+  const url = `${API_PROXY}/?url=${encodeURIComponent(
+    `https://prim.iledefrance-mobilites.fr/marketplace/vehicle-journeys/${vehicleJourneyRef}/stop_points`
+  )}`;
   try {
-    const url = `${API_PROXY}/?url=${encodeURIComponent(
-      `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${monitoringRef}&LineRef=${lineRef}&PreviewInterval=PT24H`
-    )}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
-    if (!visits.length) return { first: null, last: null };
-    return {
-      first: visits[0].MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime,
-      last: visits.at(-1).MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime
-    };
-  } catch {
-    return { first: null, last: null };
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error("Erreur vehicle-journey stop_points");
+    const data = await res.json();
+    const stops = data?.stop_points?.map(p => p.name) || [];
+    stopsCache[vehicleJourneyRef] = stops;
+    setTimeout(() => delete stopsCache[vehicleJourneyRef], 120000);
+    return stops;
+  } catch (e) {
+    return [];
   }
 }
 
@@ -139,75 +144,34 @@ function updateTrafficBloc() {
     </div>`;
 }
 
-// ===================
-//  ARRÊTS DESSERVIS (cache + fallback GTFS possible)
-// ===================
-const stopsCache = {};
-
-async function fetchStopsForVehicleJourney(vehicleJourneyRef) {
-  if (stopsCache[vehicleJourneyRef]) return stopsCache[vehicleJourneyRef];
-  const proxy = API_PROXY + "/?url=";
-  const url = `${proxy}${encodeURIComponent(
-    `https://prim.iledefrance-mobilites.fr/marketplace/vehicle-journeys/${vehicleJourneyRef}/stop_points`
-  )}`;
-  try {
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!res.ok) throw new Error("Erreur vehicle-journey stop_points");
-    const data = await res.json();
-    const stops = data?.stop_points?.map(p => p.name) || [];
-    stopsCache[vehicleJourneyRef] = stops;
-    setTimeout(() => delete stopsCache[vehicleJourneyRef], 120000);
-    return stops;
-  } catch (e) {
-    return [];
-  }
-}
-
-// ===================
-//  RENDU DES HORAIRES
-// ===================
-
+// HORAIRES + ARRÊTS DESSERVIS
 async function renderDepartures(elementId, stopKey) {
   const { monitoringRef, lineRef, name, icon } = STOP_POINTS[stopKey];
   const visits = await fetchRealTime(monitoringRef, lineRef);
-  const now = new Date();
 
   if (!visits.length) {
-    const nextStartTime = null; // Option : getNextScheduledTime(monitoringRef);
-    let message = "Aucun passage prévu actuellement";
     document.getElementById(elementId).innerHTML = `
       <div class='title-line'><img src='${icon}' class='icon-inline'>${name}</div>
-      <ul><li>${message}</li></ul>
-      <div class='schedule-extremes'>Aucun passage en cours</div>
+      <ul><li>Aucun passage prévu actuellement</li></ul>
     `;
     return;
   }
 
-  // Premier & dernier départ du jour (si quota API OK, sinon GTFS conseillé)
-  const extremes = await getExtremes(monitoringRef, lineRef);
-
   const list = await Promise.all(
     visits.slice(0, 4).map(async v => {
       const t = v.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime;
-      const dest = v.MonitoredVehicleJourney.DestinationName || "Terminus";
-      const vehicleJourneyRef = v.MonitoredVehicleJourney.VehicleJourneyRef;
-      const aimed = v.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime;
-      const expected = v.MonitoredVehicleJourney.MonitoredCall.ExpectedDepartureTime;
-      const delay = (expected && aimed) ? Math.round((new Date(expected) - new Date(aimed)) / 60000) : 0;
-      const delayStr = delay > 1 ? `<span class="retard">+${delay} min</span>` : "";
-      const stops = await fetchStopsForVehicleJourney(vehicleJourneyRef);
+      const dest = (v.MonitoredVehicleJourney.DestinationName?.[0]?.value) || "Terminus";
+      const vehicleJourneyRef = v.MonitoredVehicleJourney.FramedVehicleJourneyRef?.DatedVehicleJourneyRef;
+      const stops = vehicleJourneyRef ? (await fetchStopsForVehicleJourney(vehicleJourneyRef)) : [];
       const stopsStr = stops.length ? `<br><span class="defile-arrets">${stops.join(" – ")}</span>` : "";
-      return `<li>${formatTime(t)} ${delayStr} → ${dest}${stopsStr}</li>`;
+      return `<li>${formatTime(t)} → ${dest}${stopsStr}</li>`;
     })
-  ).then(items => items.join(""));
+  );
 
   document.getElementById(elementId).innerHTML = `
     <div class='title-line'><img src='${icon}' class='icon-inline'>${name}</div>
-    <ul>${list}</ul>
-    <div class='schedule-extremes'>
-      Premier départ : ${formatTime(extremes.first)}<br>
-      Dernier départ : ${formatTime(extremes.last)}
-    </div>`;
+    <ul>${list.join("")}</ul>
+  `;
 }
 
 // ===================
@@ -273,30 +237,12 @@ function refreshAll() {
   updateTrafficBloc();
   updateVelibBloc("velib-vincennes", VELIB_IDS.vincennes);
   updateVelibBloc("velib-breuil", VELIB_IDS.breuil);
-renderDepartures("rer-content", "rer");
-renderDepartures("bus77E-content", "bus77E");
-renderDepartures("bus77O-content", "bus77O");
-renderDepartures("bus201A-content", "bus201A");
-renderDepartures("bus201B-content", "bus201B");
+  renderDepartures("rer-content", "rer");
+  renderDepartures("bus77E-content", "bus77E");
+  renderDepartures("bus77O-content", "bus77O");
+  renderDepartures("bus201A-content", "bus201A");
+  renderDepartures("bus201B-content", "bus201B");
 }
 
 refreshAll();
 setInterval(refreshAll, 60000);
-
-// ===================
-//  CSS à ajouter dans ton fichier
-// ===================
-/*
-.defile-arrets {
-  font-size: 0.95em;
-  color: #555;
-  display: block;
-  margin-top: 2px;
-  white-space: normal;
-}
-.retard {
-  color: #b00;
-  font-weight: bold;
-  margin-left: 6px;
-}
-*/

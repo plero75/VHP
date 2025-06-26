@@ -2,33 +2,39 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=1280, initial-scale=1.0">
-  <title>Disponibilités des transports – Hippodrome de Vincennes</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Dashboard Hippodrome Vincennes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css"> <!-- Ton CSS ici -->
 </head>
 <body>
-  <div id="dashboard-main">
-    <header>
-      <h1>Disponibilités des transports en commun autour de l’hippodrome</h1>
-      <div id="date-bloc">
-        Nous sommes le <span id="current-date"></span>
-        &nbsp;–&nbsp;Il est <span id="current-time"></span>
-      </div>
-    </header>
-    <div id="dashboard-content">
-      <section id="weather-bloc"></section>
-<section id="info-trafic-bloc"></section>
-      <section id="rer-content"></section>
-      <section id="bus77-content"></section>
-      <section id="bus201-content"></section>
-      <section id="velib-vincennes"></section>
-      <section id="velib-breuil"></section>
+  <header>
+    <h1>Tableau de bord Hippodrome Vincennes</h1>
+    <div>
+      <span id="current-date"></span> — <span id="current-time"></span>
     </div>
-    <footer>
-      <div id="last-update">Dernière mise à jour...</div>
-      <div style="font-size:0.8em;opacity:0.7;margin-top:4px;">© 2025 – Hippodrome Paris-Vincennes</div>
-    </footer>
-  </div>
+  </header>
+
+  <main>
+    <section id="weather-bloc" class="bloc"></section>
+
+    <section id="info-trafic-bloc" class="bloc"></section>
+
+    <section class="blocs-flex">
+      <div id="velib-vincennes" class="bloc"></div>
+      <div id="velib-breuil" class="bloc"></div>
+    </section>
+
+    <section class="blocs-flex">
+      <div id="rer-content" class="bloc"></div>
+      <div id="bus77-content" class="bloc"></div>
+      <div id="bus201-content" class="bloc"></div>
+    </section>
+  </main>
+
+  <footer>
+    <small>© 2025 Hippodrome Vincennes — Données en temps réel (Open-Meteo, IDFM, Vélib, Sytadin)</small>
+  </footer>
+
   <script src="script2.js"></script>
 </body>
 </html>

@@ -1,248 +1,227 @@
-// =============================
-//  CONFIGURATION & CONSTANTES
-// =============================
-
-const API_PROXY = "https://ratp-proxy.hippodrome-proxy42.workers.dev";
 const STOP_POINTS = {
   rer: {
-    monitoringRef: "STIF:StopPoint:Q:43135:", // Joinville-le-Pont (RER A)
-    lineRef: "STIF:Line::C01742:",
     name: "RER A Joinville-le-Pont",
+    realtimeUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopPoint:Q:43135:",
     icon: "img/picto-rer-a.svg"
   },
-  bus77E: {
-    monitoringRef: "STIF:StopPoint:Q:417601:",
-    lineRef: "STIF:Line::C02251:",
-    name: "BUS 77 Hippodrome (Est)",
+  bus77: {
+    name: "BUS 77 Hippodrome de Vincennes",
+    realtimeUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopPoint:Q:463641:",
     icon: "img/picto-bus.svg"
   },
-  bus77O: {
-    monitoringRef: "STIF:StopPoint:Q:417602:",
-    lineRef: "STIF:Line::C02251:",
-    name: "BUS 77 Hippodrome (Ouest)",
-    icon: "img/picto-bus.svg"
-  },
-  bus201A: {
-    monitoringRef: "STIF:StopPoint:Q:423233:",
-    lineRef: "STIF:Line::C01219:",
-    name: "BUS 201 École du Breuil (A)",
-    icon: "img/picto-bus.svg"
-  },
-  bus201B: {
-    monitoringRef: "STIF:StopPoint:Q:423235:",
-    lineRef: "STIF:Line::C01219:",
-    name: "BUS 201 École du Breuil (B)",
+  bus201: {
+    name: "BUS 201 École du Breuil",
+    realtimeUrl: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopPoint:Q:463644:",
     icon: "img/picto-bus.svg"
   }
 };
+
 const VELIB_IDS = {
   vincennes: "12163",
   breuil: "12128"
 };
 
-// ===================
-//   UTILS
-// ===================
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return res.json();
+}
 
-function formatTime(d, withSec = false) {
-  if (!d) return "-";
-  let date = d instanceof Date ? d : new Date(d);
+function getDestinationName(d) {
+  if (!d) return "Destination inconnue";
+  if (typeof d === "string") return d;
+  if (Array.isArray(d)) return d[0]?.value || "Destination inconnue";
+  if (typeof d === "object") return d.value || "Destination inconnue";
+  return "Destination inconnue";
+}
+
+function formatTime(iso, withSeconds = false) {
+  if (!iso) return "-";
+  const date = new Date(iso);
   if (isNaN(date.getTime())) return "-";
-  const opts = withSec ? { hour: "2-digit", minute: "2-digit", second: "2-digit" } : { hour: "2-digit", minute: "2-digit" };
-  return date.toLocaleTimeString("fr-FR", opts);
+  const options = withSeconds ? { hour: "2-digit", minute: "2-digit", second: "2-digit" } : { hour: "2-digit", minute: "2-digit" };
+  return date.toLocaleTimeString("fr-FR", options);
 }
 
-function formatDateFr(d = new Date()) {
-  return d.toLocaleDateString("fr-FR", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+function minutesUntil(dateTimeStr) {
+  const now = new Date();
+  const target = new Date(dateTimeStr);
+  const diff = (target - now) / 60000;
+  if (isNaN(diff)) return "";
+  if (diff < 1.5) return `<span class='imminent'>(passage imminent)</span>`;
+  return `<span class='temps'> (${Math.round(diff)} min)</span>`;
 }
 
-// ===================
-//  API REALTIME
-// ===================
+function renderDepartures(id, title, data, icon) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let html = `<div class='title-line'><img src='${icon}' class='icon-inline'>${title}</div>`;
 
-async function fetchRealTime(monitoringRef, lineRef) {
+  if (!data || data.length === 0) {
+    html += `<ul><li>Aucun passage à venir</li></ul>`;
+  } else {
+    const grouped = {};
+    data.forEach(d => {
+      const dir = getDestinationName(d.MonitoredVehicleJourney.DirectionName);
+      if (!grouped[dir]) grouped[dir] = [];
+      grouped[dir].push(d);
+    });
+
+    for (const dir in grouped) {
+      html += `<h4 class='direction-title'>Direction ${dir}</h4><ul>`;
+      grouped[dir].slice(0, 4).forEach(d => {
+        const call = d.MonitoredVehicleJourney.MonitoredCall;
+        const expected = call?.ExpectedDepartureTime;
+        const aimed = call?.AimedDepartureTime;
+        const isLast = d.MonitoredVehicleJourney.FirstOrLastJourney?.value === "LAST_SERVICE_OF_DAY";
+        const mvjRef = d.MonitoredVehicleJourney.DatedVehicleJourneyRef;
+        const liId = `dep-${mvjRef.replace(/[^a-z0-9]/gi, "")}`;
+        html += `<li id="${liId}">
+          ▶ ${formatTime(expected)}${minutesUntil(expected)} 
+          ${expected !== aimed ? `<span class='delay'>(+${Math.round((new Date(expected) - new Date(aimed)) / 60000)} min)</span>` : ""}
+          ${isLast ? "<span class='last-train'>(dernier train)</span>" : ""}
+          <div class='defile-arrets'>Chargement...</div>
+        </li>`;
+      });
+      html += "</ul>";
+    }
+  }
+
+  el.innerHTML = html;
+
+  data.forEach(d => {
+    const mvjRef = d.MonitoredVehicleJourney.DatedVehicleJourneyRef;
+    const liId = `dep-${mvjRef.replace(/[^a-z0-9]/gi, "")}`;
+    const li = document.getElementById(liId);
+    if (li) injectStopsDynamically(mvjRef, li);
+  });
+}
+
+async function fetchTransport(stopKey, elementId) {
   try {
-    const url = `${API_PROXY}/?url=${encodeURIComponent(
-      `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${monitoringRef}&LineRef=${lineRef}`
-    )}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    return data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
-  } catch (error) {
-    console.error("Erreur fetch realtime", error);
-    return [];
+    const data = await fetchJSON(STOP_POINTS[stopKey].realtimeUrl);
+    const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
+    renderDepartures(elementId, STOP_POINTS[stopKey].name, visits, STOP_POINTS[stopKey].icon);
+  } catch (e) {
+    console.error(`Erreur ${stopKey}`, e);
+    document.getElementById(elementId).innerHTML =
+      `<div class='title-line'><img src='${STOP_POINTS[stopKey].icon}' class='icon-inline'>${STOP_POINTS[stopKey].name}</div><div class='error'>Données indisponibles</div>`;
   }
 }
-
-// ===================
-//  ARRÊTS DESSERVIS (cache)
-// ===================
-const stopsCache = {};
 
 async function fetchStopsForVehicleJourney(vehicleJourneyRef) {
-  if (!vehicleJourneyRef) return [];
-  if (stopsCache[vehicleJourneyRef]) return stopsCache[vehicleJourneyRef];
-  const url = `${API_PROXY}/?url=${encodeURIComponent(
-    `https://prim.iledefrance-mobilites.fr/marketplace/vehicle-journeys/${vehicleJourneyRef}/stop_points`
-  )}`;
+  const proxy = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=";
+  const url = `${proxy}https://prim.iledefrance-mobilites.fr/marketplace/vehicle-journeys/${vehicleJourneyRef}/stop_points`;
+
   try {
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!res.ok) throw new Error("Erreur vehicle-journey stop_points");
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Échec requête vehicle-journey stop_points");
     const data = await res.json();
-    const stops = data?.stop_points?.map(p => p.name) || [];
-    stopsCache[vehicleJourneyRef] = stops;
-    setTimeout(() => delete stopsCache[vehicleJourneyRef], 120000);
-    return stops;
+    return data?.stop_points?.map(p => p.name) || [];
   } catch (e) {
+    console.warn("Fallback GTFS utilisé", e);
     return [];
   }
 }
 
-// ===================
-//  AFFICHAGE DES BLOCS
-// ===================
-
-function updateDateBloc() {
-  document.getElementById("current-date").textContent = formatDateFr();
-  document.getElementById("current-time").textContent = formatTime(new Date());
+function injectStopsDynamically(mvjRef, liElement) {
+  fetchStopsForVehicleJourney(mvjRef).then(stopList => {
+    const html = stopList.length ? stopList.join(" – ") : "Liste non disponible";
+    const div = liElement.querySelector(".defile-arrets");
+    if (div) div.innerHTML = html;
+  });
 }
 
-// Vélib' dynamique
-async function updateVelibBloc(elementId, stationId) {
+async function fetchVelib(stationId, elementId) {
   try {
-    const url = "https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&q=stationcode=" + stationId;
-    const data = await fetch(url).then(r => r.json());
-    const station = data.records[0]?.fields;
-    if (!station) throw new Error("Station Vélib non trouvée");
-    const mechanical = station.mechanical ?? 0;
-    const ebike = station.ebike ?? 0;
-    const free = station.numdocksavailable ?? 0;
-    const status = station.status === "OPEN" ? "🟢 Ouverte" : "🔴 Fermée";
+    const url = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https://prim.iledefrance-mobilites.fr/marketplace/velib/station_status.json";
+    const data = await fetchJSON(url);
+    const station = data.data.stations.find(s => s.station_id == stationId);
+    const mech = station.num_bikes_available_types.find(b => b.mechanical !== undefined)?.mechanical || 0;
+    const elec = station.num_bikes_available_types.find(b => b.ebike !== undefined)?.ebike || 0;
+    const free = station.num_docks_available || 0;
     document.getElementById(elementId).innerHTML = `
       <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-      🚲 Mécaniques : ${mechanical}<br>
-      ⚡ Électriques : ${ebike}<br>
-      🅿️ Places libres : ${free}<br>
-      ${status}
+      🚲 Mécaniques : ${mech}<br>
+      ⚡ Électriques : ${elec}<br>
+      🅿️ Places libres : ${free}
     `;
   } catch (e) {
-    document.getElementById(elementId).innerHTML = `
-      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-      <div class='error'>Erreur chargement Vélib</div>
-    `;
+    console.error("Erreur Vélib :", e);
+    document.getElementById(elementId).innerHTML = "<b>Erreur Vélib</b>";
   }
 }
-
-// Bloc trafic routier Sytadin (lien uniquement)
-function updateTrafficBloc() {
-  document.getElementById("info-trafic-bloc").innerHTML = `
-    <div class='bloc-titre'><img src='img/picto-info.svg' class='icon-inline'>Info trafic routier autour de l’hippodrome</div>
-    <div style="margin-top:10px">
-      <a href="https://www.sytadin.fr/" target="_blank" rel="noopener">
-        <button style="padding:8px 16px;font-size:1em;">Voir la carte Sytadin</button>
-      </a>
-    </div>`;
-}
-
-// HORAIRES + ARRÊTS DESSERVIS
-async function renderDepartures(elementId, stopKey) {
-  const { monitoringRef, lineRef, name, icon } = STOP_POINTS[stopKey];
-  const visits = await fetchRealTime(monitoringRef, lineRef);
-
-  if (!visits.length) {
-    document.getElementById(elementId).innerHTML = `
-      <div class='title-line'><img src='${icon}' class='icon-inline'>${name}</div>
-      <ul><li>Aucun passage prévu actuellement</li></ul>
-    `;
-    return;
-  }
-
-  const list = await Promise.all(
-    visits.slice(0, 4).map(async v => {
-      const t = v.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime;
-      const dest = (v.MonitoredVehicleJourney.DestinationName?.[0]?.value) || "Terminus";
-      const vehicleJourneyRef = v.MonitoredVehicleJourney.FramedVehicleJourneyRef?.DatedVehicleJourneyRef;
-      const stops = vehicleJourneyRef ? (await fetchStopsForVehicleJourney(vehicleJourneyRef)) : [];
-      const stopsStr = stops.length ? `<br><span class="defile-arrets">${stops.join(" – ")}</span>` : "";
-      return `<li>${formatTime(t)} → ${dest}${stopsStr}</li>`;
-    })
-  );
-
-  document.getElementById(elementId).innerHTML = `
-    <div class='title-line'><img src='${icon}' class='icon-inline'>${name}</div>
-    <ul>${list.join("")}</ul>
-  `;
-}
-
-// ===================
-//  METEO DYNAMIQUE (Open-Meteo)
-// ===================
 
 async function fetchWeather() {
-  const lat = 48.8327, lon = 2.4382;
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Europe%2FParis`;
-
-  let html = `<div class='bloc-titre'><img src='img/picto-meteo.svg' class='icon-inline'>Météo</div>`;
-
   try {
-    const resp = await fetch(url);
-    const data = await resp.json();
-
-    if (data.current_weather) {
-      const temp = Math.round(data.current_weather.temperature);
-      const wind = Math.round(data.current_weather.windspeed);
-      const code = data.current_weather.weathercode;
-      const label = weatherCodeToString(code);
-      const icon = `img/${code}.png`;
-
-      html += `<div style="display:flex;align-items:center;gap:10px;">
-                 <img src="${icon}" style="height:48px;" alt="${label}">
-                 <div>
-                   <div>🌡️ <b>${temp}°C</b></div>
-                   <div>💨 ${wind} km/h</div>
-                   <div>🌤️ ${label}</div>
-                 </div>
-               </div>`;
-    } else {
-      html += "<div>Météo indisponible</div>";
-    }
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=48.82&longitude=2.44&current_weather=true";
+    const data = await fetchJSON(url);
+    const w = data.current_weather;
+    document.getElementById("weather-content").innerHTML = `
+      <div class="title-line"><img src="img/picto-meteo.svg" class="icon-inline">Météo</div>
+      🌡️ Température : <b>${w.temperature}°C</b><br>
+      ☀️ Code météo : ${w.weathercode}<br>
+      💨 Vent : ${w.windspeed} km/h`;
   } catch (e) {
-    html += "<div>Erreur météo</div>";
+    document.getElementById("weather-content").innerHTML = "<b>Météo indisponible</b>";
   }
-
-  document.getElementById("weather-bloc").innerHTML = html;
 }
 
-function weatherCodeToString(code) {
-  const mapping = {
-    0: "Ciel dégagé", 1: "Principalement dégagé", 2: "Partiellement nuageux", 3: "Couvert",
-    45: "Brouillard", 48: "Brouillard givrant", 51: "Bruine légère", 53: "Bruine modérée",
-    55: "Bruine dense", 56: "Bruine verglaçante légère", 57: "Bruine verglaçante dense",
-    61: "Pluie faible", 63: "Pluie modérée", 65: "Pluie forte", 66: "Pluie verglaçante légère",
-    67: "Pluie verglaçante forte", 71: "Neige faible", 73: "Neige modérée", 75: "Neige forte",
-    77: "Grains de neige", 80: "Averses faibles", 81: "Averses modérées", 82: "Averses violentes",
-    85: "Averses de neige faibles", 86: "Averses de neige fortes", 95: "Orage",
-    96: "Orage avec grêle légère", 99: "Orage avec grêle forte"
-  };
-  return mapping[code] || "Inconnu";
+async function fetchTrafficRoad() {
+  try {
+    const url = "https://data.cerema.fr/api/records/1.0/search/?dataset=etat-trafic-rn&rows=50&refine.zone_nom=Île-de-France";
+    const data = await fetchJSON(url);
+    const routes = data.records
+      .filter(r => ["A86", "BP"].includes(r.fields.route_nom))
+      .map(r => `<div><span style="color:${r.fields.couleur}">●</span> ${r.fields.libelle_troncon} : ${r.fields.etat_trafic}</div>`)
+      .join("");
+    document.getElementById("trafic-road").innerHTML = `<div class='title-line'><img src='img/picto-car.svg' class='icon-inline'>Trafic routier</div>${routes}`;
+  } catch (e) {
+    document.getElementById("trafic-road").innerHTML = "<b>Trafic routier indisponible</b>";
+  }
 }
-
-// ===================
-//  Rafraîchissement global
-// ===================
 
 function refreshAll() {
-  updateDateBloc();
+  fetchSchedulesOncePerDay();
+  fetchTransport("rer", "rer-content");
+  fetchTransport("bus77", "bus77-content");
+  fetchTransport("bus201", "bus201-content");
+  fetchVelib(VELIB_IDS.vincennes, "velib-vincennes");
+  fetchVelib(VELIB_IDS.breuil, "velib-breuil");
   fetchWeather();
-  updateTrafficBloc();
-  updateVelibBloc("velib-vincennes", VELIB_IDS.vincennes);
-  updateVelibBloc("velib-breuil", VELIB_IDS.breuil);
-  renderDepartures("rer-content", "rer");
-  renderDepartures("bus77E-content", "bus77E");
-  renderDepartures("bus77O-content", "bus77O");
-  renderDepartures("bus201A-content", "bus201A");
-  renderDepartures("bus201B-content", "bus201B");
+  fetchTrafficRoad();
 }
 
-refreshAll();
 setInterval(refreshAll, 60000);
+refreshAll();
+
+
+
+async function fetchSchedulesOncePerDay() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (localStorage.getItem("schedule-day") === today) return;
+
+  for (let key in STOP_POINTS) {
+    if (!STOP_POINTS[key].scheduleUrl) continue;
+    const url = STOP_POINTS[key].scheduleUrl + today.replace(/-/g, "") + "T000000";
+    try {
+      const data = await fetchJSON(url);
+      const rows = data.route_schedules?.[0]?.table?.rows || [];
+      const times = [];
+      rows.forEach(row => {
+        row.stop_date_times?.forEach(sdt => {
+          if (sdt.departure_time) times.push(sdt.departure_time);
+        });
+      });
+      times.sort();
+      if (times.length) {
+        const fmt = t => `${t.slice(0, 2)}:${t.slice(2, 4)}`;
+        localStorage.setItem(`${key}-first`, fmt(times[0]));
+        localStorage.setItem(`${key}-last`, fmt(times[times.length - 1]));
+      }
+    } catch (e) {
+      console.error(`Erreur horaires ${key}`, e);
+    }
+  }
+  localStorage.setItem("schedule-day", today);
+}

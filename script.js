@@ -3,11 +3,6 @@
 // =============================
 
 const API_PROXY = "https://ratp-proxy.hippodrome-proxy42.workers.dev";
-const STOP_AREAS = {
-  rer: "STIF:StopArea:SP:43135:",
-  bus77: "STIF:StopArea:SP:463641:",
-  bus201: "STIF:StopArea:SP:463644:"
-};
 const STOP_POINTS_IDFM = {
   rer: "STIF:StopPoint:Q:43135:",
   bus77: "STIF:StopPoint:Q:463641:",
@@ -67,7 +62,7 @@ async function fetchRealTime(monitoringRef) {
 async function getNextScheduledTime(monitoringRef) {
   try {
     const url = `${API_PROXY}/?url=${encodeURIComponent(
-      `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${monitoringRef}&PreviewInterval=PT12H`
+      `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${monitoringRef}`
     )}`;
     const res = await fetch(url);
     const data = await res.json();
@@ -87,38 +82,61 @@ function updateDateBloc() {
   document.getElementById("current-time").textContent = formatTime(new Date());
 }
 
-function updateVelibBloc(elementId, mechanical = 8, ebike = 2, free = 6) {
-  document.getElementById(elementId).innerHTML = `
-    <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-    🚲 Mécaniques : ${mechanical}<br>
-    ⚡ Électriques : ${ebike}<br>
-    🅿️ Places libres : ${free}
-  `;
+// Vélib' dynamique
+async function updateVelibBloc(elementId, stationId) {
+  // 1er essai : API IDFM (plus fiable)
+  try {
+    const url = "https://prim.iledefrance-mobilites.fr/marketplace/velib/station_status.json";
+    const data = await fetch(url).then(r => r.json());
+    const station = data?.data?.stations?.find(s => s.station_id == stationId);
+    if (!station) throw new Error("Station Vélib non trouvée");
+    const mechanical = station.num_bikes_available_types?.find(b => b.mechanical !== undefined)?.mechanical ?? 0;
+    const ebike = station.num_bikes_available_types?.find(b => b.ebike !== undefined)?.ebike ?? 0;
+    const free = station.num_docks_available ?? 0;
+    document.getElementById(elementId).innerHTML = `
+      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+      🚲 Mécaniques : ${mechanical}<br>
+      ⚡ Électriques : ${ebike}<br>
+      🅿️ Places libres : ${free}
+    `;
+    return;
+  } catch (e) {
+    // fallback
+  }
+
+  // 2e essai : OpenData Paris
+  try {
+    const url = "https://opendata.paris.fr/api/v2/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json";
+    const data = await fetch(url).then(r => r.json());
+    const station = data.find(s => s.stationcode == stationId);
+    if (!station) throw new Error("Station Vélib non trouvée (OpenData)");
+    const mechanical = station.mechanical ?? 0;
+    const ebike = station.ebike ?? 0;
+    const free = station.numdocksavailable ?? 0;
+    document.getElementById(elementId).innerHTML = `
+      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+      🚲 Mécaniques : ${mechanical}<br>
+      ⚡ Électriques : ${ebike}<br>
+      🅿️ Places libres : ${free}
+    `;
+    return;
+  } catch (e2) {
+    document.getElementById(elementId).innerHTML = `
+      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
+      <div class='error'>Erreur chargement Vélib</div>
+    `;
+  }
 }
 
-async function updateTrafficBloc() {
-  const container = document.getElementById("info-trafic-bloc");
-  try {
-    const res = await fetch("https://corsproxy.io/?https://www.sytadin.fr/sys/barreau_courbe_cms.php?type=N");
-    const html = await res.text();
-    const match = html.match(/globalEtat\":\"([^\"]+)\"/);
-    const message = match ? match[1] : "État inconnu";
-
-    container.innerHTML = `
-      <div class='bloc-titre'><img src='img/picto-info.svg' class='icon-inline'>Info trafic routier autour de l’hippodrome</div>
-      <div style="margin-top:10px">
-        🚦 État global du trafic : <b>${message}</b>
-      </div>
-      <div style="margin-top:10px">
-        <a href="https://www.sytadin.fr/" target="_blank" rel="noopener">
-          <button style="padding:8px 16px;font-size:1em;">Voir carte Sytadin</button>
-        </a>
-      </div>`;
-  } catch (e) {
-    container.innerHTML = `
-      <div class='bloc-titre'><img src='img/picto-info.svg' class='icon-inline'>Info trafic routier autour de l’hippodrome</div>
-      <div style="margin-top:10px">⚠️ Données routières indisponibles.</div>`;
-  }
+// Bloc trafic routier Sytadin (lien uniquement)
+function updateTrafficBloc() {
+  document.getElementById("info-trafic-bloc").innerHTML = `
+    <div class='bloc-titre'><img src='img/picto-info.svg' class='icon-inline'>Info trafic routier autour de l’hippodrome</div>
+    <div style="margin-top:10px">
+      <a href="https://www.sytadin.fr/" target="_blank" rel="noopener">
+        <button style="padding:8px 16px;font-size:1em;">Voir la carte Sytadin</button>
+      </a>
+    </div>`;
 }
 
 async function renderDepartures(elementId, stopKey) {
@@ -128,7 +146,7 @@ async function renderDepartures(elementId, stopKey) {
   if (!visits.length) {
     const nextStartTime = await getNextScheduledTime(STOP_POINTS_IDFM[stopKey]);
   
-  let message = "Aucun passage prévu actuellement";
+    let message = "Aucun passage prévu actuellement";
     if (nextStartTime) {
       const nextDate = new Date(nextStartTime);
       const label = stopKey === "rer" ? "train" : "bus";
@@ -224,8 +242,8 @@ function refreshAll() {
   updateDateBloc();
   fetchWeather();
   updateTrafficBloc();
-  updateVelibBloc("velib-vincennes");
-  updateVelibBloc("velib-breuil");
+  updateVelibBloc("velib-vincennes", VELIB_IDS.vincennes);
+  updateVelibBloc("velib-breuil", VELIB_IDS.breuil);
   renderDepartures("rer-content", "rer");
   renderDepartures("bus77-content", "bus77");
   renderDepartures("bus201-content", "bus201");

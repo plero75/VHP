@@ -273,11 +273,11 @@ function refreshAll() {
   updateTrafficBloc();
   updateVelibBloc("velib-vincennes", VELIB_IDS.vincennes);
   updateVelibBloc("velib-breuil", VELIB_IDS.breuil);
-  renderDepartures("rer-content", "rer");
-  renderDepartures("bus77E-content", "bus77E");
-  renderDepartures("bus77O-content", "bus77O");
-  renderDepartures("bus201A-content", "bus201A");
-  renderDepartures("bus201B-content", "bus201B");
+renderDepartures("rer-content", "rer");
+renderDepartures("bus77E-content", "bus77E");
+renderDepartures("bus77O-content", "bus77O");
+renderDepartures("bus201A-content", "bus201A");
+renderDepartures("bus201B-content", "bus201B");
 }
 
 refreshAll();

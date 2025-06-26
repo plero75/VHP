@@ -3,26 +3,41 @@
 // =============================
 
 const API_PROXY = "https://ratp-proxy.hippodrome-proxy42.workers.dev";
-const STOP_POINTS_IDFM = {
-  rer: "STIF:StopPoint:Q:43135:",
-  bus77: "STIF:StopPoint:Q:463641:",
-  bus201: "STIF:StopPoint:Q:463644:"
-};
-const VELIB_IDS = { vincennes: "1074333296", breuil: "508042092" };
-
 const STOP_POINTS = {
   rer: {
+    monitoringRef: "STIF:StopArea:SP:475771:",
+    lineRef: "STIF:Line::C01742:",
     name: "RER A Joinville-le-Pont",
     icon: "img/picto-rer-a.svg"
   },
-  bus77: {
-    name: "BUS 77 Hippodrome de Vincennes",
+  bus77E: {
+    monitoringRef: "STIF:StopPoint:Q:417601:",
+    lineRef: "STIF:Line::C02251:",
+    name: "BUS 77 Hippodrome (Est)",
     icon: "img/picto-bus.svg"
   },
-  bus201: {
-    name: "BUS 201 Ecole du Breuil",
+  bus77O: {
+    monitoringRef: "STIF:StopPoint:Q:417602:",
+    lineRef: "STIF:Line::C02251:",
+    name: "BUS 77 Hippodrome (Ouest)",
+    icon: "img/picto-bus.svg"
+  },
+  bus201A: {
+    monitoringRef: "STIF:StopPoint:Q:423233:",
+    lineRef: "STIF:Line::C01219:",
+    name: "BUS 201 École du Breuil (A)",
+    icon: "img/picto-bus.svg"
+  },
+  bus201B: {
+    monitoringRef: "STIF:StopPoint:Q:423235:",
+    lineRef: "STIF:Line::C01219:",
+    name: "BUS 201 École du Breuil (B)",
     icon: "img/picto-bus.svg"
   }
+};
+const VELIB_IDS = {
+  vincennes: "12163",
+  breuil: "12128"
 };
 
 // ===================
@@ -45,10 +60,10 @@ function formatDateFr(d = new Date()) {
 //  API REALTIME
 // ===================
 
-async function fetchRealTime(monitoringRef) {
+async function fetchRealTime(monitoringRef, lineRef) {
   try {
     const url = `${API_PROXY}/?url=${encodeURIComponent(
-      `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${monitoringRef}`
+      `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${monitoringRef}&LineRef=${lineRef}`
     )}`;
     const response = await fetch(url);
     const data = await response.json();
@@ -59,17 +74,22 @@ async function fetchRealTime(monitoringRef) {
   }
 }
 
-async function getNextScheduledTime(monitoringRef) {
+async function getExtremes(monitoringRef, lineRef) {
+  // Option la plus fiable : GTFS local, sinon API PreviewInterval (risque de quota)
   try {
     const url = `${API_PROXY}/?url=${encodeURIComponent(
-      `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${monitoringRef}`
+      `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${monitoringRef}&LineRef=${lineRef}&PreviewInterval=PT24H`
     )}`;
-    const res = await fetch(url);
-    const data = await res.json();
+    const response = await fetch(url);
+    const data = await response.json();
     const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
-    return visits[0]?.MonitoredVehicleJourney?.MonitoredCall?.AimedDepartureTime || null;
+    if (!visits.length) return { first: null, last: null };
+    return {
+      first: visits[0].MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime,
+      last: visits.at(-1).MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime
+    };
   } catch {
-    return null;
+    return { first: null, last: null };
   }
 }
 
@@ -84,43 +104,23 @@ function updateDateBloc() {
 
 // Vélib' dynamique
 async function updateVelibBloc(elementId, stationId) {
-  // 1er essai : API IDFM (plus fiable)
   try {
-    const url = "https://prim.iledefrance-mobilites.fr/marketplace/velib/station_status.json";
+    const url = "https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&q=stationcode=" + stationId;
     const data = await fetch(url).then(r => r.json());
-    const station = data?.data?.stations?.find(s => s.station_id == stationId);
+    const station = data.records[0]?.fields;
     if (!station) throw new Error("Station Vélib non trouvée");
-    const mechanical = station.num_bikes_available_types?.find(b => b.mechanical !== undefined)?.mechanical ?? 0;
-    const ebike = station.num_bikes_available_types?.find(b => b.ebike !== undefined)?.ebike ?? 0;
-    const free = station.num_docks_available ?? 0;
-    document.getElementById(elementId).innerHTML = `
-      <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
-      🚲 Mécaniques : ${mechanical}<br>
-      ⚡ Électriques : ${ebike}<br>
-      🅿️ Places libres : ${free}
-    `;
-    return;
-  } catch (e) {
-    // fallback
-  }
-
-  // 2e essai : OpenData Paris
-  try {
-    const url = "https://opendata.paris.fr/api/v2/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json";
-    const data = await fetch(url).then(r => r.json());
-    const station = data.find(s => s.stationcode == stationId);
-    if (!station) throw new Error("Station Vélib non trouvée (OpenData)");
     const mechanical = station.mechanical ?? 0;
     const ebike = station.ebike ?? 0;
     const free = station.numdocksavailable ?? 0;
+    const status = station.status === "OPEN" ? "🟢 Ouverte" : "🔴 Fermée";
     document.getElementById(elementId).innerHTML = `
       <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
       🚲 Mécaniques : ${mechanical}<br>
       ⚡ Électriques : ${ebike}<br>
-      🅿️ Places libres : ${free}
+      🅿️ Places libres : ${free}<br>
+      ${status}
     `;
-    return;
-  } catch (e2) {
+  } catch (e) {
     document.getElementById(elementId).innerHTML = `
       <div class='title-line'><img src='img/picto-velib.svg' class='icon-inline'>Vélib'</div>
       <div class='error'>Erreur chargement Vélib</div>
@@ -139,45 +139,74 @@ function updateTrafficBloc() {
     </div>`;
 }
 
+// ===================
+//  ARRÊTS DESSERVIS (cache + fallback GTFS possible)
+// ===================
+const stopsCache = {};
+
+async function fetchStopsForVehicleJourney(vehicleJourneyRef) {
+  if (stopsCache[vehicleJourneyRef]) return stopsCache[vehicleJourneyRef];
+  const proxy = API_PROXY + "/?url=";
+  const url = `${proxy}${encodeURIComponent(
+    `https://prim.iledefrance-mobilites.fr/marketplace/vehicle-journeys/${vehicleJourneyRef}/stop_points`
+  )}`;
+  try {
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error("Erreur vehicle-journey stop_points");
+    const data = await res.json();
+    const stops = data?.stop_points?.map(p => p.name) || [];
+    stopsCache[vehicleJourneyRef] = stops;
+    setTimeout(() => delete stopsCache[vehicleJourneyRef], 120000);
+    return stops;
+  } catch (e) {
+    return [];
+  }
+}
+
+// ===================
+//  RENDU DES HORAIRES
+// ===================
+
 async function renderDepartures(elementId, stopKey) {
-  const visits = await fetchRealTime(STOP_POINTS_IDFM[stopKey]);
+  const { monitoringRef, lineRef, name, icon } = STOP_POINTS[stopKey];
+  const visits = await fetchRealTime(monitoringRef, lineRef);
   const now = new Date();
 
   if (!visits.length) {
-    const nextStartTime = await getNextScheduledTime(STOP_POINTS_IDFM[stopKey]);
-  
+    const nextStartTime = null; // Option : getNextScheduledTime(monitoringRef);
     let message = "Aucun passage prévu actuellement";
-    if (nextStartTime) {
-      const nextDate = new Date(nextStartTime);
-      const label = stopKey === "rer" ? "train" : "bus";
-      message = (nextDate > now)
-        ? `⏳ Service non commencé – premier ${label} prévu à ${formatTime(nextDate)}`
-        : `✅ Service terminé – prochain ${label} demain à ${formatTime(nextDate)}`;
-    }
-
     document.getElementById(elementId).innerHTML = `
-      <div class='title-line'><img src='${STOP_POINTS[stopKey].icon}' class='icon-inline'>${STOP_POINTS[stopKey].name}</div>
+      <div class='title-line'><img src='${icon}' class='icon-inline'>${name}</div>
       <ul><li>${message}</li></ul>
       <div class='schedule-extremes'>Aucun passage en cours</div>
     `;
     return;
   }
 
-  const list = visits.slice(0, 4).map(v => {
-    const t = v.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime;
-    const dest = v.MonitoredVehicleJourney.DestinationName || "Terminus";
-    return `<li>${formatTime(t)} → ${dest}</li>`;
-  }).join("");
+  // Premier & dernier départ du jour (si quota API OK, sinon GTFS conseillé)
+  const extremes = await getExtremes(monitoringRef, lineRef);
 
-  const first = visits[0].MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime;
-  const last = visits.at(-1).MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime;
+  const list = await Promise.all(
+    visits.slice(0, 4).map(async v => {
+      const t = v.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime;
+      const dest = v.MonitoredVehicleJourney.DestinationName || "Terminus";
+      const vehicleJourneyRef = v.MonitoredVehicleJourney.VehicleJourneyRef;
+      const aimed = v.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime;
+      const expected = v.MonitoredVehicleJourney.MonitoredCall.ExpectedDepartureTime;
+      const delay = (expected && aimed) ? Math.round((new Date(expected) - new Date(aimed)) / 60000) : 0;
+      const delayStr = delay > 1 ? `<span class="retard">+${delay} min</span>` : "";
+      const stops = await fetchStopsForVehicleJourney(vehicleJourneyRef);
+      const stopsStr = stops.length ? `<br><span class="defile-arrets">${stops.join(" – ")}</span>` : "";
+      return `<li>${formatTime(t)} ${delayStr} → ${dest}${stopsStr}</li>`;
+    })
+  ).then(items => items.join(""));
 
   document.getElementById(elementId).innerHTML = `
-    <div class='title-line'><img src='${STOP_POINTS[stopKey].icon}' class='icon-inline'>${STOP_POINTS[stopKey].name}</div>
+    <div class='title-line'><img src='${icon}' class='icon-inline'>${name}</div>
     <ul>${list}</ul>
     <div class='schedule-extremes'>
-      Premier départ : ${formatTime(first)}<br>
-      Dernier départ : ${formatTime(last)}
+      Premier départ : ${formatTime(extremes.first)}<br>
+      Dernier départ : ${formatTime(extremes.last)}
     </div>`;
 }
 
@@ -245,9 +274,29 @@ function refreshAll() {
   updateVelibBloc("velib-vincennes", VELIB_IDS.vincennes);
   updateVelibBloc("velib-breuil", VELIB_IDS.breuil);
   renderDepartures("rer-content", "rer");
-  renderDepartures("bus77-content", "bus77");
-  renderDepartures("bus201-content", "bus201");
+  renderDepartures("bus77E-content", "bus77E");
+  renderDepartures("bus77O-content", "bus77O");
+  renderDepartures("bus201A-content", "bus201A");
+  renderDepartures("bus201B-content", "bus201B");
 }
 
 refreshAll();
 setInterval(refreshAll, 60000);
+
+// ===================
+//  CSS à ajouter dans ton fichier
+// ===================
+/*
+.defile-arrets {
+  font-size: 0.95em;
+  color: #555;
+  display: block;
+  margin-top: 2px;
+  white-space: normal;
+}
+.retard {
+  color: #b00;
+  font-weight: bold;
+  margin-left: 6px;
+}
+*/

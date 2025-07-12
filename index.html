@@ -1,38 +1,26 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Mobilité Hippodrome de Vincennes</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <title>Tableau des passages – Hippodromes</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="main-container">
+  <h1>Passages en temps réel</h1>
 
-    <header>
-      <h1>Mobilité autour de l’Hippodrome de Vincennes</h1>
-      <div id="current-date"></div>
-      <div id="current-time"></div>
-    </header>
+  <table id="departures">
+    <thead>
+      <tr>
+        <th>Ligne</th>
+        <th>Direction</th>
+        <th>Prochain passage</th>
+        <th>Premier / Dernier</th>
+        <th>Arrêts desservis</th>
+      </tr>
+    </thead>
+    <tbody id="departures-body"></tbody>
+  </table>
 
-    <section id="horaires">
-      <div id="rer-content"></div>
-      <div id="bus77E-content"></div>
-      <div id="bus77O-content"></div>
-      <div id="bus201A-content"></div>
-      <div id="bus201B-content"></div>
-    </section>
-
-    <section id="velib">
-<div id="velib-vincennes" class="dashboard-card velib-card"></div>
-<div id="velib-breuil" class="dashboard-card velib-card"></div>
-
-    </section>
-
-    <section id="weather-bloc"></section>
-    <section id="info-trafic-bloc"></section>
-
-  </div>
-
-  <script src="script2.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>

@@ -1,26 +1,62 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <title>Tableau des passages – Hippodromes</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard Vincennes</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script type="module" src="script.js" defer></script>
 </head>
 <body>
-  <h1>Passages en temps réel</h1>
+  <div id="dashboard">
+    <header>
+      <div id="logo-block">
+        <img src="logo-vincennes.png" alt="Hippodrome de Vincennes" id="logo">
+        <h1>Infos Transports & Météo</h1>
+      </div>
+      <div id="datetime"></div>
+    </header>
 
-  <table id="departures">
-    <thead>
-      <tr>
-        <th>Ligne</th>
-        <th>Direction</th>
-        <th>Prochain passage</th>
-        <th>Premier / Dernier</th>
-        <th>Arrêts desservis</th>
-      </tr>
-    </thead>
-    <tbody id="departures-body"></tbody>
-  </table>
+    <main>
+      <section class="block" id="rer-block">
+        <h2>🚆 RER A – Joinville-le-Pont</h2>
+        <div id="rer-schedules" class="schedules"></div>
+      </section>
 
-  <script type="module" src="script.js"></script>
+      <section class="block" id="bus77-block">
+        <h2>🚌 Bus 77 – Hippodrome de Vincennes</h2>
+        <div id="bus77-schedules" class="schedules"></div>
+      </section>
+
+      <section class="block" id="bus201-block">
+        <h2>🚌 Bus 201 – École du Breuil</h2>
+        <div id="bus201-schedules" class="schedules"></div>
+      </section>
+
+      <section class="block" id="velib-block">
+        <h2>🚲 Vélib’</h2>
+        <div id="velib-data"></div>
+      </section>
+
+      <section class="block" id="weather-block">
+        <h2>🌤 Météo</h2>
+        <div id="weather">Chargement météo…</div>
+      </section>
+
+      <section class="block" id="news-block">
+        <h2>📰 Dernières actus</h2>
+        <div id="news-banner-content">Chargement…</div>
+      </section>
+
+      <section class="block" id="races-block">
+        <h2>🐴 Prochaines courses</h2>
+        <div id="races-list">Chargement…</div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2025 Hippodrome de Vincennes – Données IDFM, Vélib’, OpenWeather</p>
+    </footer>
+  </div>
 </body>
 </html>

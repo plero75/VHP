@@ -1,18 +1,61 @@
-/* Style simple et responsive */
-body            { font-family: system-ui, sans-serif; margin: 2rem; }
-h1              { margin-bottom: 1rem; }
-table           { width: 100%; border-collapse: collapse; }
-thead th        { background: #222; color: #fff; padding: .4rem .6rem; }
-tbody td        { border-bottom: 1px solid #ddd; padding: .4rem .6rem; }
+body {
+  font-family: sans-serif;
+  background-color: #f8f9fa;
+  margin: 0;
+  color: #333;
+}
 
-@media (max-width: 700px) {           /* empile la table sur mobile */
-  thead        { display: none; }
-  tbody, tr, td{ display: block; width: 100%; }
-  tr           { margin-bottom: 1rem; }
-  td::before   { font-weight: 600; display: block; }
-  td:nth-child(1)::before { content: "Ligne";      }
-  td:nth-child(2)::before { content: "Direction";  }
-  td:nth-child(3)::before { content: "Passage";    }
-  td:nth-child(4)::before { content: "1er / Dern."; }
-  td:nth-child(5)::before { content: "Arrêts";     }
+#dashboard {
+  max-width: 1000px;
+  margin: auto;
+  padding: 1rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#logo-block {
+  display: flex;
+  align-items: center;
+}
+
+#logo {
+  height: 60px;
+  margin-right: 1rem;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.block {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 5px #ccc;
+}
+
+.schedules div {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+footer {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+@media (max-width: 800px) {
+  main {
+    grid-template-columns: 1fr;
+  }
 }

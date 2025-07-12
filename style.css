@@ -1,110 +1,18 @@
-body, html {
-  margin: 0; padding: 0;
-  background: #212328; color: #f6f7fa;
-  font-family: "Segoe UI", "Arial", sans-serif;
-  font-size: 18px;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-}
-#dashboard-main {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 16px;
-  box-sizing: border-box;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-header {
-  text-align: center;
-  margin-bottom: 12px;
-}
-h1 {
-  font-size: 2em;
-  margin: 8px 0 0 0;
-  letter-spacing: 0.02em;
-}
-#dashboard-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 18px;
-  flex: 1 0 auto;
-  align-items: start;
-  overflow: hidden;
-}
-section {
-  background: #272934;
-  border-radius: 18px;
-  box-shadow: 0 2px 12px #0006;
-  padding: 18px 16px 10px 16px;
-  min-width: 0;
-  min-height: 110px;
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
-}
-.title-line {
-  font-weight: 600;
-  font-size: 1.12em;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-}
-.icon-inline {
-  height: 24px; width: 24px;
-  vertical-align: middle;
-  margin-right: 8px;
-}
-ul { list-style: none; margin: 0 0 0 0; padding: 0;}
-li { margin-bottom: 2px; }
-.direction-title { color: #FFD700; margin: 7px 0 3px 0; }
-.schedule-extremes { margin-top: 6px; color: #aaa; font-size:0.97em; }
-.imminent { color: #e04; font-weight: bold; margin-left: 5px; }
-.temps { color: #3bf; margin-left: 5px; font-weight: bold;}
-.last-train { color: #f60; font-weight: bold; }
-.defile-arrets { font-size: 0.93em; margin: 4px 0 3px 20px; color: #b4e3fa;}
-.delay { color: #F00; margin-left: 5px;}
-.error { color: #f86; font-weight: bold; }
-footer {
-  text-align: center;
-  font-size: 1.05em;
-  margin-top: 12px;
-  opacity: 0.88;
-}
+/* Style simple et responsive */
+body            { font-family: system-ui, sans-serif; margin: 2rem; }
+h1              { margin-bottom: 1rem; }
+table           { width: 100%; border-collapse: collapse; }
+thead th        { background: #222; color: #fff; padding: .4rem .6rem; }
+tbody td        { border-bottom: 1px solid #ddd; padding: .4rem .6rem; }
 
-@media (max-width: 1000px) {
-  #dashboard-content {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  body, html, #dashboard-main {
-    font-size: 17px;
-    padding: 7px;
-  }
+@media (max-width: 700px) {           /* empile la table sur mobile */
+  thead        { display: none; }
+  tbody, tr, td{ display: block; width: 100%; }
+  tr           { margin-bottom: 1rem; }
+  td::before   { font-weight: 600; display: block; }
+  td:nth-child(1)::before { content: "Ligne";      }
+  td:nth-child(2)::before { content: "Direction";  }
+  td:nth-child(3)::before { content: "Passage";    }
+  td:nth-child(4)::before { content: "1er / Dern."; }
+  td:nth-child(5)::before { content: "Arrêts";     }
 }
-
- 
-.defile-arrets {
-  font-size: 0.95em;
-  color: #555;
-  display: block;
-  margin-top: 2px;
-  white-space: normal;
-}
-.retard {
-  color: #b00;
-  font-weight: bold;
-  margin-left: 6px;
-}
- 
- 
-.defile-arrets {
-  font-size: 0.95em;
-  color: #555;
-  display: block;
-  margin-top: 2px;
-  white-space: normal;
-}
- 

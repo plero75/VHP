@@ -1,4 +1,5 @@
 import { CONFIG } from './config.js';
+import { fetchRERAStops } from './modules/fetchRERAStops.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   updateDateTime();
@@ -7,6 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchStopMonitoring(CONFIG.STOPS.rerA, "rer-schedules");
   fetchStopMonitoring(CONFIG.STOPS.bus77, "bus77-schedules");
   fetchStopMonitoring(CONFIG.STOPS.bus201, "bus201-schedules");
+
+fetchRERAStops({
+  monitoringRef: "STIF:StopPoint:Q:473951:", // Joinville-le-Pont
+  proxyURL: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=",
+  targetElementId: "rer-a-stops"
+});
 
   fetchWeather();
   fetchNews();

@@ -2,9 +2,10 @@ export const CONFIG = {
   PROXY_BASE: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=",
 
   STOPS: {
-    rerA: "STIF:StopArea:SP:43135:",
+    rerA_area: "STIF:StopArea:SP:43135:", // zone complète (Joinville)
+    rerA_point: "STIF:StopPoint:Q:473951:", // point précis
     bus77: "STIF:StopArea:SP:463641:",
-    bus201: "STIF:StopArea:SP:463644:",
+    bus201: "STIF:StopArea:SP:463644:"
   },
 
   LINES: {

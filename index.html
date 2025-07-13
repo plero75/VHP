@@ -27,6 +27,50 @@
   <span id="rer-a-stops-content" style="display: inline-block; margin-left: 1rem;">
     🔄 Chargement en cours...
   </span>
+  <div id="rer-a-stops" style="width: 100%; overflow-x: auto; white-space: nowrap; font-family: sans-serif; font-size: 1rem; padding: 10px; background: #f2f2f2; border-radius: 8px;">
+  🔄 Chargement des arrêts du prochain RER A...
+</div>
+
+<script>
+(async function () {
+  const stopMonitoringUrl = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=" +
+    encodeURIComponent("https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopPoint:Q:473951:");
+
+  try {
+    const response = await fetch(stopMonitoringUrl);
+    const data = await response.json();
+
+    const journey = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit?.[0]?.MonitoredVehicleJourney;
+    const vehicleJourneyId = journey?.FramedVehicleJourneyRef?.DatedVehicleJourneyRef;
+
+    if (!vehicleJourneyId) {
+      document.getElementById("rer-a-stops").textContent = "❌ Aucune donnée de train disponible.";
+      return;
+    }
+
+    const encodedId = encodeURIComponent(vehicleJourneyId);
+    const journeyUrl = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=" +
+      encodeURIComponent("https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/vehicle_journeys/" + encodedId);
+
+    const stopsRes = await fetch(journeyUrl);
+    const stopsData = await stopsRes.json();
+
+    const stops = stopsData?.vehicle_journeys?.[0]?.stop_times;
+
+    if (!stops || stops.length === 0) {
+      document.getElementById("rer-a-stops").textContent = "❌ Aucun arrêt trouvé pour ce train.";
+      return;
+    }
+
+    const stopNames = stops.map(s => s.stop_point?.name).filter(Boolean);
+    document.getElementById("rer-a-stops").innerHTML = "🚆 Prochains arrêts : " + stopNames.join(" ➜ ");
+  } catch (e) {
+    document.getElementById("rer-a-stops").textContent = "⚠️ Erreur lors de la récupération des données.";
+    console.error(e);
+  }
+})();
+</script>
+
 </div>
 
 <script>

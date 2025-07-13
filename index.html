@@ -22,6 +22,63 @@
         <h2>🚆 RER A – Joinville-le-Pont</h2>
         <div id="rer-schedules" class="schedules"></div>
       </section>
+<div id="rer-a-stops" style="white-space: nowrap; overflow-x: auto; padding: 1rem; border: 2px solid #ccc; border-radius: 10px; font-family: sans-serif; background: #f9f9f9;">
+  <strong>Prochains arrêts du RER A depuis Joinville-le-Pont :</strong>
+  <span id="rer-a-stops-content" style="display: inline-block; margin-left: 1rem;">
+    🔄 Chargement en cours...
+  </span>
+</div>
+
+<script>
+async function loadRERAStops() {
+  const container = document.getElementById("rer-a-stops-content");
+  try {
+    const stopMonitoringUrl = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=https%3A%2F%2Fprim.iledefrance-mobilites.fr%2Fmarketplace%2Fstop-monitoring%3FMonitoringRef%3DSTIF%3AStopArea%3ASP%3A43135%3A";
+    const res = await fetch(stopMonitoringUrl);
+    const data = await res.json();
+    const visits = data.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit;
+
+    if (!visits || visits.length === 0) {
+      container.innerText = "Aucun train à venir.";
+      return;
+    }
+
+    const vjId = visits[0].MonitoredVehicleJourney.FramedVehicleJourneyRef.DatedVehicleJourneyRef;
+    const encodedVjId = encodeURIComponent("vehicle_journey:" + vjId);
+
+    const journeyUrl = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=" + encodeURIComponent("https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/vehicle_journeys/" + encodedVjId);
+    const journeyRes = await fetch(journeyUrl);
+    const journeyData = await journeyRes.json();
+
+    const stops = journeyData.vehicle_journeys[0].stop_times;
+    const futureStops = stops.filter(s => !s.skipped_stop);
+
+    container.innerHTML = "";
+    futureStops.forEach((s, i) => {
+      const el = document.createElement("span");
+      el.style.marginRight = "20px";
+      el.style.padding = "6px 12px";
+      el.style.borderRadius = "20px";
+      el.style.backgroundColor = "#007bff";
+      el.style.color = "white";
+      el.style.display = "inline-block";
+      el.style.fontSize = "0.85rem";
+      el.innerText = s.stop_point.name;
+      container.appendChild(el);
+      if (i < futureStops.length - 1) {
+        const arrow = document.createElement("span");
+        arrow.innerText = " ➜ ";
+        container.appendChild(arrow);
+      }
+    });
+  } catch (e) {
+    container.innerText = "Erreur lors du chargement des arrêts.";
+    console.error(e);
+  }
+}
+
+loadRERAStops();
+</script>
 
       <section class="block" id="bus77-block">
         <h2>🚌 Bus 77 – Hippodrome de Vincennes</h2>

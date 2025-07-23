@@ -1,11 +1,13 @@
-async function loadRERAStops() {
-  const container = document.getElementById("rer-a-stops-content");
+export async function fetchRERAStops({ monitoringRef, proxyURL, targetElementId }) {
+  const container = document.getElementById(targetElementId);
   if (!container) return;
 
+  container.innerHTML = "🔄 Chargement des arrêts...";
+
   try {
-    // 1. Récupérer le prochain train depuis Joinville
-    const stopMonitoringUrl = CONFIG.PROXY_BASE + encodeURIComponent(
-      "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=" + CONFIG.STOPS.rerA_point
+    // 1. Récupérer le prochain train via le monitoringRef fourni
+    const stopMonitoringUrl = proxyURL + encodeURIComponent(
+      `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${monitoringRef}`
     );
     const res = await fetch(stopMonitoringUrl);
     const data = await res.json();
@@ -25,8 +27,8 @@ async function loadRERAStops() {
 
     // 3. Récupérer les arrêts de ce train
     const encodedVjId = encodeURIComponent("vehicle_journey:" + vjId);
-    const journeyUrl = CONFIG.PROXY_BASE + encodeURIComponent(
-      "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/vehicle_journeys/" + encodedVjId
+    const journeyUrl = proxyURL + encodeURIComponent(
+      `https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/vehicle_journeys/${encodedVjId}`
     );
     const journeyRes = await fetch(journeyUrl);
     const journeyData = await journeyRes.json();
@@ -69,6 +71,3 @@ async function loadRERAStops() {
     console.error(e);
   }
 }
-
-// Appelle la fonction au chargement
-document.addEventListener("DOMContentLoaded", loadRERAStops);

@@ -1,9 +1,9 @@
- export const CONFIG = {
+export const CONFIG = {
   PROXY_BASE: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=",
 
   STOPS: {
-    rerA_area: "STIF:StopArea:SP:475771:", // zone complète (Joinville-le-Pont)
-    rerA_point: "STIF:StopPoint:Q:8768239:", // point précis (Joinville-le-Pont)
+    rerA_area: "STIF:StopArea:SP:475771:", // Joinville-le-Pont (zone complète, recommandé pour l'affichage RER A)
+    rerA_point: "STIF:StopPoint:Q:8768239:", // Joinville-le-Pont (point précis, rarement utile pour l'affichage grand public)
     bus77: "STIF:StopArea:SP:463641:",
     bus201: "STIF:StopArea:SP:463644:"
   },

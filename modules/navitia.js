@@ -1,7 +1,6 @@
-
+// modules/navitia.js
 const proxy = "https://ratp-proxy.hippodrome-proxy42.workers.dev";
 const stopMonitoringUrl = `${proxy}/?url=https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopPoint:Q:43135:`;
-// 43135 = Joinville-le-Pont (RER A)
 
 export async function getNextStops() {
   try {

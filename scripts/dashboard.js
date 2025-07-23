@@ -12,8 +12,12 @@ function init() {
 }
 
 async function refresh() {
-  const stops = await getNextStops();
-  renderStops(stops);
+  try {
+    const stops = await getNextStops();
+    renderStops(stops);
+  } catch (e) {
+    console.error("Erreur dans refresh :", e);
+  }
 }
 
 init();

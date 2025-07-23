@@ -19,8 +19,8 @@ export const CONFIG = {
     breuil: { station_id: 508042092, stationCode: "12128" }
   },
 
-  NEWS_URL: "https://raw.githubusercontent.com/plero75/static-data/main/news.json",
-  RACES_URL: "https://raw.githubusercontent.com/plero75/static-data/main/races.json",
+  NEWS_URL: "https://github.com/plero75/VHP/blob/main/news.json",
+  RACES_URL: "https://github.com/plero75/VHP/blob/main/races.json",
 
   WEATHER_URL: "https://api.open-meteo.com/v1/forecast?latitude=48.828&longitude=2.435&current=temperature_2m,weathercode&timezone=Europe%2FParis"
 };

@@ -11,6 +11,8 @@ export async function fetchRERAStops({ monitoringRef, proxyURL, targetElementId 
     );
     const res = await fetch(stopMonitoringUrl);
     const data = await res.json();
+    console.log("StopMonitoring response:", data); // <--- AJOUTE CETTE LIGNE
+
     const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit;
 
     if (!visits || visits.length === 0) {

@@ -5,13 +5,13 @@ document.addEventListener("DOMContentLoaded", () => {
   updateDateTime();
   setInterval(updateDateTime, 10000);
 
-  fetchStopMonitoring(CONFIG.STOPS.rerA_area, "rer-schedules");
+fetchStopMonitoring(CONFIG.STOPS.rerA_area, "rer-schedules");
 
-  fetchRERAStops({
-    monitoringRef: CONFIG.STOPS.rerA_point,
-    proxyURL: CONFIG.PROXY_BASE,
-    targetElementId: "rer-a-stops"
-  });
+fetchRERAStops({
+  monitoringRef: CONFIG.STOPS.rerA_point,
+  proxyURL: CONFIG.PROXY_BASE,
+  targetElementId: "rer-a-stops"
+});
 
   fetchWeather();
   fetchNews();

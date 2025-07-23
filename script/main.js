@@ -1,6 +1,6 @@
 
-import { getNextStops } from './modules/navitia.js';
-import { renderStops } from './modules/ui.js';
+import { getNextStops } from '../modules/navitia.js';
+import { renderStops } from '../modules/ui.js';
 
 async function update() {
   const ul = document.getElementById("gares-desservies");

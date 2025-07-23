@@ -11,17 +11,22 @@ export async function fetchRERAStops({ monitoringRef, proxyURL, targetElementId 
     );
     const res = await fetch(stopMonitoringUrl);
     const data = await res.json();
-    console.log("StopMonitoring response:", data); // <--- AJOUTE CETTE LIGNE
+    console.log("StopMonitoring response:", data);
+    console.log("StopMonitoringDelivery:", data?.Siri?.ServiceDelivery?.StopMonitoringDelivery);
+    console.log("MonitoredStopVisit:", data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit);
 
     const visits = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit;
-
     if (!visits || visits.length === 0) {
       container.innerText = "Aucun train à venir.";
       return;
     }
 
-    // 2. Prendre le DatedVehicleJourneyRef du prochain train
-    const vjId = visits[0]?.MonitoredVehicleJourney?.FramedVehicleJourneyRef?.DatedVehicleJourneyRef;
+    // 2. Prendre l'identifiant du prochain train (pris depuis le premier train à venir)
+    const vjObj = visits[0]?.MonitoredVehicleJourney;
+    const vjId =
+      vjObj?.FramedVehicleJourneyRef?.DatedVehicleJourneyRef ||
+      vjObj?.DatedVehicleJourneyRef ||
+      null;
     if (!vjId) {
       container.innerText = "Aucun identifiant de train trouvé.";
       return;
@@ -34,6 +39,7 @@ export async function fetchRERAStops({ monitoringRef, proxyURL, targetElementId 
     );
     const journeyRes = await fetch(journeyUrl);
     const journeyData = await journeyRes.json();
+    console.log("VehicleJourney response:", journeyData);
 
     const stops = journeyData?.vehicle_journeys?.[0]?.stop_times;
     if (!stops || stops.length === 0) {
@@ -58,7 +64,7 @@ export async function fetchRERAStops({ monitoringRef, proxyURL, targetElementId 
       el.style.color = "white";
       el.style.display = "inline-block";
       el.style.fontSize = "0.95rem";
-      el.innerText = s.stop_point.name;
+      el.innerText = s.stop_point?.name || "Arrêt inconnu";
       container.appendChild(el);
       if (i < futureStops.length - 1) {
         const arrow = document.createElement("span");

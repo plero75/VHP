@@ -21,11 +21,27 @@ export async function fetchRERAStops({ monitoringRef, proxyURL, targetElementId 
       return;
     }
 
+    // Log avec l'heure et l'identifiant du prochain train detecté
+    const firstVisit = visits[0];
+    const firstJourney = firstVisit?.MonitoredVehicleJourney;
+    const call = firstJourney?.MonitoredCall;
+    const nextTime =
+      call?.ExpectedDepartureTime ||
+      call?.ExpectedArrivalTime ||
+      call?.AimedDepartureTime ||
+      call?.AimedArrivalTime ||
+      null;
+    const timeStr = nextTime ? new Date(nextTime).toLocaleTimeString('fr-FR') : 'Heure inconnue';
+    const nextId =
+      firstJourney?.FramedVehicleJourneyRef?.DatedVehicleJourneyRef ||
+      firstJourney?.DatedVehicleJourneyRef ||
+      'ID inconnu';
+    console.log(`[${new Date().toLocaleTimeString('fr-FR')}] Prochain train ${nextId} – heure prévue : ${timeStr}`);
+
     // 2. Prendre l'identifiant du prochain train (pris depuis le premier train à venir)
-    const vjObj = visits[0]?.MonitoredVehicleJourney;
     const vjId =
-      vjObj?.FramedVehicleJourneyRef?.DatedVehicleJourneyRef ||
-      vjObj?.DatedVehicleJourneyRef ||
+      firstJourney?.FramedVehicleJourneyRef?.DatedVehicleJourneyRef ||
+      firstJourney?.DatedVehicleJourneyRef ||
       null;
     if (!vjId) {
       container.innerText = "Aucun identifiant de train trouvé.";

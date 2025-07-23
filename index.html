@@ -1,38 +1,82 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tableau de bord Vincennes</title>
-  <link rel="stylesheet" href="style.css"/>
-  <script type="module" src="script.js" defer></script>
+  <meta charset="UTF-8">
+  <title>Dashboard Vincennes</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+    header, footer {
+      background: #333;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2em;
+    }
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    section {
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .horloge {
+      font-size: 1.5em;
+    }
+  </style>
 </head>
 <body>
-  <div id="dashboard">
-    <header>
-      <div id="logo-block">
-        <img src="logo-vincennes.png" alt="Hippodrome de Vincennes" id="logo">
-        <h1>Infos Transports & Météo</h1>
-      </div>
-      <div id="datetime"></div>
-    </header>
-
-    <main>
-   <section class="block" id="rer-block">
-  <h2>🚆 RER A – Joinville-le-Pont</h2>
-  <div id="rer-schedules" class="schedules"></div>
-  <div id="rer-a-stops" style="white-space: nowrap; overflow-x: auto; padding: 1rem; border: 2px solid #ccc; border-radius: 10px; font-family: sans-serif; background: #f9f9f9;">
-    <strong>Prochains arrêts du RER A depuis Joinville-le-Pont :</strong>
-    <span id="rer-a-stops-content" style="display: inline-block; margin-left: 1rem;">
-      🔄 Chargement en cours...
-    </span>
-  </div>
-</section>
-    </main>
-
-    <footer>
-      <p>© 2025 Hippodrome de Vincennes – Données IDFM, Vélib’, OpenWeather</p>
-    </footer>
-  </div>
+  <header>
+    <h1>🎩 Dashboard Vincennes</h1>
+    <div class="horloge" id="clock">--:--</div>
+  </header>
+  <main>
+    <section>
+      <h2>🚆 Prochain RER A – Joinville</h2>
+      <ul id="gares-desservies"><li>Chargement…</li></ul>
+    </section>
+    <section>
+      <h2>🚌 Prochains Bus – Hippodrome</h2>
+      <ul id="bus-vincennes"><li>Chargement…</li></ul>
+    </section>
+    <section>
+      <h2>🚲 Vélib’ – École du Breuil</h2>
+      <ul id="velib"><li>Chargement…</li></ul>
+    </section>
+    <section>
+      <h2>⚠️ Alertes Trafic</h2>
+      <ul id="alertes"><li>Chargement…</li></ul>
+    </section>
+    <section>
+      <h2>🐴 Prochaine Course</h2>
+      <ul id="courses"><li>Chargement…</li></ul>
+    </section>
+  </main>
+  <footer>
+    <p>© Hippodrome de Vincennes – À bientôt !</p>
+  </footer>
+  <script type="module" src="scripts/dashboard.js"></script>
 </body>
 </html>

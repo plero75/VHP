@@ -57,3 +57,21 @@ body{margin:0;background:var(--bg);color:var(--fg);min-height:100dvh}
 @media (pointer:coarse){
   .trip{min-height:44px}           /* cibles tactiles */
 }
+
+.news-item {
+  animation: fadeIn 0.8s ease;
+}
+.news-item h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: bold;
+}
+.news-item p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #ccc;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

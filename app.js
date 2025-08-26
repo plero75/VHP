@@ -8,6 +8,14 @@
   const now = () => new Date();
   const minDiff = (a,b) => Math.round((a-b)/60000);
 
+  // --- helper: transforme objets/arrays SIRI en libellé
+  function asLabel(v){
+    if (!v) return '';
+    if (Array.isArray(v)) return asLabel(v[0]);
+    if (typeof v === 'object') return asLabel(v.value || v.text || v.name || v.$ || v.label || v.id);
+    return String(v);
+  }
+
   const setTS = (id) => { const el = q(id); if (el) el.textContent = 'MAJ ' + fmtTime(now()); };
 
   const safeFetch = async (url) => {
@@ -23,12 +31,13 @@
     }
   };
 
-  // Weather
+  // ---- Weather (Open-Meteo)
   async function loadWeather() {
     const url = `https://api.open-meteo.com/v1/forecast`
-  + `?latitude=${C.COORDS.lat}&longitude=${C.COORDS.lon}`
-  + `&current_weather=true&hourly=temperature_2m,weathercode`
-  + `&timezone=Europe%2FParis`; const data = await safeFetch(url);
+      + `?latitude=${C.COORDS.lat}&longitude=${C.COORDS.lon}`
+      + `&current_weather=true&hourly=temperature_2m,weathercode`
+      + `&timezone=Europe%2FParis`;
+    const data = await safeFetch(url);
     if (!data) return;
     const cur = data.current_weather;
     const icon = weatherIcon(cur.weathercode);
@@ -43,7 +52,7 @@
     return 'Temps variable';
   }
 
-  // News RSS
+  // ---- News RSS
   async function loadNews(){
     const txt = await safeFetch('https://www.francetvinfo.fr/titres.rss');
     if (!txt) return;
@@ -54,14 +63,8 @@
     q('#news-ticker').innerHTML = `<span>${line}</span>`;
   }
 
-  // Velib
+  // ---- Velib (GBFS Smovengo)
   async function loadVelib() {
-    const url = `https://prim.iledefrance-mobilites.fr/marketplace/station_status`;
-    const data = await safeFetch(url);
-    if (data && data.data && data.data.stations) {
-      renderVelibStations(data.data.stations);
-      return;
-    }
     const d2 = await safeFetch('https://velib-metropole-opendata.smovengo.cloud/opendata/Velib_Metropole/station_status.json');
     if (d2 && d2.data && d2.data.stations) renderVelibStations(d2.data.stations);
   }
@@ -84,42 +87,59 @@
     return 'danger';
   }
 
-  // Stop-Monitoring (SIRI)
+  // ---- Stop-Monitoring (SIRI)
   async function loadStop(moduleId, monitoringRef){
     const url = `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${encodeURIComponent(monitoringRef)}`;
     const data = await safeFetch(url);
     if (!data) return;
     const visits = (((data||{}).Siri||{}).ServiceDelivery||{}).StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
     const enriched = visits.map(v => enrichVisit(v)).filter(Boolean);
-    // Split by DirectionRef
+
+    // Split by DirectionRef / Destination
     const groups = {};
     for (const it of enriched) {
       const key = it.DirectionRef || 'NA';
       (groups[key] ||= []).push(it);
     }
     Object.values(groups).forEach(arr => arr.sort((a,b)=> a.when - b.when));
+
     const keys = Object.keys(groups).slice(0,2);
     const [A,B] = [keys[0], keys[1]];
     renderTrips(`${moduleId}-list-A`, groups[A]);
     renderTrips(`${moduleId}-list-B`, groups[B]);
-    q(`#${moduleId}-dirA`).textContent = groups[A]?.[0]?.DestinationName || 'Direction A';
-    q(`#${moduleId}-dirB`).textContent = groups[B]?.[0]?.DestinationName || 'Direction B';
+
+    q(`#${moduleId}-dirA`).textContent = asLabel(groups[A]?.[0]?.DestinationName) || 'Direction A';
+    q(`#${moduleId}-dirB`).textContent = asLabel(groups[B]?.[0]?.DestinationName) || 'Direction B';
     setTS(`#${moduleId}-ts`);
   }
 
   function enrichVisit(v){
     try{
-      const mvj = v.MonitoredVehicleJourney || {};
+      const mvj  = v.MonitoredVehicleJourney || {};
       const call = mvj.MonitoredCall || {};
-      const aimed = parseISO(call.AimedDepartureTime || call.AimedArrivalTime || call.AimedQuayTime || v.RecordedAtTime);
+      const aimed    = parseISO(call.AimedDepartureTime || call.AimedArrivalTime || call.AimedQuayTime || v.RecordedAtTime);
       const expected = parseISO(call.ExpectedDepartureTime || call.ExpectedArrivalTime || call.ExpectedQuayTime || call.AimedDepartureTime);
       const delay = minDiff(expected, aimed);
-      const when = expected;
-      const cancelled = (mvj?.Operational?.Monitored === false) || (mvj?.ProgressStatus === 'cancelled') || (mvj?.Status === 'cancelled');
-      const oc = (mvj?.OnwardCalls?.OnwardCall || []).map(c => c.StopPointName).filter(Boolean).join(' · ');
+      const when  = expected;
+
+      const dest =
+        asLabel(mvj.DestinationName) ||
+        asLabel(call.DestinationDisplay) ||
+        asLabel(mvj.DirectionName) || '';
+
+      const dirRef = asLabel(mvj.DirectionRef) || asLabel(mvj.DirectionName) || dest;
+
+      const oc = (mvj?.OnwardCalls?.OnwardCall || [])
+        .map(c => asLabel(c.StopPointName)).filter(Boolean).join(' · ');
+
+      const cancelled =
+        mvj?.Operational?.Monitored === false ||
+        mvj?.ProgressStatus === 'cancelled' ||
+        mvj?.Status === 'cancelled';
+
       return {
-        DestinationName: mvj.DestinationName || mvj.DirectionName || '',
-        DirectionRef: mvj.DirectionRef || mvj.DirectionName || '',
+        DestinationName: dest,
+        DirectionRef: dirRef,
         when, aimed, expected, delay, cancelled, calls: oc
       };
     }catch(e){ return null; }
@@ -146,9 +166,9 @@
     ul.innerHTML = items || `<li class="trip"><span>Aucun passage</span><span class="badge theory">mode théorique</span></li>`;
   }
 
-  // Traffic disruptions
+  // ---- Traffic disruptions (PRIM general-message)
   async function loadTraffic(targetId, lineRefs=[]) {
-    const url = `https://prim.iledefrance-mobilites.fr/marketplace/traffic-disruptions`;
+    const url = `https://prim.iledefrance-mobilites.fr/marketplace/general-message`;
     const data = await safeFetch(url);
     if (!data) return;
     const messages = (data?.messages || data?.generalMessages || data) || [];
@@ -157,22 +177,24 @@
       return lineRefs.length ? lineRefs.some(x => lr.includes(String(x).toLowerCase())) : true;
     }) : [];
     const html = relevant.slice(0,3).map(m => {
-      const txt = m?.message?.text || m?.title || m?.summary || 'Perturbation';
+      const txt = asLabel(m?.message?.text) || asLabel(m?.title) || asLabel(m?.summary) || 'Perturbation';
       return `<div>⚠️ ${txt}</div>`;
     }).join('') || '<div>Aucune perturbation signalée</div>';
     const el = q(`#${targetId}`);
     if (el) el.innerHTML = html;
   }
 
-  // Races (PMU)
+  // ---- Races (PMU offline + fallback local)
   async function loadRaces(){
     const today = new Date();
     const dd = String(today.getDate()).padStart(2,'0');
     const mm = String(today.getMonth()+1).padStart(2,'0');
     const yyyy = today.getFullYear();
     const dateStr = `${dd}${mm}${yyyy}`;
-    const url = `https://online.turfinfo.api.pmu.fr/rest/client/61/programme/${dateStr}?specialisation=INTERNET&meteo=true`;
-    const data = await safeFetch(url);
+    const url = `https://offline.turfinfo.api.pmu.fr/rest/client/7/programme/${dateStr}?specialisation=INTERNET`;
+    let data = await safeFetch(url);
+    if (!data) data = await safeFetch('./data/races.json');
+
     let next = null;
     try{
       const races = [];
@@ -196,7 +218,7 @@
     }catch(e){}
     const el = q('#race-next');
     if (!next) { el.textContent = "Pas de course aujourd’hui."; q('#race-ctdwn').textContent=''; return; }
-    el.textContent = `${next.libelle || 'Course'} — départ ${next.heureDepart}`;
+    el.textContent = `${asLabel(next.libelle) || 'Course'} — départ ${next.heureDepart}`;
     const [H,M] = (next.heureDepart||'00:00').split(':').map(Number);
     const target = new Date(now().getFullYear(), now().getMonth(), now().getDate(), H, M);
     const tick = () => {
@@ -206,7 +228,7 @@
     tick(); setInterval(tick, 30000);
   }
 
-  // Kickoff
+  // ---- Kickoff
   function kickoff(){
     loadWeather(); setInterval(loadWeather, C.REFRESH_MS.WEATHER);
     loadNews(); setInterval(loadNews, C.REFRESH_MS.NEWS);

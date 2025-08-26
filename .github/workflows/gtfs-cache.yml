@@ -1,0 +1,35 @@
+name: Build GTFS cache
+
+on:
+  schedule:
+    - cron: "30 2 * * *" # 03:30 Europe/Paris (approx)
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download latest GTFS
+        env:
+          ODS_APIKEY: ${{ secrets.ODS_APIKEY }}
+        run: |
+          mkdir -p tmp data
+          curl -sSL -H "Authorization: Apikey ${ODS_APIKEY}" \
+            "https://data.iledefrance-mobilites.fr/api/v2/catalog/datasets/offre-horaires-tc-gtfs-idfm/files?limit=1&offset=0" > tmp/list.json
+          FILE_URL=$(jq -r '.files[0].url' tmp/list.json)
+          curl -sSL -H "Authorization: Apikey ${ODS_APIKEY}" "$FILE_URL" -o tmp/gtfs.zip
+
+      - name: Build cache JSON
+        run: |
+          python3 scripts/gtfs/extract_gtfs.py --zip tmp/gtfs.zip --out data/gtfs-cache.json --stops STIF:StopPoint:Q:43135: STIF:StopArea:SP:463641: STIF:StopArea:SP:463644:
+
+      - name: Commit cache
+        run: |
+          git config user.name "gtfs-bot"
+          git config user.email "gtfs-bot@users.noreply.github.com"
+          git add data/gtfs-cache.json
+          git commit -m "chore(gtfs): update cache" || echo "No changes"
+          git push

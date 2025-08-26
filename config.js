@@ -1,28 +1,32 @@
-export const CONFIG = {
-  PROXY_BASE: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=",
-
+// IDs & configuration
+window.CONFIG = {
+  PROXY: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=",
+  COORDS: { lat: 48.835, lon: 2.440 }, // Hippodrome Vincennes approx
+  // MonitoringRef (SIRI)
   STOPS: {
-    STIF:StopPoint:Q:43135:
-    rerA_area: "STIF:StopArea:SP:475771:", // Joinville-le-Pont (zone complète, recommandé pour l'affichage RER A)
-    rerA_point: "STIF:StopPoint:Q:43135:",
-", // Joinville-le-Pont (point précis, rarement utile pour l'affichage grand public)
-    bus77: "STIF:StopArea:SP:463641:",
-    bus201: "STIF:StopArea:SP:463644:"
+    RER_A_JOINVILLE: "STIF:StopPoint:Q:43135:",      // RER A (StopPoint). Possible d'utiliser StopArea si besoin.
+    BUS_77_HIPPODROME: "STIF:StopArea:SP:463641:",
+    BUS_201_BREUIL: "STIF:StopArea:SP:463644:"
   },
-
-  LINES: {
-    rerA: "line:IDFM:C01742",
-    bus77_201: "line:IDFM:C02251",
-    bus201_alt: "line:IDFM:C01219"
+  // Optionnel: filtres lignes pour trafic
+  LINE_FILTERS: {
+    RER_A: ["IDFM:Line::C01742:"], // à ajuster avec le vrai LineRef si besoin
+    BUS_NEAR_JOINVILLE: ["77","201"] // ou LineRef IDFM
   },
-
+  // Velib stations
   VELIB: {
-    vincennes: { station_id: 1074333296, stationCode: "12163" },
-    breuil: { station_id: 508042092, stationCode: "12128" }
+    VINCENNES: { station_id: "1074333296", stationCode: "12163", label: "Vincennes" },
+    BREUIL:    { station_id: "508042092", stationCode: "12128", label: "Breuil" }
   },
-
-  NEWS_URL: "https://raw.githubusercontent.com/plero75/VHP/main/news.json",
-  RACES_URL: "https://raw.githubusercontent.com/plero75/VHP/main/races.json",
-
-  WEATHER_URL: "https://api.open-meteo.com/v1/forecast?latitude=48.828&longitude=2.435&current=temperature_2m,weathercode&timezone=Europe%2FParis"
+  FEATURES: {
+    SHOW_VIGILANCE: false
+  },
+  REFRESH_MS: {
+    STOP_MONITORING: 30000,
+    TRAFFIC: 60000,
+    VELIB: 60000,
+    WEATHER: 600000,
+    NEWS: 120000,
+    RACES: 900000
+  }
 };

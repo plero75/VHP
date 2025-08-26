@@ -123,13 +123,23 @@ function renderCarousel(news) {
     // Split by DirectionRef / Destination
     const groups = {};
     for (const it of enriched) {
-      const key = it.DirectionRef || 'NA';
+      const dest = asLabel(it.DestinationName) || 'NA';
+      const key = `${it.DirectionRef || 'NA'}|${dest}`;
       (groups[key] ||= []).push(it);
     }
     Object.values(groups).forEach(arr => arr.sort((a,b)=> a.when - b.when));
 
     const keys = Object.keys(groups).slice(0,2);
     const [A,B] = [keys[0], keys[1]];
+    // fetch served stops for the next train/bus per direction
+    if (groups[A] && groups[A][0] && groups[A][0].vehicleJourneyId) {
+      const namesA = await fetchVehicleJourney(groups[A][0].vehicleJourneyId);
+      if (namesA && namesA.length) groups[A][0].calls = namesA.join(' • ');
+    }
+    if (groups[B] && groups[B][0] && groups[B][0].vehicleJourneyId) {
+      const namesB = await fetchVehicleJourney(groups[B][0].vehicleJourneyId);
+      if (namesB && namesB.length) groups[B][0].calls = namesB.join(' • ');
+    }
     renderTrips(`${moduleId}-list-A`, groups[A]);
     renderTrips(`${moduleId}-list-B`, groups[B]);
 
@@ -142,6 +152,7 @@ function renderCarousel(news) {
     try{
       const mvj  = v.MonitoredVehicleJourney || {};
       const call = mvj.MonitoredCall || {};
+      const vjId = (mvj.FramedVehicleJourneyRef && (mvj.FramedVehicleJourneyRef.DatedVehicleJourneyRef || mvj.FramedVehicleJourneyRef.DatedVehicleJourney)) || mvj.VehicleJourneyRef || mvj.BlockRef || null;
       const aimed    = parseISO(call.AimedDepartureTime || call.AimedArrivalTime || call.AimedQuayTime || v.RecordedAtTime);
       const expected = parseISO(call.ExpectedDepartureTime || call.ExpectedArrivalTime || call.ExpectedQuayTime || call.AimedDepartureTime);
       const delay = minDiff(expected, aimed);
@@ -174,6 +185,7 @@ function renderCarousel(news) {
     const ul = q('#' + targetId);
     if (!ul) return;
     ul.innerHTML = '';
+    let first = true;
     const items = (arr||[]).slice(0,4).map(x => {
       const mins = Math.max(0, minDiff(x.when, now()));
       const imminent = mins < 2;
@@ -182,7 +194,8 @@ function renderCarousel(news) {
       const aimed = x.delay>0 ? `<span class="strike">${fmtTime(x.aimed)}</span>` : '';
       const badge = x.cancelled ? `<span class="badge cancel">supprimé</span>`
                    : imminent ? `<span class="badge imminent">imminent</span>` : '';
-      const calls = x.calls ? `<small class="calls">${x.calls}</small>` : '';
+      const calls = (first && x.calls) ? `<small class="calls">${x.calls}</small>` : '';
+      first = false;
       return `<li class="trip">
         <span class="time">${time}</span>
         <span class="meta">${aimed}${delay}${badge}</span>
@@ -191,9 +204,25 @@ function renderCarousel(news) {
     ul.innerHTML = items || `<li class="trip"><span>Aucun passage</span><span class="badge theory">mode théorique</span></li>`;
   }
 
+  
+  // ---- Vehicle Journeys (to list served stops for the NEXT train per direction)
+  async function fetchVehicleJourney(vjId) {
+    if (!vjId) return null;
+    const url = `https://prim.iledefrance-mobilites.fr/marketplace/vehicle_journeys/${encodeURIComponent(vjId)}`;
+    const data = await safeFetch(url);
+    if (!data) return null;
+    try {
+      // Try to normalize known payload shapes
+      const sj = (data.vehicle_journey || data) ;
+      const times = sj.stop_times || sj.StopTimes || [];
+      const names = times.map(t => asLabel(t.stop_name || t.StopPointName || t.name)).filter(Boolean);
+      return names;
+    } catch(e){ console.warn("vehicle_journey parse error", e); return null; }
+  }
+
   // ---- Traffic disruptions (PRIM general-message)
   async function loadTraffic(targetId, lineRefs=[]) {
-    const url = `https://prim.iledefrance-mobilites.fr/marketplace/general-message`;
+    const url = `https://prim.iledefrance-mobilites.fr/marketplace/general-message`; // note: filtered client-side by lineRefs
     const data = await safeFetch(url);
     if (!data) return;
     const messages = (data?.messages || data?.generalMessages || data) || [];

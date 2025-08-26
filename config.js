@@ -10,23 +10,23 @@ window.CONFIG = {
   STOPS: {
     // RER A — Joinville-le-Pont
     // NB: tu peux utiliser le StopArea pour capter plusieurs points d'arrêt si dispo côté producteur
-    RER_A_JOINVILLE_STOPPOINT: "STIF:StopPoint:Q:43135:",
-    RER_A_JOINVILLE_STOPAREA:  "STIF:StopArea:SP:43135:",
+    RER_A_JOINVILLE_STOPPOINT: "IDFM:70640",
+    RER_A_JOINVILLE_STOPAREA:  "IDFM:70640",
 
     // Bus locaux côté Hippodrome / Breuil (fournis par toi)
-    BUS_77_HIPPODROME: "STIF:StopArea:SP:463641:",
-    BUS_201_BREUIL:    "STIF:StopArea:SP:463644:"
+    BUS_77_HIPPODROME: "IDFM:463641",
+    BUS_201_BREUIL:    "IDFM:463644"
   },
 
   // --- Références de lignes (pour l'API /general-message trafic) ---
   LINE_REFS: {
     // Confirmé
-    RER_A: "STIF:Line::C01742:",
+    RER_A: "line:IDFM:C01742",
 
     // Si tu connais les LineRef IDFM exactes des lignes bus, mets-les ici (sinon on filtrera par StopAreaRef)
     // Exemples : "STIF:Line::C0XXXX:"
-    BUS_77:  null,
-    BUS_201: null
+    BUS_77: "line:IDFM:C02251",
+    BUS_201: "line:IDFM:C02251"
   },
 
   // --- Vélib’ (stations proches) ---
@@ -69,10 +69,10 @@ window.CONFIG = {
   // --- Fréquences de rafraîchissement ---
   REFRESH_MS: {
     STOP_MONITORING: 30000,  // passages temps réel
-    TRAFFIC:         60000,  // info trafic
-    VELIB:           60000,  // disponibilité vélos
+    TRAFFIC:         120000,  // info trafic
+    VELIB:           30000,  // disponibilité vélos
     WEATHER:        600000,  // météo
-    NEWS:            15000,  // carrousel actus
+    NEWS:            60000,  // carrousel actus
     RACES:          600000   // programme courses
   }
 };

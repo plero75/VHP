@@ -52,16 +52,41 @@
     return 'Temps variable';
   }
 
-  // ---- News RSS
-  async function loadNews(){
-    const txt = await safeFetch('https://www.francetvinfo.fr/titres.rss');
-    if (!txt) return;
-    const doc = new DOMParser().parseFromString(txt, "text/xml");
-    const items = Array.from(doc.querySelectorAll('item')).slice(0, 8);
-    const titles = items.map(i => i.querySelector('title')?.textContent.trim()).filter(Boolean);
-    const line = titles.join('  •  ');
-    q('#news-ticker').innerHTML = `<span>${line}</span>`;
+  /// ---- News RSS (France Info en carrousel 15s)
+async function loadNews() {
+  const resp = await fetch(C.PROXY + encodeURIComponent("https://www.francetvinfo.fr/titres.rss"));
+  if (!resp.ok) return;
+  const text = await resp.text();
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(text, "application/xml");
+
+  const items = Array.from(xml.querySelectorAll("item")).slice(0, 10);
+  const newsData = items.map(item => ({
+    title: item.querySelector("title")?.textContent.trim() || "",
+    desc: item.querySelector("description")?.textContent.trim() || ""
+  }));
+
+  renderCarousel(newsData);
+}
+
+function renderCarousel(news) {
+  const container = document.getElementById("news-ticker");
+  let index = 0;
+
+  function showNext() {
+    const n = news[index];
+    container.innerHTML = `
+      <div class="news-item">
+        <h4>${n.title}</h4>
+        <p>${n.desc}</p>
+      </div>
+    `;
+    index = (index + 1) % news.length;
   }
+
+  showNext();
+  setInterval(showNext, 15000); // toutes les 15 secondes
+}
 
   // ---- Velib (GBFS Smovengo)
   async function loadVelib() {

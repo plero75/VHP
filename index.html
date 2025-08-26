@@ -1,82 +1,90 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard Vincennes</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background: #f9f9f9;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      width: 100vw;
-    }
-    header, footer {
-      background: #333;
-      color: white;
-      padding: 10px;
-      text-align: center;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2em;
-    }
-    main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    section {
-      background: white;
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    .horloge {
-      font-size: 1.5em;
-    }
-  </style>
+  <meta charset="utf-8">
+  <title>VHP3 – Dashboard Vincennes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <header>
-    <h1>🎩 Dashboard Vincennes</h1>
-    <div class="horloge" id="clock">--:--</div>
+  <header class="hdr">
+    <div class="brand">VHP3 · Hippodrome de Vincennes</div>
+    <div id="weather" class="weather" aria-live="polite">🌦️ Météo — chargement…</div>
+    <div id="vigilance" class="vigilance" aria-live="polite"></div>
   </header>
-  <main>
-    <section>
-      <h2>🚆 Prochain RER A – Joinville</h2>
-      <ul id="gares-desservies"><li>Chargement…</li></ul>
+
+  <main class="grid">
+    <section class="card" id="rerA">
+      <h2>RER A — Joinville-le-Pont <small id="rerA-ts"></small></h2>
+      <div class="two-cols">
+        <div>
+          <h3 id="rerA-dirA">Direction A</h3>
+          <ul id="rerA-list-A" class="trips" aria-live="polite"></ul>
+        </div>
+        <div>
+          <h3 id="rerA-dirB">Direction B</h3>
+          <ul id="rerA-list-B" class="trips" aria-live="polite"></ul>
+        </div>
+      </div>
+      <div id="rerA-traffic" class="traffic"></div>
     </section>
-    <section>
-      <h2>🚌 Prochains Bus – Hippodrome</h2>
-      <ul id="bus-vincennes"><li>Chargement…</li></ul>
+
+    <section class="card" id="bus77">
+      <h2>Bus 77 — Hippodrome <small id="bus77-ts"></small></h2>
+      <div class="two-cols">
+        <div>
+          <h3 id="bus77-dirA">Direction A</h3>
+          <ul id="bus77-list-A" class="trips"></ul>
+        </div>
+        <div>
+          <h3 id="bus77-dirB">Direction B</h3>
+          <ul id="bus77-list-B" class="trips"></ul>
+        </div>
+      </div>
+      <div id="bus77-traffic" class="traffic"></div>
     </section>
-    <section>
-      <h2>🚲 Vélib’ – École du Breuil</h2>
-      <ul id="velib"><li>Chargement…</li></ul>
+
+    <section class="card" id="bus201">
+      <h2>Bus 201 — École du Breuil <small id="bus201-ts"></small></h2>
+      <div class="two-cols">
+        <div>
+          <h3 id="bus201-dirA">Direction A</h3>
+          <ul id="bus201-list-A" class="trips"></ul>
+        </div>
+        <div>
+          <h3 id="bus201-dirB">Direction B</h3>
+          <ul id="bus201-list-B" class="trips"></ul>
+        </div>
+      </div>
+      <div id="bus201-traffic" class="traffic"></div>
     </section>
-    <section>
-      <h2>⚠️ Alertes Trafic</h2>
-      <ul id="alertes"><li>Chargement…</li></ul>
+
+    <section class="card" id="velib">
+      <h2>Vélib’ — Proximité</h2>
+      <div class="two-cols">
+        <div id="velib-vincennes">Station Vincennes — chargement…</div>
+        <div id="velib-breuil">Station Breuil — chargement…</div>
+      </div>
     </section>
-    <section>
-      <h2>🐴 Prochaine Course</h2>
-      <ul id="courses"><li>Chargement…</li></ul>
+
+    <section class="card" id="races">
+      <h2>Prochaine course — Paris-Vincennes</h2>
+      <div id="race-next">Chargement…</div>
+      <div id="race-ctdwn"></div>
+    </section>
+
+    <section class="card" id="news">
+      <h2>Actu</h2>
+      <div id="news-ticker" class="ticker" aria-live="polite">Chargement…</div>
     </section>
   </main>
-  <footer>
-    <p>© Hippodrome de Vincennes – À bientôt !</p>
+
+  <footer class="ftr">
+    <span>MAJ proxy · <code id="last-update"></code></span>
+    <span>Mode: <code id="mode-indicator">live</code></span>
   </footer>
-  <script type="module" src="scripts/dashboard.js"></script>
+
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>

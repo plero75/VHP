@@ -25,8 +25,10 @@
 
   // Weather
   async function loadWeather() {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${C.COORDS.lat}&longitude=${C.COORDS.lon}&current_weather=true&timezone=Europe/Paris`;
-    const data = await safeFetch(url);
+    const url = `https://api.open-meteo.com/v1/forecast`
+  + `?latitude=${C.COORDS.lat}&longitude=${C.COORDS.lon}`
+  + `&current_weather=true&hourly=temperature_2m,weathercode`
+  + `&timezone=Europe%2FParis`; const data = await safeFetch(url);
     if (!data) return;
     const cur = data.current_weather;
     const icon = weatherIcon(cur.weathercode);

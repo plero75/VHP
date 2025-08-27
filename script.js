@@ -1,22 +1,23 @@
-// import { CONFIG } from './config.js';
+// On récupère la config globale
 const CONFIG = window.CONFIG;
-import { fetchRERAStops } from './modules/fetchRERAStops.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   updateDateTime();
   setInterval(updateDateTime, 10000);
 
-fetchStopMonitoring(CONFIG.STOPS.rerA_area, "rer-schedules");
+  // Charger horaires RER A
+  fetchStopMonitoring(CONFIG.STOPS.RER_A_JOINVILLE_STOPAREA, "rerA");
 
-fetchRERAStops({
-  monitoringRef: CONFIG.STOPS.rerA_point,
-  proxyURL: CONFIG.PROXY_BASE,
-  targetElementId: "rer-a-stops"
-});
-
+  // Charger météo
   fetchWeather();
+
+  // Charger actus
   fetchNews();
-  fetchVelib(CONFIG.VELIB.vincennes, CONFIG.VELIB.breuil);
+
+  // Charger Vélib
+  loadVelib();
+
+  // Charger courses
   fetchRaces();
 });
 
@@ -27,14 +28,15 @@ function updateDateTime() {
 }
 
 // Horaires en temps réel
-async function fetchStopMonitoring(stopId, targetId) {
-  const url = `${CONFIG.PROXY_BASE}https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${stopId}`;
+async function fetchStopMonitoring(stopId, moduleId) {
+  const url = `${CONFIG.PROXY}https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${stopId}`;
   try {
     const res = await fetch(url);
     const data = await res.json();
-    const journeys = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
+    console.log("StopMonitoring data", data);
 
-    const container = document.getElementById(targetId);
+    const journeys = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]?.MonitoredStopVisit || [];
+    const container = document.getElementById(`${moduleId}-traffic`);
     if (!container) return;
 
     container.innerHTML = "";
@@ -43,7 +45,7 @@ async function fetchStopMonitoring(stopId, targetId) {
       const aimed = new Date(journey.MonitoredVehicleJourney.MonitoredCall.AimedDepartureTime);
       const expected = new Date(journey.MonitoredVehicleJourney.MonitoredCall.ExpectedDepartureTime);
       const delay = Math.round((expected - aimed) / 60000);
-      const status = journey.MonitoredVehicleJourney.DatedVehicleJourneyRef.includes("cancelled")
+      const status = journey.MonitoredVehicleJourney.DatedVehicleJourneyRef?.includes("cancelled")
         ? "❌ Supprimé"
         : (delay > 0 ? `⚠️ +${delay} min` : "🟢 À l'heure");
 
@@ -52,104 +54,50 @@ async function fetchStopMonitoring(stopId, targetId) {
       </div>`;
     });
   } catch (e) {
-    const container = document.getElementById(targetId);
-    if (container) container.innerHTML = "Erreur chargement horaires";
     console.error("fetchStopMonitoring error:", e);
+    const container = document.getElementById(`${moduleId}-traffic`);
+    if (container) container.innerHTML = "Erreur chargement horaires";
   }
 }
 
-// Météo
+// Météo (exemple basique, à adapter selon API)
 async function fetchWeather() {
   try {
-    const res = await fetch(CONFIG.WEATHER_URL);
+    const res = await fetch(`${CONFIG.PROXY}https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.COORDS.lat}&longitude=${CONFIG.COORDS.lon}&current_weather=true`);
     const data = await res.json();
-    const temp = data?.current?.temperature_2m;
-    const code = data?.current?.weathercode;
-
-    const weatherEl = document.getElementById("weather");
-    if (weatherEl) {
-      weatherEl.innerHTML = (temp !== undefined && code !== undefined)
-        ? `Température : ${temp}°C<br>Météo : ${translateWeather(code)}`
-        : "Données météo indisponibles";
+    console.log("Météo", data);
+    const el = document.getElementById("weather");
+    if (el && data.current_weather) {
+      el.textContent = `🌡️ ${data.current_weather.temperature}°C — ${data.current_weather.weathercode}`;
     }
   } catch (e) {
-    const weatherEl = document.getElementById("weather");
-    if (weatherEl) weatherEl.innerHTML = "Erreur météo";
     console.error("fetchWeather error:", e);
   }
 }
 
-function translateWeather(code) {
-  const map = {
-    0: "☀️ Clair",
-    1: "🌤 Peu nuageux",
-    2: "⛅ Nuageux",
-    3: "☁️ Couvert",
-    45: "🌫 Brouillard",
-    51: "🌦 Pluie légère",
-    61: "🌧 Pluie",
-    71: "🌨 Neige",
-    80: "🌧 Averses"
-  };
-  return map[code] || "❓ Inconnu";
-}
-
-// Vélib
-async function fetchVelib(st1, st2) {
-  try {
-    const [res1, res2] = await Promise.all([
-      fetch("https://velib-metropole-opendata.smoove.pro/opendata/Velib_Metropole/station_status.json"),
-      fetch("https://velib-metropole-opendata.smoove.pro/opendata/Velib_Metropole/station_information.json")
-    ]);
-    const status = await res1.json();
-    const info = await res2.json();
-
-    const stations = [st1, st2].map(({ station_id }) => {
-      const s = status?.data?.stations?.find(x => x.station_id == station_id);
-      const i = info?.data?.stations?.find(x => x.station_id == station_id);
-      if (!s || !i) return `Station ${station_id} : données indisponibles`;
-      return `${i.name} – 🚲 ${s.num_bikes_available} / 🅿️ ${s.num_docks_available}`;
-    });
-
-    const el = document.getElementById("velib-info");
-    if (el) el.innerHTML = stations.join("<br>");
-  } catch (e) {
-    const el = document.getElementById("velib-info");
-    if (el) el.innerHTML = "Erreur Vélib'";
-    console.error("fetchVelib error:", e);
-  }
-}
-
-// News
+// Actus locales (depuis news.json)
 async function fetchNews() {
   try {
-    const res = await fetch(CONFIG.NEWS_URL);
+    const res = await fetch("./news.json");
     const data = await res.json();
-    const html = Array.isArray(data)
-      ? data.slice(0, 3).map(n => `<div>📰 ${n.title}</div>`).join("")
-      : "Aucune actualité disponible";
-    const el = document.getElementById("news-banner-content");
-    if (el) el.innerHTML = html;
+    console.log("News", data);
+    renderCarousel(data);
   } catch (e) {
-    const el = document.getElementById("news-banner-content");
-    if (el) el.innerHTML = "Erreur news";
     console.error("fetchNews error:", e);
   }
 }
 
-// Courses
+// Courses (depuis races.json)
 async function fetchRaces() {
   try {
-    const res = await fetch(CONFIG.RACES_URL);
+    const res = await fetch("./races.json");
     const data = await res.json();
-    const html = Array.isArray(data)
-      ? data.slice(0, 3).map(r => `<div>🐎 ${r.date} – ${r.event}</div>`).join("")
-      : "Aucune course disponible";
-    const el = document.getElementById("races-content");
-    if (el) el.innerHTML = html;
+    console.log("Courses", data);
+    const el = document.getElementById("race-next");
+    if (el && data.length) {
+      el.textContent = `${data[0].date} — ${data[0].event}`;
+    }
   } catch (e) {
-    const el = document.getElementById("races-content");
-    if (el) el.innerHTML = "Erreur courses";
     console.error("fetchRaces error:", e);
   }
 }

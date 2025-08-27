@@ -77,7 +77,7 @@ function renderCarousel(news) {
   }
 
   // ---- Stop-Monitoring (SIRI)
-  async const _firstLastCache = {};
+ const _firstLastCache = {};
   async function getFirstLast(stopArea, lineRef){
     const key = stopArea + '|' + lineRef;
     if (_firstLastCache[key]) return _firstLastCache[key];

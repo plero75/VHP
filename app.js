@@ -91,7 +91,7 @@ function renderCarousel(news) {
     }catch(e){ return null; }
   }
 
-  function loadStop(moduleId, monitoringRef){
+async function loadStop(moduleId, monitoringRef) {
     const url = `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${monitoringRef}`;
     const data = await safeFetch(url);
     if (!data) return;
@@ -214,7 +214,7 @@ function renderCarousel(news) {
   }
 
   // ---- Traffic disruptions (PRIM general-message)
-  async async function loadTraffic(targetId, lineRefs=[]) {
+async function loadTraffic(targetId, lineRefs=[]) {
   try{
     let base = "https://prim.iledefrance-mobilites.fr/marketplace/general-message";
     if (lineRefs && lineRefs.length){

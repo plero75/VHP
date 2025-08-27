@@ -1,0 +1,20 @@
+{
+  "IDFM:70640": {
+    "line:IDFM:C01742": {
+      "dirA_last": "00:25",
+      "dirB_last": "00:20"
+    }
+  },
+  "IDFM:463641": {
+    "line:IDFM:C02251": {
+      "dirA_last": "00:15",
+      "dirB_last": "00:10"
+    }
+  },
+  "IDFM:463644": {
+    "line:IDFM:C02251": {
+      "dirA_last": "00:40",
+      "dirB_last": "00:35"
+    }
+  }
+}

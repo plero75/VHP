@@ -1,4 +1,5 @@
-import { CONFIG } from './config.js';
+// import { CONFIG } from './config.js';
+const CONFIG = window.CONFIG;
 import { fetchRERAStops } from './modules/fetchRERAStops.js';
 
 document.addEventListener("DOMContentLoaded", () => {

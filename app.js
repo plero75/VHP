@@ -118,8 +118,9 @@ async function loadStop(moduleId, monitoringRef) {
       const namesB = await fetchVehicleJourney(groups[B][0].vehicleJourneyId);
       if (namesB && namesB.length) groups[B][0].calls = namesB.join(' • ');
     }
-function renderTrips(targetId, arr, moduleId, monitoringRef) {
-    renderTrips(`${moduleId}-list-B`, groups[B]);
+renderTrips(`${moduleId}-list-A`, groups[A], moduleId, monitoringRef);
+renderTrips(`${moduleId}-list-B`, groups[B], moduleId, monitoringRef);
+
 
     q(`#${moduleId}-dirA`).textContent = asLabel(groups[A]?.[0]?.DestinationName) || 'Direction A';
     q(`#${moduleId}-dirB`).textContent = asLabel(groups[B]?.[0]?.DestinationName) || 'Direction B';
@@ -159,7 +160,7 @@ function renderTrips(targetId, arr, moduleId, monitoringRef) {
     }catch(e){ return null; }
   }
 
-  function renderTrips(targetId, arr){
+function renderTrips(targetId, arr, moduleId, monitoringRef) {
     const ul = q('#' + targetId);
     if (!ul) return;
     ul.innerHTML = '';

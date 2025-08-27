@@ -118,7 +118,7 @@ async function loadStop(moduleId, monitoringRef) {
       const namesB = await fetchVehicleJourney(groups[B][0].vehicleJourneyId);
       if (namesB && namesB.length) groups[B][0].calls = namesB.join(' • ');
     }
-    renderTrips(`${moduleId}-list-A`, groups[A]);
+function renderTrips(targetId, arr, moduleId, monitoringRef) {
     renderTrips(`${moduleId}-list-B`, groups[B]);
 
     q(`#${moduleId}-dirA`).textContent = asLabel(groups[A]?.[0]?.DestinationName) || 'Direction A';

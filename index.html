@@ -11,6 +11,7 @@
     <div class="brand">VHP3 · Hippodrome de Vincennes</div>
     <div id="weather" class="weather" aria-live="polite">🌦️ Météo — chargement…</div>
     <div id="vigilance" class="vigilance" aria-live="polite"></div>
+    <div id="clock" class="clock"></div>
   </header>
 
   <main class="grid">
@@ -18,12 +19,12 @@
       <h2>RER A — Joinville-le-Pont <small id="rerA-ts"></small></h2>
       <div class="two-cols">
         <div>
-          <h3 id="rerA-dirA">Direction A</h3>
-          <ul id="rerA-list-A" class="trips" aria-live="polite"></ul>
+          <h3 id="rerA-dirA">Direction Paris</h3>
+          <ul id="rer-paris" class="trips" aria-live="polite"></ul>
         </div>
         <div>
-          <h3 id="rerA-dirB">Direction B</h3>
-          <ul id="rerA-list-B" class="trips" aria-live="polite"></ul>
+          <h3 id="rerA-dirB">Direction Boissy</h3>
+          <ul id="rer-boissy" class="trips" aria-live="polite"></ul>
         </div>
       </div>
       <div id="rerA-traffic" class="traffic"></div>
@@ -34,7 +35,7 @@
       <div class="two-cols">
         <div>
           <h3 id="bus77-dirA">Direction A</h3>
-          <ul id="bus77-list-A" class="trips"></ul>
+          <ul id="bus-hippodrome-list" class="trips"></ul>
         </div>
         <div>
           <h3 id="bus77-dirB">Direction B</h3>
@@ -49,19 +50,19 @@
       <div class="two-cols">
         <div>
           <h3 id="bus201-dirA">Direction A</h3>
-          <ul id="bus201-list-A" class="trips"></ul>
+          <ul id="bus-breuil-list" class="trips"></ul>
         </div>
         <div>
           <h3 id="bus201-dirB">Direction B</h3>
-          <ul id="bus201-list-B" class="trips"></ul>
+          <ul id="bus-joinville-list" class="trips"></ul>
         </div>
       </div>
       <div id="bus201-traffic" class="traffic"></div>
     </section>
 
     <section class="card" id="velib">
-      <h2>Vélib’ — Proximité</h2>
-      <div class="two-cols">
+      <h2>Vélib' — Proximité</h2>
+      <div id="velib-list" class="two-cols">
         <div id="velib-vincennes">Station Vincennes — chargement…</div>
         <div id="velib-breuil">Station Breuil — chargement…</div>
       </div>
@@ -69,26 +70,25 @@
 
     <section class="card" id="races">
       <h2>Prochaine course — Paris-Vincennes</h2>
-      <div id="race-next">Chargement…</div>
+      <div id="courses-list">Chargement…</div>
       <div id="race-ctdwn"></div>
     </section>
 
     <section class="card" id="news">
       <h2>Actu</h2>
-      <div id="news-ticker" class="ticker" aria-live="polite">Chargement…</div>
+      <div id="news-content" class="ticker" aria-live="polite">Chargement…</div>
+      <div id="news-counter"></div>
     </section>
   </main>
 
   <footer class="ftr">
-    <span>MAJ proxy · <code id="last-update"></code></span>
+    <span id="lastUpdate">MAJ proxy</span>
     <span>Mode: <code id="mode-indicator">live</code></span>
     <span>Date/Heure: <code id="datetime"></code></span>
   </footer>
 
-<script src="./config.js"></script>
-<script src="./app.js"></script>
-<script src="./script.js"></script>
+  <!-- Scripts chargés une seule fois -->
+  <script src="./config.js"></script>
   <script src="./app.js"></script>
-  <script type="module" src="./script.js"></script>
 </body>
 </html>

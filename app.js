@@ -1,17 +1,18 @@
-// app.js - Configuration avec API Vélib PRIM
-const PROXY = "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=";
-const WEATHER_URL = "https://api.open-meteo.com/v1/forecast?latitude=48.835&longitude=2.45&current_weather=true";
+// app.js - Version unifiée pour VHP3
+// - Utilise uniquement CONFIG de config.js
+// - Supprime les éléments DOM inexistants
+// - PRIM pour temps réel + Vélib
 
-// ✅ Nouvelle API Vélib via PRIM 
+const PROXY = window.CONFIG.PROXY;
+const WEATHER_URL = `https://api.open-meteo.com/v1/forecast?latitude=${window.CONFIG.COORDS.lat}&longitude=${window.CONFIG.COORDS.lon}&current_weather=true`;
 const VELIB_PRIM_URL = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/coverage/fr-idf/equipment/poi_types/amenity:bicycle_rental/pois";
-
 const RSS_URL = "https://www.francetvinfo.fr/titres.rss";
 
 const STOP_IDS = {
-  RER_A: "STIF:StopArea:SP:43135:",
-  JOINVILLE_AREA: "STIF:StopArea:SP:70640:",
-  HIPPODROME: "STIF:StopArea:SP:463641:",
-  BREUIL: "STIF:StopArea:SP:463644:"
+  RER_A: window.CONFIG.STOPS.RER_A_JOINVILLE_STOPAREA,
+  JOINVILLE_AREA: window.CONFIG.STOPS.RER_A_JOINVILLE_STOPAREA,
+  HIPPODROME: window.CONFIG.STOPS.BUS_77_HIPPODROME,
+  BREUIL: window.CONFIG.STOPS.BUS_201_BREUIL
 };
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -20,20 +21,22 @@ let currentNews = 0;
 let newsItems = [];
 let currentInfoPanel = 0;
 
-// Clock and updates
 function setClock() {
+  const el = $("#clock");
+  if (!el) return;
   const d = new Date();
-  $("#clock").textContent = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  el.textContent = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 setInterval(setClock, 1000);
 setClock();
 
 function setLastUpdate() {
+  const el = $("#lastUpdate");
+  if (!el) return;
   const d = new Date();
-  $("#lastUpdate").textContent = "Maj " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  el.textContent = "MAJ " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
-// Helpers
 function makeChip(text) {
   const span = document.createElement("span");
   span.className = "chip";
@@ -69,7 +72,6 @@ async function fetchText(url, timeout = 10000) {
   }
 }
 
-// Transport parsing
 function minutesFromISO(iso) {
   if (!iso) return null;
   return Math.max(0, Math.round((new Date(iso).getTime() - Date.now()) / 60000));
@@ -108,8 +110,8 @@ function regroupRER(data) {
   };
 }
 
-// Renderers
 function renderRER(el, rows) {
+  if (!el) return;
   el.innerHTML = "";
   (rows || []).slice(0, 3).forEach(r => {
     const row = document.createElement("div");
@@ -121,6 +123,7 @@ function renderRER(el, rows) {
 }
 
 function renderBus(el, buses, cls) {
+  if (!el) return;
   el.innerHTML = "";
   (buses || []).slice(0, 4).forEach(b => {
     const row = document.createElement("div");
@@ -131,7 +134,6 @@ function renderBus(el, buses, cls) {
   });
 }
 
-// ✅ Nouvelle fonction Vélib PRIM
 async function fetchVelibPRIM() {
   try {
     const url = PROXY + encodeURIComponent(VELIB_PRIM_URL + "?distance=2000&coord=48.8350;2.4400");
@@ -143,44 +145,33 @@ async function fetchVelibPRIM() {
   }
 }
 
-// ✅ Parser pour données Vélib PRIM
 function parseVelibPRIM(data) {
   if (!data?.pois) return {};
-  
   const stations = {};
   const targetStations = {
-    "hippodrome": /hippodrome|vincennes/i,
-    "breuil": /breuil|école/i
+    hippodrome: /hippodrome|vincennes/i,
+    breuil: /breuil|école/i
   };
-
   data.pois.forEach(poi => {
     const name = poi.name || "";
-    const coord = poi.coord || {};
-    
-    // Identifier les stations proches de l'hippodrome et du Breuil
+    const properties = poi.properties || {};
     let stationKey = null;
-    if (targetStations.hippodrome.test(name)) {
-      stationKey = "12163";
-    } else if (targetStations.breuil.test(name)) {
-      stationKey = "12128";
-    }
-    
+    if (targetStations.hippodrome.test(name)) stationKey = "12163";
+    else if (targetStations.breuil.test(name)) stationKey = "12128";
     if (stationKey) {
-      // Extraire les données de disponibilité depuis les propriétés
-      const properties = poi.properties || {};
       stations[stationKey] = {
-        name: name,
+        name,
         mechanical: parseInt(properties.available_bikes) || 0,
         electric: parseInt(properties.available_ebikes) || 0,
         docks: parseInt(properties.available_bike_stands) || 0
       };
     }
   });
-
   return stations;
 }
 
 function renderVelib(el, stations) {
+  if (!el) return;
   el.innerHTML = "";
   Object.entries(stations || {}).forEach(([id, info]) => {
     const st = document.createElement("div");
@@ -190,23 +181,16 @@ function renderVelib(el, stations) {
   });
 }
 
-// Courses Vincennes
 async function getVincennes() {
   const arr = [];
   for (let d = 0; d < 3; d++) {
-    // Délai entre requêtes pour éviter le rate limiting
-    if (d > 0) {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-    }
-    
+    if (d > 0) await new Promise(r => setTimeout(r, 1500));
     const dt = new Date();
     dt.setDate(dt.getDate() + d);
     const pmu = String(dt.getDate()).padStart(2, "0") + String(dt.getMonth() + 1).padStart(2, "0") + dt.getFullYear();
     const url = PROXY + encodeURIComponent("https://offline.turfinfo.api.pmu.fr/rest/client/7/programme/" + pmu);
-    
     const data = await fetchJSON(url);
     if (!data) continue;
-    
     data.programme.reunions.forEach(r => {
       if (r.hippodrome.code === "VIN") {
         r.courses.forEach(c => {
@@ -229,6 +213,7 @@ async function getVincennes() {
 }
 
 function renderCourses(el, courses) {
+  if (!el) return;
   el.innerHTML = "";
   (courses || []).slice(0, 6).forEach(c => {
     const row = document.createElement("div");
@@ -238,7 +223,6 @@ function renderCourses(el, courses) {
   });
 }
 
-// News
 async function loadNews() {
   let actus = [];
   try {
@@ -254,7 +238,6 @@ async function loadNews() {
   } catch (e) {
     console.warn("RSS failed:", e);
   }
-  
   if (!actus.length) {
     actus = [
       { title: "RER A : trafic normal", description: "Circulation fluide sur l'ensemble de la ligne" },
@@ -263,70 +246,67 @@ async function loadNews() {
       { title: "Météo clémente", description: "Températures douces pour les déplacements" }
     ];
   }
-  
   renderNews(actus);
 }
 
 function renderNews(items) {
   newsItems = items; currentNews = 0;
-  const el = $("#news-content"); el.innerHTML = "";
+  const el = $("#news-content"); if (!el) return;
+  el.innerHTML = "";
   items.forEach((n, i) => {
     const d = document.createElement("div");
     d.className = "news-item" + (i === 0 ? " active" : "");
     d.innerHTML = '<div class="news-title">' + n.title + '</div><div class="news-text">' + n.description + '</div><div class="news-meta">France Info</div>';
     el.append(d);
   });
-  $("#news-counter").textContent = "1/" + items.length;
+  const ctr = $("#news-counter");
+  if (ctr) ctr.textContent = "1/" + items.length;
 }
 
 function nextNews() {
-  document.querySelector(".news-item.active")?.classList.remove("active");
-  currentNews = (currentNews + 1) % newsItems.length;
-  document.querySelectorAll(".news-item")[currentNews].classList.add("active");
-  $("#news-counter").textContent = (currentNews + 1) + "/" + newsItems.length;
+  const active = document.querySelector(".news-item.active");
+  if (active) active.classList.remove("active");
+  currentNews = newsItems.length ? (currentNews + 1) % newsItems.length : 0;
+  const list = document.querySelectorAll(".news-item");
+  if (list[currentNews]) list[currentNews].classList.add("active");
+  const ctr = $("#news-counter");
+  if (ctr) ctr.textContent = (currentNews + 1) + "/" + newsItems.length;
 }
 
 function toggleInfoPanel() {
-  $("#panel-meteo").classList.toggle("active");
-  $("#panel-trafic").classList.toggle("active");
-  $("#info-title").textContent = currentInfoPanel ? "Météo Locale" : "Trafic IDF";
-  currentInfoPanel = currentInfoPanel ? 0 : 1;
+  // Conservé pour compat mais pas utilisé dans ce layout
 }
 
-// ✅ Main refresh function avec Vélib PRIM
 async function refresh() {
   console.log("🔄 Refresh");
-  
+
   const [rer, jv, hp, br] = await Promise.all([
     fetchJSON(PROXY + encodeURIComponent("https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=" + STOP_IDS.RER_A)),
     fetchJSON(PROXY + encodeURIComponent("https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=" + STOP_IDS.JOINVILLE_AREA)),
     fetchJSON(PROXY + encodeURIComponent("https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=" + STOP_IDS.HIPPODROME)),
     fetchJSON(PROXY + encodeURIComponent("https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=" + STOP_IDS.BREUIL))
   ]);
-  
+
   if (rer) {
     const rd = regroupRER(rer);
     renderRER($("#rer-paris"), rd.directionParis);
     renderRER($("#rer-boissy"), rd.directionBoissy);
   }
-  
+
   renderBus($("#bus-joinville-list"), parseStop(jv), "joinville");
   renderBus($("#bus-hippodrome-list"), parseStop(hp), "hippodrome");
   renderBus($("#bus-breuil-list"), parseStop(br), "breuil");
 
-  // ✅ Météo + Vélib PRIM
   const [meteo, velibData] = await Promise.all([
     fetchJSON(WEATHER_URL),
-    fetchVelibPRIM()  // Nouvelle fonction Vélib PRIM
+    fetchVelibPRIM()
   ]);
-  
+
   if (meteo?.current_weather) {
-    $("#meteo-temp").textContent = Math.round(meteo.current_weather.temperature);
-    $("#meteo-desc").textContent = "Conditions actuelles";
-    $("#meteo-extra").textContent = "Vent " + meteo.current_weather.windspeed + " km/h";
+    const mt = $("#weather");
+    if (mt) mt.textContent = `🌡️ ${Math.round(meteo.current_weather.temperature)}°C — vent ${meteo.current_weather.windspeed} km/h`;
   }
-  
-  // ✅ Rendu Vélib avec données PRIM
+
   renderVelib($("#velib-list"), velibData);
 
   const courses = await getVincennes();
@@ -336,8 +316,6 @@ async function refresh() {
   setLastUpdate();
 }
 
-// Intervals et initialisation
 setInterval(nextNews, 20000);
-setInterval(toggleInfoPanel, 15000);
 setInterval(refresh, 30000);
 refresh();

@@ -14,10 +14,10 @@ window.CONFIG = {
 
   // --- Arrêts (MonitoringRef) – Formats STIF compatibles PRIM ---
   STOPS: {
-    // RER A — Joinville-le-Pont 
-    RER_A_JOINVILLE: "STIF:StopArea:SP:70640:",
+    // RER A — Joinville-le-Pont (confirmé OK via proxy)
+    RER_A_JOINVILLE: "STIF:StopArea:SP:43135:",
 
-    // Bus locaux
+    // Bus locaux (StopArea à confirmer; StopPoint Q à intégrer plus tard)
     BUS_77_HIPPODROME: "STIF:StopArea:SP:463641:",
     BUS_201_BREUIL: "STIF:StopArea:SP:463644:"
   },

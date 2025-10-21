@@ -1,15 +1,15 @@
 // === CONFIG VHP – Hippodrome de Vincennes ===
 window.CONFIG = {
-  // Proxy Cloudflare (utilisé seulement si pas d'API key)
+  // Proxy Cloudflare avec clé PRIM injectée côté worker
   PROXY: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=",
 
   // Coordonnées Hippodrome (météo)
   COORDS: { lat: 48.835, lon: 2.440 },
 
-  // PRIM direct mode (si API key renseignée, on bypasse le proxy)
+  // PRIM en mode proxy uniquement (clé injectée côté worker)
   PRIM: {
     BASE: "https://prim.iledefrance-mobilites.fr/marketplace",
-    APIKEY: "" // Renseigner votre clé ici pour requêtes directes (sinon le proxy est utilisé)
+    APIKEY: "" // Laissé vide car clé injectée côté proxy worker
   },
 
   // --- Arrêts (MonitoringRef) – Formats STIF compatibles PRIM ---
@@ -31,11 +31,11 @@ window.CONFIG = {
 
   // --- Fréquences de rafraîchissement ---
   REFRESH_MS: {
-    STOP_MONITORING: 30000,  // passages temps réel
-    TRAFFIC: 120000, // info trafic
-    VELIB: 30000,  // disponibilité vélos
-    WEATHER: 600000,  // météo
-    NEWS: 60000,  // carrousel actus
+    STOP_MONITORING: 45000,  // passages temps réel (réduit pour éviter surcharge proxy)
+    TRAFFIC: 180000, // info trafic
+    VELIB: 60000,  // disponibilité vélos
+    WEATHER: 300000,  // météo (plus fréquent pour test)
+    NEWS: 120000,  // carrousel actus
     RACES: 600000   // programme courses
   }
 };

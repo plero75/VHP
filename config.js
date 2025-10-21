@@ -1,41 +1,32 @@
 // === CONFIG VHP – Hippodrome de Vincennes ===
 window.CONFIG = {
-  // Proxy Cloudflare (injection des clés + CORS)
+  // Proxy Cloudflare (utilisé seulement si pas d'API key)
   PROXY: "https://ratp-proxy.hippodrome-proxy42.workers.dev/?url=",
 
   // Coordonnées Hippodrome (météo)
   COORDS: { lat: 48.835, lon: 2.440 },
 
-  // --- Arrêts principaux (MonitoringRef SIRI) — IDs IDFM (nouveau format) ---
-  STOPS: {
-    // RER A — Joinville-le-Pont
-    RER_A_JOINVILLE_STOPAREA: "IDFM:70640",
+  // PRIM direct mode (si API key renseignée, on bypasse le proxy)
+  PRIM: {
+    BASE: "https://prim.iledefrance-mobilites.fr/marketplace",
+    APIKEY: "" // Renseigner votre clé ici pour requêtes directes (sinon le proxy est utilisé)
+  },
 
-    // Bus locaux côté Hippodrome / Breuil
-    BUS_77_HIPPODROME: "IDFM:463641",
-    BUS_201_BREUIL: "IDFM:463644"
+  // --- Arrêts (MonitoringRef) – Formats STIF compatibles PRIM ---
+  STOPS: {
+    // RER A — Joinville-le-Pont 
+    RER_A_JOINVILLE: "STIF:StopArea:SP:70640:",
+
+    // Bus locaux
+    BUS_77_HIPPODROME: "STIF:StopArea:SP:463641:",
+    BUS_201_BREUIL: "STIF:StopArea:SP:463644:"
   },
 
   // --- Références de lignes ---
   LINES: {
-    RER_A: "line:IDFM:C01742",
-    BUS_77: "line:IDFM:C02251",
-    BUS_201: "line:IDFM:C02251"
-  },
-
-  // --- Filtres pour les messages trafic ---
-  LINE_FILTERS: {
-    RER_A: ["RER A", "C01742", "line:IDFM:C01742", "A"],
-    BUS_77: ["77", "C02251", "line:IDFM:C02251"],
-    BUS_201: ["201", "C02251", "line:IDFM:C02251"]
-  },
-
-  // --- Sources Vélib' ---
-  VELIB: {
-    STATIONS: [
-      { id: 12163, label: "Vincennes – Hippodrome" },
-      { id: 12128, label: "École du Breuil / Pyramides" }
-    ]
+    RER_A: "STIF:Line::C01742:",
+    BUS_77: "STIF:Line::C02251:",
+    BUS_201: "STIF:Line::C02251:"
   },
 
   // --- Fréquences de rafraîchissement ---
